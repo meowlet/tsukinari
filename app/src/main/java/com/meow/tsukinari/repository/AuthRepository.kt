@@ -10,16 +10,16 @@ import kotlinx.coroutines.withContext
 class AuthRepository {
     val currentUser: FirebaseUser? = Firebase.auth.currentUser
 
-    fun HasUser(): Boolean {
+    fun hasUser(): Boolean {
         return Firebase.auth.currentUser != null
     }
 
-    fun GetUserId(): String {
+    fun getUserId(): String {
         return Firebase.auth.currentUser?.uid.orEmpty()
     }
 
 
-    suspend fun SignUp(email: String, password: String, isCompleted: (Boolean) -> Unit) =
+    suspend fun signUp(email: String, password: String, isCompleted: (Boolean) -> Unit) =
         withContext(Dispatchers.IO) {
             Firebase.auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {
                 if (it.isSuccessful) {
@@ -30,7 +30,7 @@ class AuthRepository {
             }.await()
         }
 
-    suspend fun SignIn(email: String, password: String, isCompleted: (Boolean) -> Unit) =
+    suspend fun signIn(email: String, password: String, isCompleted: (Boolean) -> Unit) =
         withContext(Dispatchers.IO) {
             Firebase.auth.signInWithEmailAndPassword(email, password).addOnCompleteListener {
                 if (it.isSuccessful) {
@@ -41,18 +41,19 @@ class AuthRepository {
             }.await()
         }
 
-    suspend fun SignOut() {
+    suspend fun signOut() {
         Firebase.auth.signOut()
     }
 
-    fun ResetPassword(email: String, isCompleted: (Boolean) -> Unit) {
-        Firebase.auth.sendPasswordResetEmail(email).addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                isCompleted.invoke(true)
-            } else {
-                isCompleted.invoke(false)
-            }
+    suspend fun resetPassword(email: String, isCompleted: (Boolean) -> Unit) =
+        withContext(Dispatchers.IO) {
+            Firebase.auth.sendPasswordResetEmail(email).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    isCompleted.invoke(true)
+                } else {
+                    isCompleted.invoke(false)
+                }
+            }.await()
         }
-    }
 
 }

@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 fun SignUpScreen(
     authViewModel: AuthViewModel? = null,
     onNavToHomePage: () -> Unit,
+    onNavToForgotPage: () -> Unit,
     onNavToSignInPage: () -> Unit,
 ) {
     val authUiState = authViewModel?.authUiState
@@ -67,7 +68,7 @@ fun SignUpScreen(
         ) {
             OutlinedTextField(
                 value = authUiState?.userNameSignUp ?: "",
-                onValueChange = { authViewModel?.OnUserNameSignUpChange(it) },
+                onValueChange = { authViewModel?.onUserNameSignUpChange(it) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Email, contentDescription = ""
@@ -83,7 +84,7 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 value = authUiState?.passwordSignUp ?: "",
-                onValueChange = { authViewModel?.OnPassswordSignUpChange(it) },
+                onValueChange = { authViewModel?.onPassswordSignUpChange(it) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Info, contentDescription = ""
@@ -101,7 +102,7 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 value = authUiState?.confirmPasswordSignUp ?: "",
-                onValueChange = { authViewModel?.OnConfirmPasswordSignUpChange(it) },
+                onValueChange = { authViewModel?.onConfirmPasswordSignUpChange(it) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Info, contentDescription = ""
@@ -120,13 +121,15 @@ fun SignUpScreen(
             Text(
                 text = "Forgot password",
                 textAlign = TextAlign.Right,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavToForgotPage.invoke() },
                 style = MaterialTheme.typography.bodySmall,
                 textDecoration = TextDecoration.Underline
             )
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedButton(onClick = {
-                authViewModel?.SignUp(context) {
+                authViewModel?.signUp(context) {
                     onNavToSignInPage.invoke()
 
                 }
@@ -156,7 +159,7 @@ fun SignUpScreen(
 @Composable
 fun SignUpPreview() {
     Surface {
-        SignUpScreen(onNavToHomePage = { /*TODO*/ }) {
+        SignUpScreen(onNavToHomePage = { /*TODO*/ }, onNavToForgotPage = {}) {
 
         }
     }

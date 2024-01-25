@@ -39,8 +39,8 @@ import com.meow.tsukinari.R
 fun SignInScreen(
     authViewModel: AuthViewModel? = null,
     onNavToHomePage: () -> Unit,
-    onNavToForgotPage: () -> Unit,
     onNavToSignUpPage: () -> Unit,
+    onNavToForgotPage: () -> Unit,
 ) {
     val authUiState = authViewModel?.authUiState
     val isError = authUiState?.signInError != null
@@ -73,7 +73,7 @@ fun SignInScreen(
         ) {
             OutlinedTextField(
                 value = authUiState?.email ?: "",
-                onValueChange = { authViewModel?.OnUserNameChange(it) },
+                onValueChange = { authViewModel?.onUserNameChange(it) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Email, contentDescription = ""
@@ -89,7 +89,7 @@ fun SignInScreen(
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 value = authUiState?.password ?: "",
-                onValueChange = { authViewModel?.OnPasswordChange(it) },
+                onValueChange = { authViewModel?.onPasswordChange(it) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Info, contentDescription = ""
@@ -115,7 +115,7 @@ fun SignInScreen(
                 textDecoration = TextDecoration.Underline
             )
             Spacer(modifier = Modifier.height(16.dp))
-            OutlinedButton(onClick = { authViewModel?.SignIn(context) }) {
+            OutlinedButton(onClick = { authViewModel?.signIn(context) }) {
                 Text(
                     "SIGN IN", style = MaterialTheme.typography.titleMedium,
 
@@ -153,7 +153,7 @@ fun Logo() {
 @Composable
 fun SignInPreview() {
     Surface {
-        SignInScreen(onNavToHomePage = { /*TODO*/ }, onNavToForgotPage = {}) {
+        SignInScreen(onNavToHomePage = { /*TODO*/ }, onNavToSignUpPage = {}) {
 
         }
     }

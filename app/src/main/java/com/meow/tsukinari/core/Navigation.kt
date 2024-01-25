@@ -39,6 +39,13 @@ fun Navigation(
                             inclusive = true
                         }
                     }
+                }, onNavToSignUpPage = {
+                    authViewModel.clearSignUpForm()
+                    navController.navigate(AuthRoutes.SignUp.name) {
+                        launchSingleTop = true
+                        popUpTo(AuthRoutes.SignIn.name) {
+                        }
+                    }
                 }, onNavToForgotPage = {
                     navController.navigate(AuthRoutes.ForgotPassword.name) {
                         launchSingleTop = true
@@ -46,38 +53,52 @@ fun Navigation(
                         }
                     }
                 }, authViewModel = authViewModel
-            ) {
-                navController.navigate(AuthRoutes.SignUp.name) {
-                    launchSingleTop = true
-                    popUpTo(AuthRoutes.SignIn.name) {
-                    }
-                }
-            }
+            )
         }
         composable(route = AuthRoutes.SignUp.name) {
             SignUpScreen(
                 onNavToHomePage = {
                     navController.navigate(HomeRoutes.Home.name) {
+                        launchSingleTop = true
                         popUpTo(AuthRoutes.SignIn.name) {
                             inclusive = true
                         }
                     }
+                }, onNavToSignInPage = {
+                    navController.navigate(AuthRoutes.SignIn.name) {
+                        launchSingleTop = true
+                        popUpTo(AuthRoutes.SignIn.name) {
+                            inclusive = true
+                        }
+                    }
+                }, onNavToForgotPage = {
+                    navController.navigate(AuthRoutes.ForgotPassword.name) {
+                        popUpTo(AuthRoutes.SignIn.name) {
+                        }
+                    }
                 }, authViewModel = authViewModel
-            ) {
-                navController.navigate(AuthRoutes.SignIn.name)
-            }
+            )
         }
         composable(route = AuthRoutes.ForgotPassword.name) {
             ForgotPasswordScreen(
+                onNavToSignInPage = {
+                    navController.navigate(AuthRoutes.SignIn.name) {
+                        popUpTo(AuthRoutes.SignIn.name) {
+                            inclusive = true
+                        }
+                    }
+                },
                 authViewModel = authViewModel
-            ) {
-                navController.navigate(AuthRoutes.SignIn.name)
-            }
+            )
         }
         composable(route = HomeRoutes.Home.name) {
-            HomeScreen(authViewModel = authViewModel) {
-                navController.navigate(AuthRoutes.SignIn.name)
-            }
+            HomeScreen(onNavToSignInPage = {
+                navController.navigate(AuthRoutes.SignIn.name) {
+                    popUpTo(HomeRoutes.Home.name) {
+                        inclusive = true
+                    }
+                }
+            }, authViewModel = authViewModel)
         }
     }
 }

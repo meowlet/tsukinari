@@ -15,55 +15,55 @@ class AuthViewModel(
 ) : ViewModel() {
     val currentUser = repository.currentUser
 
-    val hasUser: Boolean get() = repository.HasUser()
+    val hasUser: Boolean get() = repository.hasUser()
 
     var authUiState by mutableStateOf(AuthUiState())
         private set
 
-    fun OnUserNameChange(userName: String) {
+    fun onUserNameChange(userName: String) {
         authUiState = authUiState.copy(email = userName)
         authUiState = authUiState.copy(signInError = "")
     }
 
-    fun OnPasswordChange(password: String) {
+    fun onPasswordChange(password: String) {
         authUiState = authUiState.copy(password = password)
         authUiState = authUiState.copy(signInError = "")
     }
 
-    fun OnUserNameSignUpChange(userName: String) {
+    fun onUserNameSignUpChange(userName: String) {
         authUiState = authUiState.copy(userNameSignUp = userName)
         authUiState = authUiState.copy(signUpError = "")
     }
 
-    fun OnPassswordSignUpChange(password: String) {
+    fun onPassswordSignUpChange(password: String) {
         authUiState = authUiState.copy(passwordSignUp = password)
         authUiState = authUiState.copy(signUpError = "")
     }
 
-    fun OnConfirmPasswordSignUpChange(password: String) {
+    fun onConfirmPasswordSignUpChange(password: String) {
         authUiState = authUiState.copy(confirmPasswordSignUp = password)
         authUiState = authUiState.copy(signUpError = "")
     }
 
     fun onEmailResetChange(emailReset: String) {
         authUiState = authUiState.copy(emailReset = emailReset)
-        authUiState = authUiState.copy(signUpError = "")
+        authUiState = authUiState.copy(resetPasswordError = "")
     }
 
-    fun ValidateSignInForm(): Boolean {
+    fun validateSignInForm(): Boolean {
         return authUiState.email.isNotEmpty() && authUiState.password.isNotEmpty()
     }
 
-    fun ValidateSignUpForm(): Boolean {
+    fun validateSignUpForm(): Boolean {
         return authUiState.userNameSignUp.isNotEmpty() && authUiState.passwordSignUp.isNotEmpty()
     }
 
-    fun SignUp(
+    fun signUp(
         context: Context,
         onSignUpCompleted: () -> Unit
     ) = viewModelScope.launch {
         try {
-            if (!ValidateSignUpForm()) {
+            if (!validateSignUpForm()) {
                 throw IllegalArgumentException("Fields must not be empty.")
             }
             authUiState = authUiState.copy(isLoading = true)
@@ -71,14 +71,14 @@ class AuthViewModel(
                 throw IllegalArgumentException("Password does not match")
             }
             authUiState = authUiState.copy(signUpError = "")
-            repository.SignUp(
+            repository.signUp(
                 authUiState.userNameSignUp,
                 authUiState.passwordSignUp
             ) { isCompleted ->
                 if (isCompleted) {
                     Toast.makeText(context, "Successfully signed up!", Toast.LENGTH_SHORT).show()
                     authUiState = authUiState.copy(isSuccessful = true)
-                    SignOut {}
+                    signOut {}
                     onSignUpCompleted.invoke()
                 } else {
                     Toast.makeText(context, "Failed signing up!", Toast.LENGTH_SHORT).show()
@@ -93,17 +93,23 @@ class AuthViewModel(
         }
     }
 
+    fun clearSignUpForm() {
+        authUiState = authUiState.copy(userNameSignUp = "")
+        authUiState = authUiState.copy(passwordSignUp = "")
+        authUiState = authUiState.copy(confirmPasswordSignUp = "")
+    }
 
-    fun SignIn(
+
+    fun signIn(
         context: Context
     ) = viewModelScope.launch {
         try {
-            if (!ValidateSignInForm()) {
+            if (!validateSignInForm()) {
                 throw IllegalArgumentException("Fields must not be empty.")
             }
             authUiState = authUiState.copy(isLoading = true)
             authUiState = authUiState.copy(signInError = "")
-            repository.SignIn(authUiState.email, authUiState.password) { isCompleted ->
+            repository.signIn(authUiState.email, authUiState.password) { isCompleted ->
                 if (isCompleted) {
                     Toast.makeText(context, "Successfully signed in!", Toast.LENGTH_SHORT).show()
                     authUiState = authUiState.copy(isSuccessful = true)
@@ -120,15 +126,19 @@ class AuthViewModel(
         }
     }
 
-    fun ResetPassword(
+    fun resetPassword(
         context: Context,
         onResetPasswordCompleted: () -> Unit
     ) = viewModelScope.launch {
         try {
             authUiState = authUiState.copy(isLoading = true)
-            repository.ResetPassword(authUiState.emailReset) { isCompleted ->
+            repository.resetPassword(authUiState.emailReset) { isCompleted ->
                 if (isCompleted) {
-                    Toast.makeText(context, "Password reset email sent!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        "Password reset email is sent to ${authUiState.emailReset}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     authUiState = authUiState.copy(isSuccessful = true)
                     onResetPasswordCompleted.invoke()
                 } else {
@@ -138,21 +148,20 @@ class AuthViewModel(
                         Toast.LENGTH_SHORT
                     ).show()
                     authUiState = authUiState.copy(isSuccessful = false)
-                    authUiState =
-                        authUiState.copy(resetPasswordError = "Invalid or unavailable email")
                 }
             }
         } catch (e: Exception) {
+            authUiState = authUiState.copy(resetPasswordError = e.localizedMessage)
             e.printStackTrace()
         } finally {
             authUiState = authUiState.copy(isLoading = false)
         }
     }
 
-    fun SignOut(
+    fun signOut(
         onSignOutCompleted: () -> Unit
     ) = viewModelScope.launch {
-        repository.SignOut()
+        repository.signOut()
         onSignOutCompleted.invoke()
     }
 }

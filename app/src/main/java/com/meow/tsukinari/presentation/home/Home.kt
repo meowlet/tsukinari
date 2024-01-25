@@ -18,7 +18,7 @@ fun HomeScreen(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             val context = LocalContext.current
             Text(text = "Home Screen")
-            Button(onClick = { authViewModel?.SignOut { onNavToSignInPage.invoke() } }) {
+            Button(onClick = { authViewModel?.signOut { onNavToSignInPage.invoke() } }) {
                 Text(text = "Sign out")
             }
         }
