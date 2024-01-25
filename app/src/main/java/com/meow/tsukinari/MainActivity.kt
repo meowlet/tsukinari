@@ -10,19 +10,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.meow.tsukinari.core.Navigation
+import com.meow.tsukinari.presentation.authentication.AuthViewModel
 import com.meow.tsukinari.ui.theme.TsukinariTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val authViewModel = viewModel(modelClass = AuthViewModel::class.java)
             TsukinariTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
+
+                    Navigation(authViewModel = authViewModel)
                 }
             }
         }

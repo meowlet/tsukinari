@@ -11,37 +11,38 @@ class AuthRepository {
     val currentUser: FirebaseUser? = Firebase.auth.currentUser
 
     fun HasUser(): Boolean {
-        return currentUser != null
+        return Firebase.auth.currentUser != null
     }
 
     fun GetUserId(): String {
-        return currentUser?.uid.orEmpty()
+        return Firebase.auth.currentUser?.uid.orEmpty()
     }
 
 
     suspend fun SignUp(email: String, password: String, isCompleted: (Boolean) -> Unit) =
         withContext(Dispatchers.IO) {
-            Firebase.auth
-                .createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        isCompleted(true)
-                    } else {
-                        isCompleted(false)
-                    }
-                }.await()
+            Firebase.auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {
+                if (it.isSuccessful) {
+                    isCompleted.invoke(true)
+                } else {
+                    isCompleted.invoke(false)
+                }
+            }.await()
         }
 
     suspend fun SignIn(email: String, password: String, isCompleted: (Boolean) -> Unit) =
         withContext(Dispatchers.IO) {
-            Firebase.auth
-                .signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        isCompleted(true)
-                    } else {
-                        isCompleted(false)
-                    }
-                }.await()
+            Firebase.auth.signInWithEmailAndPassword(email, password).addOnCompleteListener {
+                if (it.isSuccessful) {
+                    isCompleted.invoke(true)
+                } else {
+                    isCompleted.invoke(false)
+                }
+            }.await()
         }
+
+    suspend fun SignOut() {
+        Firebase.auth.signOut()
+    }
+
 }
