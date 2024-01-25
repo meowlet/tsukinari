@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.meow.tsukinari.presentation.authentication.AuthViewModel
+import com.meow.tsukinari.presentation.authentication.ForgotPasswordScreen
 import com.meow.tsukinari.presentation.authentication.SignInScreen
 import com.meow.tsukinari.presentation.authentication.SignUpScreen
 import com.meow.tsukinari.presentation.home.HomeScreen
@@ -13,7 +14,8 @@ import com.meow.tsukinari.presentation.home.HomeScreen
 
 enum class AuthRoutes {
     SignIn,
-    SignUp
+    SignUp,
+    ForgotPassword
 }
 
 enum class HomeRoutes {
@@ -37,12 +39,17 @@ fun Navigation(
                             inclusive = true
                         }
                     }
+                }, onNavToForgotPage = {
+                    navController.navigate(AuthRoutes.ForgotPassword.name) {
+                        launchSingleTop = true
+                        popUpTo(AuthRoutes.SignIn.name) {
+                        }
+                    }
                 }, authViewModel = authViewModel
             ) {
                 navController.navigate(AuthRoutes.SignUp.name) {
                     launchSingleTop = true
                     popUpTo(AuthRoutes.SignIn.name) {
-                        inclusive = true
                     }
                 }
             }
@@ -60,8 +67,17 @@ fun Navigation(
                 navController.navigate(AuthRoutes.SignIn.name)
             }
         }
+        composable(route = AuthRoutes.ForgotPassword.name) {
+            ForgotPasswordScreen(
+                authViewModel = authViewModel
+            ) {
+                navController.navigate(AuthRoutes.SignIn.name)
+            }
+        }
         composable(route = HomeRoutes.Home.name) {
-            HomeScreen(authViewModel = authViewModel)
+            HomeScreen(authViewModel = authViewModel) {
+                navController.navigate(AuthRoutes.SignIn.name)
+            }
         }
     }
 }

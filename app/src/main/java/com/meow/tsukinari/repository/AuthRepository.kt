@@ -45,4 +45,14 @@ class AuthRepository {
         Firebase.auth.signOut()
     }
 
+    fun ResetPassword(email: String, isCompleted: (Boolean) -> Unit) {
+        Firebase.auth.sendPasswordResetEmail(email).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                isCompleted.invoke(true)
+            } else {
+                isCompleted.invoke(false)
+            }
+        }
+    }
+
 }

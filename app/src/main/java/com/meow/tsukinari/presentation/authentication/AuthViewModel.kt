@@ -21,7 +21,7 @@ class AuthViewModel(
         private set
 
     fun OnUserNameChange(userName: String) {
-        authUiState = authUiState.copy(userName = userName)
+        authUiState = authUiState.copy(email = userName)
         authUiState = authUiState.copy(signInError = "")
     }
 
@@ -45,8 +45,13 @@ class AuthViewModel(
         authUiState = authUiState.copy(signUpError = "")
     }
 
+    fun onEmailResetChange(emailReset: String) {
+        authUiState = authUiState.copy(emailReset = emailReset)
+        authUiState = authUiState.copy(signUpError = "")
+    }
+
     fun ValidateSignInForm(): Boolean {
-        return authUiState.userName.isNotEmpty() && authUiState.password.isNotEmpty()
+        return authUiState.email.isNotEmpty() && authUiState.password.isNotEmpty()
     }
 
     fun ValidateSignUpForm(): Boolean {
@@ -54,7 +59,8 @@ class AuthViewModel(
     }
 
     fun SignUp(
-        context: Context
+        context: Context,
+        onSignUpCompleted: () -> Unit
     ) = viewModelScope.launch {
         try {
             if (!ValidateSignUpForm()) {
@@ -72,6 +78,8 @@ class AuthViewModel(
                 if (isCompleted) {
                     Toast.makeText(context, "Successfully signed up!", Toast.LENGTH_SHORT).show()
                     authUiState = authUiState.copy(isSuccessful = true)
+                    SignOut {}
+                    onSignUpCompleted.invoke()
                 } else {
                     Toast.makeText(context, "Failed signing up!", Toast.LENGTH_SHORT).show()
                     authUiState = authUiState.copy(isSuccessful = false)
@@ -85,6 +93,7 @@ class AuthViewModel(
         }
     }
 
+
     fun SignIn(
         context: Context
     ) = viewModelScope.launch {
@@ -94,7 +103,7 @@ class AuthViewModel(
             }
             authUiState = authUiState.copy(isLoading = true)
             authUiState = authUiState.copy(signInError = "")
-            repository.SignIn(authUiState.userName, authUiState.password) { isCompleted ->
+            repository.SignIn(authUiState.email, authUiState.password) { isCompleted ->
                 if (isCompleted) {
                     Toast.makeText(context, "Successfully signed in!", Toast.LENGTH_SHORT).show()
                     authUiState = authUiState.copy(isSuccessful = true)
@@ -111,22 +120,54 @@ class AuthViewModel(
         }
     }
 
+    fun ResetPassword(
+        context: Context,
+        onResetPasswordCompleted: () -> Unit
+    ) = viewModelScope.launch {
+        try {
+            authUiState = authUiState.copy(isLoading = true)
+            repository.ResetPassword(authUiState.emailReset) { isCompleted ->
+                if (isCompleted) {
+                    Toast.makeText(context, "Password reset email sent!", Toast.LENGTH_SHORT).show()
+                    authUiState = authUiState.copy(isSuccessful = true)
+                    onResetPasswordCompleted.invoke()
+                } else {
+                    Toast.makeText(
+                        context,
+                        "Failed to send password reset email!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    authUiState = authUiState.copy(isSuccessful = false)
+                    authUiState =
+                        authUiState.copy(resetPasswordError = "Invalid or unavailable email")
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            authUiState = authUiState.copy(isLoading = false)
+        }
+    }
+
     fun SignOut(
+        onSignOutCompleted: () -> Unit
     ) = viewModelScope.launch {
         repository.SignOut()
-
+        onSignOutCompleted.invoke()
     }
 }
 
 data class AuthUiState(
-    val userName: String = "",
+    val email: String = "",
     val password: String = "",
     val userNameSignUp: String = "",
     val passwordSignUp: String = "",
     val confirmPasswordSignUp: String = "",
+    val emailReset: String = "",
     val isLoading: Boolean = false,
     val isSuccessful: Boolean = false,
     val signInError: String = "",
     val signUpError: String = "",
+    val resetPasswordError: String = "",
 )
 

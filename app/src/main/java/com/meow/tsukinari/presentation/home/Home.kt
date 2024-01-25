@@ -12,12 +12,13 @@ import com.meow.tsukinari.presentation.authentication.AuthViewModel
 @Composable
 fun HomeScreen(
     authViewModel: AuthViewModel? = null,
+    onNavToSignInPage: () -> Unit
 ) {
     Surface {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             val context = LocalContext.current
             Text(text = "Home Screen")
-            Button(onClick = { authViewModel?.SignOut() }) {
+            Button(onClick = { authViewModel?.SignOut { onNavToSignInPage.invoke() } }) {
                 Text(text = "Sign out")
             }
         }

@@ -125,7 +125,12 @@ fun SignUpScreen(
                 textDecoration = TextDecoration.Underline
             )
             Spacer(modifier = Modifier.height(16.dp))
-            OutlinedButton(onClick = { authViewModel?.SignUp(context) }) {
+            OutlinedButton(onClick = {
+                authViewModel?.SignUp(context) {
+                    onNavToSignInPage.invoke()
+
+                }
+            }) {
                 Text(
                     "SIGN UP", style = MaterialTheme.typography.titleMedium,
 
