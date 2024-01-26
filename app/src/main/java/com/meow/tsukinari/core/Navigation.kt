@@ -10,7 +10,6 @@ import com.meow.tsukinari.presentation.authentication.ForgotPasswordScreen
 import com.meow.tsukinari.presentation.authentication.SignInScreen
 import com.meow.tsukinari.presentation.authentication.SignUpScreen
 import com.meow.tsukinari.presentation.home.HomeScreen
-import com.meow.tsukinari.presentation.home.UploadViewModel
 
 
 enum class AuthRoutes {
@@ -28,8 +27,7 @@ enum class HomeRoutes {
 @Composable
 fun Navigation(
     navController: NavHostController = rememberNavController(),
-    authViewModel: AuthViewModel,
-    uploadViewModel: UploadViewModel
+    authViewModel: AuthViewModel
 ) {
     NavHost(navController = navController, startDestination = AuthRoutes.SignIn.name) {
         composable(route = AuthRoutes.SignIn.name) {
@@ -100,7 +98,7 @@ fun Navigation(
                         inclusive = true
                     }
                 }
-            }, uploadViewModel = uploadViewModel)
+            }, authViewModel = authViewModel)
         }
     }
 }
