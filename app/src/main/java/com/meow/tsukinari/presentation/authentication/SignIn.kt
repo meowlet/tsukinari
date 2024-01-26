@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Info
@@ -139,12 +138,11 @@ fun SignInScreen(
 
 @Composable
 fun Logo() {
-    Spacer(modifier = Modifier.height(12.dp))
     Image(
-        painterResource(R.drawable.app_logo),
+        painterResource(R.drawable.tsukinari_logo),
         contentDescription = "",
         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-        modifier = Modifier.size(150.dp)
+        modifier = Modifier.padding(top = 40.dp)
     )
 }
 
