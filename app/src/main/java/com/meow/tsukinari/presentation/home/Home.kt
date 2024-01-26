@@ -7,18 +7,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
-import com.meow.tsukinari.presentation.authentication.AuthViewModel
 
 @Composable
 fun HomeScreen(
-    authViewModel: AuthViewModel? = null,
+    uploadViewModel: UploadViewModel? = null,
     onNavToSignInPage: () -> Unit
 ) {
     Surface {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             val context = LocalContext.current
             Text(text = "Home Screen")
-            Button(onClick = { authViewModel?.signOut { onNavToSignInPage.invoke() } }) {
+            Button(onClick = { uploadViewModel?.testPushData() }) {
                 Text(text = "Sign out")
             }
         }
