@@ -17,7 +17,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -39,7 +38,7 @@ fun ForgotPasswordScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 32.dp, end = 32.dp, top = 32.dp)
+            .padding(start = 32.dp, end = 32.dp)
     ) {
         Column(verticalArrangement = Arrangement.Center, modifier = Modifier.weight(0.25f)) {
             Logo()
@@ -93,17 +92,11 @@ fun ForgotPasswordScreen(
                 modifier = Modifier.clickable { onNavToSignInPage.invoke() })
         }
     }
-
-
-    LaunchedEffect(key1 = authViewModel?.hasUser) {
-        if (authViewModel?.hasUser == true) {
-        }
-    }
 }
 
 @Preview
 @Composable
-fun asdfljlfdsa() {
+fun Prev() {
     ForgotPasswordScreen {
     }
 }
