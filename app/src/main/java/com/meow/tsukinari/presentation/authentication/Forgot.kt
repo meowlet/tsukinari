@@ -38,7 +38,7 @@ fun ForgotPasswordScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 32.dp, end = 32.dp)
+            .padding(start = 32.dp, end = 32.dp, top = 32.dp)
     ) {
         Column(verticalArrangement = Arrangement.Center, modifier = Modifier.weight(0.25f)) {
             Logo()
