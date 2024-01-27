@@ -9,7 +9,8 @@ import com.meow.tsukinari.presentation.authentication.AuthViewModel
 import com.meow.tsukinari.presentation.authentication.ForgotPasswordScreen
 import com.meow.tsukinari.presentation.authentication.SignInScreen
 import com.meow.tsukinari.presentation.authentication.SignUpScreen
-import com.meow.tsukinari.presentation.home.HomeScreen
+import com.meow.tsukinari.presentation.my_fictions.MyFictionsScreen
+import com.meow.tsukinari.presentation.my_fictions.MyFictionsViewModel
 
 
 enum class AuthRoutes {
@@ -27,7 +28,8 @@ enum class HomeRoutes {
 @Composable
 fun Navigation(
     navController: NavHostController = rememberNavController(),
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    myFictionsViewModel: MyFictionsViewModel,
 ) {
     NavHost(navController = navController, startDestination = AuthRoutes.SignIn.name) {
         composable(route = AuthRoutes.SignIn.name) {
@@ -92,13 +94,17 @@ fun Navigation(
             )
         }
         composable(route = HomeRoutes.Home.name) {
-            HomeScreen(onNavToSignInPage = {
-                navController.navigate(AuthRoutes.SignIn.name) {
-                    popUpTo(HomeRoutes.Home.name) {
-                        inclusive = true
+            MyFictionsScreen(
+                onNavToSignInPage = {
+                    navController.navigate(AuthRoutes.SignIn.name) {
+                        popUpTo(HomeRoutes.Home.name) {
+                            inclusive = true
+                        }
                     }
-                }
-            }, authViewModel = authViewModel)
+                },
+                myFictionsViewModel = myFictionsViewModel,
+                onNavToAddingPage = {},
+                onNavToUpdatingPage = {})
         }
     }
 }

@@ -12,8 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.meow.tsukinari.core.Navigation
 import com.meow.tsukinari.presentation.authentication.AuthViewModel
+import com.meow.tsukinari.presentation.editor.EditorViewModel
+import com.meow.tsukinari.presentation.editor.UpdatingScreen
+import com.meow.tsukinari.presentation.my_fictions.MyFictionsViewModel
 import com.meow.tsukinari.ui.theme.TsukinariTheme
 
 class MainActivity : ComponentActivity() {
@@ -22,13 +24,15 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             val authViewModel = viewModel(modelClass = AuthViewModel::class.java)
+            val editorViewModel = viewModel(modelClass = EditorViewModel::class.java)
+            val myFictionsViewModel = viewModel(modelClass = MyFictionsViewModel::class.java)
             TsukinariTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-
-                    Navigation(authViewModel = authViewModel)
+                    UpdatingScreen(editorViewModel)
+//                    Navigation(authViewModel = authViewModel, myFictionsViewModel = myFictionsViewModel)
                 }
             }
         }

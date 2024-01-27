@@ -3,6 +3,7 @@ package com.meow.tsukinari.presentation.authentication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -118,15 +119,15 @@ fun SignUpScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "Forgot password",
-                textAlign = TextAlign.Right,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onNavToForgotPage.invoke() },
-                style = MaterialTheme.typography.bodySmall,
-                textDecoration = TextDecoration.Underline
-            )
+            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Forgot password",
+                    modifier = Modifier
+                        .clickable { onNavToForgotPage.invoke() },
+                    style = MaterialTheme.typography.bodySmall,
+                    textDecoration = TextDecoration.Underline
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedButton(onClick = {
                 authViewModel?.signUp(context) {
