@@ -78,7 +78,7 @@ class AuthViewModel(
                 if (isCompleted) {
                     Toast.makeText(context, "Successfully signed up!", Toast.LENGTH_SHORT).show()
                     authUiState = authUiState.copy(isSuccessful = true)
-                    signOut {}
+                    signOut()
                     onSignUpCompleted.invoke()
                 } else {
                     Toast.makeText(context, "Failed signing up!", Toast.LENGTH_SHORT).show()
@@ -158,11 +158,8 @@ class AuthViewModel(
         }
     }
 
-    fun signOut(
-        onSignOutCompleted: () -> Unit
-    ) = viewModelScope.launch {
+    fun signOut() = viewModelScope.launch {
         repository.signOut()
-        onSignOutCompleted.invoke()
     }
 }
 

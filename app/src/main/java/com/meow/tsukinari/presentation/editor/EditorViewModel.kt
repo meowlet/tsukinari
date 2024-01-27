@@ -1,4 +1,4 @@
-package com.meow.tsukinari.presentation.management
+package com.meow.tsukinari.presentation.editor
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -7,10 +7,10 @@ import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseUser
 import com.meow.tsukinari.repository.DatabaseRepository
 
-class ManagementViewModel(
+class EditorViewModel(
     private val repository: DatabaseRepository = DatabaseRepository(),
 ) : ViewModel() {
-    var managementUiState by mutableStateOf(ManagementUiState())
+    var editorUiState by mutableStateOf(EditorUiState())
         private set
 
     private val hasUser: Boolean
@@ -21,35 +21,35 @@ class ManagementViewModel(
 
 
     fun onTitleChange(title: String) {
-        managementUiState = managementUiState.copy(title = title)
+        editorUiState = editorUiState.copy(title = title)
     }
 
     fun onDescriptionChange(description: String) {
-        managementUiState = managementUiState.copy(description = description)
+        editorUiState = editorUiState.copy(description = description)
     }
 
     fun addNote() {
         if (hasUser) {
             repository.addFiction(
                 uploaderId = user!!.uid,
-                title = managementUiState.title,
-                description = managementUiState.description,
+                title = editorUiState.title,
+                description = editorUiState.description,
 //                timestamp = Timestamp.now(),
                 coverLink = "Cover URL"
             ) {
-                managementUiState = managementUiState.copy(fictionAddedStatus = it)
+                editorUiState = editorUiState.copy(fictionAddedStatus = it)
             }
         }
     }
 
     fun resetState() {
-        managementUiState = ManagementUiState()
+        editorUiState = EditorUiState()
     }
 
 }
 
 
-data class ManagementUiState(
+data class EditorUiState(
     val title: String = "",
     val description: String = "",
     val fictionAddedStatus: Boolean = false,

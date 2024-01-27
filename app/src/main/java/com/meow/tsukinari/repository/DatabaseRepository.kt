@@ -14,8 +14,8 @@ import kotlinx.coroutines.flow.callbackFlow
 
 const val USERS_COLLECTION_REF = "users"
 const val FICTIONS_COLLECTION_REF = "fictions"
-const val FOLLOWS_COLLECTION_REF = "users"
-const val CHAPTERS_COLLECTION_REF = "users"
+const val FOLLOWS_COLLECTION_REF = "follows"
+const val CHAPTERS_COLLECTION_REF = "chapters"
 
 
 // Khai báo hằng số cho tên của node chứa các ghi chú
