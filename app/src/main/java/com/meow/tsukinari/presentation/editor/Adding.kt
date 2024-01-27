@@ -39,7 +39,7 @@ fun AddingScreen(
             .padding(start = 32.dp, end = 32.dp, top = 32.dp)
     ) {
         Text(
-            text = "Contribute \nyour fiction",
+            text = "Contribute\nyour fiction",
             style = MaterialTheme.typography.displayMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier
@@ -100,7 +100,6 @@ fun AddingScreen(
             Text(text = "Submit")
         }
     }
-
 }
 
 @Preview(showSystemUi = true, wallpaper = Wallpapers.RED_DOMINATED_EXAMPLE)

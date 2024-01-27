@@ -42,6 +42,22 @@ class EditorViewModel(
         }
     }
 
+    fun deleteFiction(fictionId: String) = repository.deleteFiction(fictionId) {
+        editorUiState = editorUiState.copy(fictionDeletedStatus = it)
+    }
+
+    fun updateFiction(
+        fictionId: String
+    ) {
+        repository.updateFiction(
+            title = editorUiState.title,
+            description = editorUiState.description,
+            fictionId = fictionId
+        ) {
+            editorUiState = editorUiState.copy(fictionUpdatedStatus = it)
+        }
+    }
+
     fun resetState() {
         editorUiState = EditorUiState()
     }
@@ -53,4 +69,6 @@ data class EditorUiState(
     val title: String = "",
     val description: String = "",
     val fictionAddedStatus: Boolean = false,
+    val fictionUpdatedStatus: Boolean = false,
+    val fictionDeletedStatus: Boolean = false
 )

@@ -93,10 +93,11 @@ class DatabaseRepository {
         val fictionId = fictionsRef.push().key ?: "null"
 
         val fiction = FictionModel(
+            fictionId,
             uploaderId,
             title,
             description,
-            coverLink
+            coverLink,
         )
 
         fictionsRef.child(fictionId)
@@ -127,6 +128,7 @@ class DatabaseRepository {
         val updateData = hashMapOf<String, Any>(
             "description" to description,
             "title" to title,
+            "fictionId" to fictionId
         )
 
 
