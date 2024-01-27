@@ -17,71 +17,66 @@ const val FICTIONS_COLLECTION_REF = "fictions"
 const val FOLLOWS_COLLECTION_REF = "follows"
 const val CHAPTERS_COLLECTION_REF = "chapters"
 
-
-// Khai báo hằng số cho tên của node chứa các ghi chú
-
 class DatabaseRepository {
 
     fun user() = Firebase.auth.currentUser
     fun hasUser(): Boolean = Firebase.auth.currentUser != null
     fun getUserId(): String = Firebase.auth.currentUser?.uid.orEmpty()
 
-    private val usersRef = Firebase.database.getReference(FICTIONS_COLLECTION_REF)
+    private val usersRef = Firebase.database.getReference(USERS_COLLECTION_REF)
     private val fictionsRef = Firebase.database.getReference(FICTIONS_COLLECTION_REF)
-    private val chaptersRef = Firebase.database.getReference(FICTIONS_COLLECTION_REF)
-    private val followsRef = Firebase.database.getReference(FICTIONS_COLLECTION_REF)
+    private val chaptersRef = Firebase.database.getReference(CHAPTERS_COLLECTION_REF)
+    private val followsRef = Firebase.database.getReference(FOLLOWS_COLLECTION_REF)
 
     fun getUserFictions(
         userId: String,
     ): Flow<Resources<List<FictionModel>>> = callbackFlow {
-        // Tạo một listener để lắng nghe sự thay đổi của dữ liệu
+
         val valueEventListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                // Kiểm tra snapshot có tồn tại hay không
+
                 if (snapshot.exists()) {
-                    // Lấy ra danh sách các ghi chú từ snapshot
+
                     val fictions =
                         snapshot.children.mapNotNull { it.getValue(FictionModel::class.java) }
-                    // Gửi kết quả thành công với dữ liệu là danh sách ghi chú
+
                     trySend(Resources.Success(data = fictions))
                 } else {
-                    // Gửi kết quả lỗi với thông báo là không có dữ liệu
+
                     trySend(Resources.Error(throwable = Exception("No data")))
                 }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // Gửi kết quả lỗi với nguyên nhân là error
+
                 trySend(Resources.Error(throwable = error.toException()))
             }
         }
 
-        // Thêm listener vào node chứa các ghi chú của người dùng
-        fictionsRef.child(FICTIONS_COLLECTION_REF).child(userId)
+        fictionsRef.orderByChild("uploaderId").equalTo(userId)
             .addValueEventListener(valueEventListener)
 
-        // Khi flow bị huỷ, gỡ bỏ listener
         awaitClose {
-            fictionsRef.child(FICTIONS_COLLECTION_REF).child(userId)
+            fictionsRef.orderByChild("uploaderId").equalTo(userId)
                 .removeEventListener(valueEventListener)
         }
     }
 
-    fun getNote(
-        noteId: String,
+    fun getFiction(
+        fictionId: String,
         onError: (Throwable?) -> Unit,
         onSuccess: (FictionModel?) -> Unit
     ) {
-        // Lấy dữ liệu của ghi chú theo id
-        fictionsRef.child(FICTIONS_COLLECTION_REF).child(getUserId()).child(noteId)
+
+        fictionsRef.child(fictionId).equalTo(getUserId(), "uploaderId")
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    // Gọi hàm onSuccess với dữ liệu là ghi chú từ snapshot
+
                     onSuccess.invoke(snapshot.getValue(FictionModel::class.java))
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    // Gọi hàm onError với nguyên nhân là error
+
                     onError.invoke(error.toException())
                 }
             })
@@ -91,62 +86,57 @@ class DatabaseRepository {
         uploaderId: String,
         title: String,
         description: String,
-//        timestamp: Timestamp,
         coverLink: String,
         onComplete: (Boolean) -> Unit,
     ) {
-        // Tạo một id ngẫu nhiên cho ghi chú mới
-        val noteId = fictionsRef.push().key ?: "null"
-        // Tạo một đối tượng ghi chú với các thông tin cho trước
-        val note = FictionModel(
+
+        val fictionId = fictionsRef.push().key ?: "null"
+
+        val fiction = FictionModel(
             uploaderId,
             title,
             description,
-//            timestamp,
             coverLink
         )
-        // Thêm ghi chú vào node tương ứng với id
-        fictionsRef.child(noteId)
-            .setValue(note)
+
+        fictionsRef.child(fictionId)
+            .setValue(fiction)
             .addOnCompleteListener { result ->
-                // Gọi hàm onComplete với kết quả là thành công hay thất bại
+
                 onComplete.invoke(result.isSuccessful)
             }
     }
 
-    fun deleteNote(noteId: String, onComplete: (Boolean) -> Unit) {
-        // Xoá ghi chú khỏi node tương ứng với id
-        fictionsRef.child(FICTIONS_COLLECTION_REF).child(getUserId()).child(noteId)
+    fun deleteFiction(fictionId: String, onComplete: (Boolean) -> Unit) {
+
+        fictionsRef.child(fictionId)
             .removeValue()
             .addOnCompleteListener { result ->
-                // Gọi hàm onComplete với kết quả là thành công hay thất bại
+
                 onComplete.invoke(result.isSuccessful)
             }
     }
 
-    fun updateNote(
+    fun updateFiction(
         title: String,
-        note: String,
-        color: Int,
-        noteId: String,
+        description: String,
+        fictionId: String,
         onResult: (Boolean) -> Unit
     ) {
-        // Tạo một map chứa các dữ liệu cần cập nhật
+
         val updateData = hashMapOf<String, Any>(
-            "colorIndex" to color,
-            "description" to note,
+            "description" to description,
             "title" to title,
         )
 
-        // Cập nhật dữ liệu cho node tương ứng với id
-        fictionsRef.child(FICTIONS_COLLECTION_REF).child(getUserId()).child(noteId)
+
+        fictionsRef.child(fictionId)
             .updateChildren(updateData)
             .addOnCompleteListener { result ->
-                // Gọi hàm onResult với kết quả là thành công hay thất bại
+
                 onResult(result.isSuccessful)
             }
     }
-
     fun signOut() = Firebase.auth.signOut()
 }
 
