@@ -27,7 +27,9 @@ import com.meow.tsukinari.ui.theme.TsukinariTheme
 
 @Composable
 fun UpdatingScreen(
-    editorViewModel: EditorViewModel? = null
+    editorViewModel: EditorViewModel? = null,
+    fictionId: String,
+    onNavigate: () -> Unit,
 ) {
     val managementUiState = editorViewModel?.editorUiState
     Column(
@@ -91,14 +93,14 @@ fun UpdatingScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedButton(
-            onClick = { editorViewModel?.updateFiction("-NpAAtAsnjzlW8bisrno") },
+            onClick = { editorViewModel?.updateFiction(fictionId) },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "Update")
         }
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedButton(
-            onClick = { editorViewModel?.deleteFiction("-NpAAtAsnjzlW8bisrno") },
+            onClick = { editorViewModel?.deleteFiction(fictionId) },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "Delete")
@@ -110,6 +112,6 @@ fun UpdatingScreen(
 @Composable
 fun UpdatingPrev() {
     TsukinariTheme {
-        UpdatingScreen()
+        UpdatingScreen(fictionId = "nigga") {}
     }
 }
