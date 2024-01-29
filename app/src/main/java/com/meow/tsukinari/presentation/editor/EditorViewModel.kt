@@ -36,6 +36,7 @@ class EditorViewModel(
 
     fun addNote() {
         if (hasUser) {
+            editorUiState = editorUiState.copy(isLoading = true)
             repository.addFiction(
                 uploaderId = user!!.uid,
                 title = editorUiState.title,
@@ -44,6 +45,7 @@ class EditorViewModel(
                 imageUri = editorUiState.imageUri
             ) {
                 editorUiState = editorUiState.copy(fictionAddedStatus = it)
+                editorUiState = editorUiState.copy(isLoading = false)
             }
         }
     }
@@ -69,6 +71,17 @@ class EditorViewModel(
         editorUiState = EditorUiState()
     }
 
+    fun resetImage() {
+        editorUiState = editorUiState.copy(imageUri = Uri.EMPTY)
+    }
+
+    fun resetNoteChangedStatus() {
+        editorUiState = editorUiState.copy(
+            fictionAddedStatus = false,
+            fictionUpdatedStatus = false,
+            fictionDeletedStatus = false,
+        )
+    }
 
 }
 
@@ -79,5 +92,6 @@ data class EditorUiState(
     val imageUri: Uri = Uri.EMPTY,
     val fictionAddedStatus: Boolean = false,
     val fictionUpdatedStatus: Boolean = false,
-    val fictionDeletedStatus: Boolean = false
+    val fictionDeletedStatus: Boolean = false,
+    val isLoading: Boolean = false
 )

@@ -105,6 +105,8 @@ fun TsukinariTheme(
             window.statusBarColor = Color.TRANSPARENT
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
             window.navigationBarColor = Color.TRANSPARENT
+            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars =
+                !darkTheme
         }
     }
 

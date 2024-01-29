@@ -29,7 +29,7 @@ class MyFictionsViewModel(
         } else {
             myFictionsUiState = myFictionsUiState.copy(
                 fictionsList = Resources.Error(
-                    throwable = Throwable(message = "User is not Login")
+                    throwable = Throwable(message = "User is not signed in!")
                 )
             )
         }
