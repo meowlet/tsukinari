@@ -45,6 +45,7 @@ class MyFictionsViewModel(
         myFictionsUiState = myFictionsUiState.copy(fictionDeletedStatus = it)
     }
 
+
     fun signOut() = repository.signOut()
 
 }

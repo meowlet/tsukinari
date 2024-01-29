@@ -1,7 +1,11 @@
 package com.meow.tsukinari.presentation.editor
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +35,14 @@ fun UpdatingScreen(
     fictionId: String,
     onNavigate: () -> Unit,
 ) {
+    val singlePhotoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            if (uri != null)
+                editorViewModel?.onImageChange(uri) else {
+            }
+        }
+    )
     val managementUiState = editorViewModel?.editorUiState
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -82,6 +94,11 @@ fun UpdatingScreen(
                 .clip(RoundedCornerShape(10.dp))
                 .background(MaterialTheme.colorScheme.primaryContainer)
                 .border(2.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(10.dp))
+                .clickable {
+                    singlePhotoPicker.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                }
         ) {
             Text(
                 text = "Click here to upload the cover image.upload the cover image.",

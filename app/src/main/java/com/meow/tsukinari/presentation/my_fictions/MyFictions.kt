@@ -43,6 +43,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.meow.tsukinari.model.FictionModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+
+fun getTime(uploadedAt: Long): String {
+    val sdf = SimpleDateFormat("HH:mm - dd/MM/yyyy", Locale.getDefault())
+    return sdf.format(Date(uploadedAt))
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -132,7 +141,7 @@ fun FictionItem(
         ) {
             Image(
                 painter = rememberAsyncImagePainter(
-                    "https://picsum.photos/seed/123/300/200"
+                    fiction.coverLink
                 ),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
@@ -167,7 +176,7 @@ fun FictionItem(
                 )
 
                 Text(
-                    text = "Last updated: 01/01/2024",
+                    text = "${getTime(fiction.uploadedAt)}",
                     style = MaterialTheme.typography.bodySmall
                 )
             }

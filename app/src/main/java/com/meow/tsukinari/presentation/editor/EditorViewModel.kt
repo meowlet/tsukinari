@@ -1,5 +1,6 @@
 package com.meow.tsukinari.presentation.editor
 
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,6 +14,7 @@ class EditorViewModel(
     var editorUiState by mutableStateOf(EditorUiState())
         private set
 
+
     private val hasUser: Boolean
         get() = repository.hasUser()
 
@@ -22,6 +24,10 @@ class EditorViewModel(
 
     fun onTitleChange(title: String) {
         editorUiState = editorUiState.copy(title = title)
+    }
+
+    fun onImageChange(imageUri: Uri) {
+        editorUiState = editorUiState.copy(imageUri = imageUri)
     }
 
     fun onDescriptionChange(description: String) {
@@ -35,7 +41,7 @@ class EditorViewModel(
                 title = editorUiState.title,
                 description = editorUiState.description,
 //                timestamp = Timestamp.now(),
-                coverLink = "Cover URL"
+                imageUri = editorUiState.imageUri
             ) {
                 editorUiState = editorUiState.copy(fictionAddedStatus = it)
             }
@@ -52,7 +58,8 @@ class EditorViewModel(
         repository.updateFiction(
             title = editorUiState.title,
             description = editorUiState.description,
-            fictionId = fictionId
+            fictionId = fictionId,
+            imageUri = editorUiState.imageUri
         ) {
             editorUiState = editorUiState.copy(fictionUpdatedStatus = it)
         }
@@ -62,12 +69,14 @@ class EditorViewModel(
         editorUiState = EditorUiState()
     }
 
+
 }
 
 
 data class EditorUiState(
     val title: String = "",
     val description: String = "",
+    val imageUri: Uri = Uri.EMPTY,
     val fictionAddedStatus: Boolean = false,
     val fictionUpdatedStatus: Boolean = false,
     val fictionDeletedStatus: Boolean = false

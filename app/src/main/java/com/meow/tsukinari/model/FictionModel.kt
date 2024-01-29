@@ -6,6 +6,6 @@ data class FictionModel(
     val uploaderId: String = "",
     val title: String = "",
     val description: String = "",
-//    val uploadedAt: Timestamp = Timestamp.now(),
+    val uploadedAt: Long = System.currentTimeMillis(),
     val coverLink: String = ""
 )

@@ -1,15 +1,18 @@
 package com.meow.tsukinari.repository
 
+import android.net.Uri
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
+import com.google.firebase.storage.storage
 import com.meow.tsukinari.model.FictionModel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import java.util.UUID
 
 
 const val USERS_COLLECTION_REF = "users"
@@ -27,6 +30,22 @@ class DatabaseRepository {
     private val fictionsRef = Firebase.database.getReference(FICTIONS_COLLECTION_REF)
     private val chaptersRef = Firebase.database.getReference(CHAPTERS_COLLECTION_REF)
     private val followsRef = Firebase.database.getReference(FOLLOWS_COLLECTION_REF)
+
+    private val fictionImagesRef = Firebase.storage.reference.child("images")
+
+
+    fun uploadImage(imageUri: Uri, onComplete: (String?) -> Unit) {
+        val filePath = fictionImagesRef.child("${UUID.randomUUID()}")
+        filePath.putFile(imageUri)
+            .addOnSuccessListener {
+                filePath.downloadUrl.addOnSuccessListener { uri ->
+                    onComplete(uri.toString())
+                }
+            }
+            .addOnFailureListener {
+                onComplete(null)
+            }
+    }
 
     fun getUserFictions(
         userId: String,
@@ -86,26 +105,31 @@ class DatabaseRepository {
         uploaderId: String,
         title: String,
         description: String,
-        coverLink: String,
+        imageUri: Uri,
         onComplete: (Boolean) -> Unit,
     ) {
 
         val fictionId = fictionsRef.push().key ?: "null"
 
-        val fiction = FictionModel(
-            fictionId,
-            uploaderId,
-            title,
-            description,
-            coverLink,
-        )
+        uploadImage(imageUri) { imageUrl ->
+            if (imageUrl != null) {
+                val fiction = FictionModel(
+                    uploaderId = uploaderId,
+                    title = title,
+                    description = description,
+                    fictionId = fictionId,
+                    coverLink = imageUrl,
+                )
 
-        fictionsRef.child(fictionId)
-            .setValue(fiction)
-            .addOnCompleteListener { result ->
-
-                onComplete.invoke(result.isSuccessful)
+                // Add fiction to database
+                fictionsRef.child(fictionId).setValue(fiction)
+                    .addOnCompleteListener { result ->
+                        onComplete(result.isSuccessful)
+                    }
+            } else {
+                onComplete(false)
             }
+        }
     }
 
     fun deleteFiction(fictionId: String, onComplete: (Boolean) -> Unit) {
@@ -122,23 +146,31 @@ class DatabaseRepository {
         title: String,
         description: String,
         fictionId: String,
+        imageUri: Uri,
         onResult: (Boolean) -> Unit
     ) {
 
-        val updateData = hashMapOf<String, Any>(
-            "description" to description,
-            "title" to title,
-            "fictionId" to fictionId
-        )
+        uploadImage(imageUri) { imageUrl ->
+            if (imageUrl != null) {
+                val updateData = hashMapOf<String, Any>(
+                    "description" to description,
+                    "title" to title,
+                    "coverLink" to imageUrl
+                )
 
 
-        fictionsRef.child(fictionId)
-            .updateChildren(updateData)
-            .addOnCompleteListener { result ->
+                fictionsRef.child(fictionId)
+                    .updateChildren(updateData)
+                    .addOnCompleteListener { result ->
 
-                onResult(result.isSuccessful)
+                        onResult(result.isSuccessful)
+                    }
             }
+        }
+
+
     }
+
     fun signOut() = Firebase.auth.signOut()
 }
 
