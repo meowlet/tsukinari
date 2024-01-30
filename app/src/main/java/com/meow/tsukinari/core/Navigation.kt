@@ -13,9 +13,9 @@ import com.meow.tsukinari.presentation.authentication.AuthViewModel
 import com.meow.tsukinari.presentation.authentication.ForgotPasswordScreen
 import com.meow.tsukinari.presentation.authentication.SignInScreen
 import com.meow.tsukinari.presentation.authentication.SignUpScreen
-import com.meow.tsukinari.presentation.editor.AddingScreen
 import com.meow.tsukinari.presentation.editor.EditorViewModel
 import com.meow.tsukinari.presentation.editor.UpdatingScreen
+import com.meow.tsukinari.presentation.editor.UploadingScreen
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsScreen
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsViewModel
 
@@ -25,7 +25,7 @@ enum class AuthRoutes {
 }
 
 enum class HomeRoutes {
-    Home, Add, Update,
+    MyFictions, Upload, Update,
 }
 
 enum class NestedRoutes {
@@ -73,10 +73,9 @@ fun NavGraphBuilder.authGraph(
                 }
             }, onNavToSignUpPage = {
 
-                navController.navigate(AuthRoutes.SignIn.name) {
+                navController.navigate(AuthRoutes.SignUp.name) {
                     launchSingleTop = true
                     popUpTo(AuthRoutes.SignIn.name) {
-                        inclusive = true
                     }
                 }
             }, authViewModel = authViewModel
@@ -85,7 +84,7 @@ fun NavGraphBuilder.authGraph(
 
         composable(route = AuthRoutes.SignUp.name) {
             SignUpScreen(onNavToHomePage = {
-                navController.navigate(HomeRoutes.Home.name) {
+                navController.navigate(HomeRoutes.MyFictions.name) {
                     launchSingleTop = true
                     popUpTo(AuthRoutes.SignIn.name) {
                         inclusive = true
@@ -102,7 +101,7 @@ fun NavGraphBuilder.authGraph(
                 navController.navigate(AuthRoutes.ForgotPassword.name) {
                     popUpTo(AuthRoutes.SignIn.name) {}
                 }
-            })
+            }, authViewModel = authViewModel)
         }
         composable(route = AuthRoutes.ForgotPassword.name) {
             ForgotPasswordScreen(
@@ -124,10 +123,10 @@ fun NavGraphBuilder.homeGraph(
     myFictionsViewModel: MyFictionsViewModel
 ) {
     navigation(
-        startDestination = HomeRoutes.Home.name,
+        startDestination = HomeRoutes.MyFictions.name,
         route = NestedRoutes.Main.name,
     ) {
-        composable(HomeRoutes.Home.name) {
+        composable(HomeRoutes.MyFictions.name) {
             MyFictionsScreen(
                 myFictionsViewModel = myFictionsViewModel,
                 onNavToUpdatingPage = { fictionId ->
@@ -146,7 +145,7 @@ fun NavGraphBuilder.homeGraph(
                     }
                 },
                 onNavToAddingPage = {
-                    navController.navigate(HomeRoutes.Add.name)
+                    navController.navigate(HomeRoutes.Upload.name)
                 },
             )
         }
@@ -162,7 +161,7 @@ fun NavGraphBuilder.homeGraph(
                 editorViewModel = editorViewModel,
                 fictionId = entry.arguments?.getString("id") as String,
                 onNavigate = {
-                    navController.navigateUp()
+                    navController.navigate(HomeRoutes.MyFictions.name)
                 }
             )
 
@@ -170,9 +169,10 @@ fun NavGraphBuilder.homeGraph(
         }
 
         composable(
-            route = HomeRoutes.Add.name
+            route = HomeRoutes.Upload.name
         ) { entry ->
-            AddingScreen(
+            UploadingScreen(
+                onNavigate = { navController.navigate(HomeRoutes.MyFictions.name) },
                 editorViewModel = editorViewModel,
             )
         }
