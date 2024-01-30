@@ -100,7 +100,10 @@ fun MyFictionsScreen(
                     IconButton(onClick = { /*TODO*/ }) {
                         Icon(imageVector = Icons.Default.List, contentDescription = "")
                     }
-                    IconButton(onClick = { /*TODO*/ }) {
+                    IconButton(onClick = {
+                        myFictionsViewModel?.signOut()
+                        onNavToSignInPage.invoke()
+                    }) {
                         Icon(imageVector = Icons.Default.Person, contentDescription = "")
                     }
                 },
@@ -108,7 +111,8 @@ fun MyFictionsScreen(
             )
         }
     ) { padding ->
-        when (myFictionsUiState.fictionsList) {
+
+    when (myFictionsUiState.fictionsList) {
             is Resources.Loading -> {
                 CircularProgressIndicator(
                     modifier = Modifier

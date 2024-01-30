@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -42,6 +44,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.Wallpapers
@@ -53,11 +56,13 @@ import kotlinx.coroutines.launch
 @SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddingScreen(
-    editorViewModel: EditorViewModel? = null
+fun UploadingScreen(
+    editorViewModel: EditorViewModel? = null,
+    onNavigate: () -> Unit
 ) {
 
 
+    val context = LocalContext.current
     val editorUiState = editorViewModel?.editorUiState ?: EditorUiState()
 
 
@@ -65,8 +70,6 @@ fun AddingScreen(
         editorViewModel?.resetState()
     }
 
-    val isFormFilled = editorUiState.title.isNotBlank() &&
-            editorUiState.description.isNotBlank() && editorUiState.imageUri != Uri.EMPTY
 
     val hasImage = editorUiState.imageUri != Uri.EMPTY
 
@@ -86,10 +89,10 @@ fun AddingScreen(
 
     Scaffold(
         floatingActionButton = {
-            if (isFormFilled) {
+            if (editorViewModel!!.isFormFilled()) {
                 FloatingActionButton(
                     onClick = {
-                        editorViewModel?.addNote()
+                        editorViewModel.addFiction(context)
                     },
                 ) {
                     if (editorUiState.isLoading)
@@ -100,19 +103,22 @@ fun AddingScreen(
         }, snackbarHost = { SnackbarHost(hostState = snackBarHostState) }
     ) { padding ->
 
+        if (editorUiState.fictionAddedStatus) {
+            scope.launch {
+                editorViewModel?.resetChangedStatus()
+                snackBarHostState.showSnackbar(
+                    "Fiction added successfully", duration = SnackbarDuration.Short
+                )
+                onNavigate.invoke()
+            }
+        }
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .padding(start = 32.dp, end = 32.dp, top = padding.calculateTopPadding())
                 .verticalScroll(rememberScrollState())
         ) {
-            if (editorUiState.fictionAddedStatus) {
-                scope.launch {
-                    snackBarHostState.showSnackbar("Added Note Successfully")
-                    editorViewModel?.resetNoteChangedStatus()
-//                    onNavigate.invoke()
-                }
-            }
+
             Text(
                 text = "Contribute\nyour fiction",
                 style = MaterialTheme.typography.displayMedium,
@@ -180,6 +186,7 @@ fun AddingScreen(
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
+                            .fillMaxSize()
                             .drawWithCache {
                                 onDrawWithContent {
                                     drawContent()
@@ -221,6 +228,6 @@ fun AddingScreen(
 @Composable
 fun AddingPrev() {
     TsukinariTheme {
-        AddingScreen()
+        UploadingScreen {}
     }
 }
