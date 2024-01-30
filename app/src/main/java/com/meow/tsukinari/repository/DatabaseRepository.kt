@@ -12,13 +12,15 @@ import com.meow.tsukinari.model.FictionModel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import java.util.UUID
 
-
+//Small data
 const val USERS_COLLECTION_REF = "users"
 const val FICTIONS_COLLECTION_REF = "fictions"
 const val FOLLOWS_COLLECTION_REF = "follows"
 const val CHAPTERS_COLLECTION_REF = "chapters"
+
+//Large data
+const val IMAGES_COLLECTION_REF = "images"
 
 class DatabaseRepository {
 
@@ -31,21 +33,22 @@ class DatabaseRepository {
     private val chaptersRef = Firebase.database.getReference(CHAPTERS_COLLECTION_REF)
     private val followsRef = Firebase.database.getReference(FOLLOWS_COLLECTION_REF)
 
-    private val fictionImagesRef = Firebase.storage.reference.child("images")
+    private val fictionImagesRef = Firebase.storage.reference.child(IMAGES_COLLECTION_REF)
 
 
-    fun uploadImage(imageUri: Uri, onComplete: (String?) -> Unit) {
-        val filePath = fictionImagesRef.child("${UUID.randomUUID()}")
+    fun uploadImage(imageUri: Uri, fictionId: String, onComplete: (String?) -> Unit) {
+        val filePath = fictionImagesRef.child(getUserId()).child("$fictionId")
         filePath.putFile(imageUri)
             .addOnSuccessListener {
-                filePath.downloadUrl.addOnSuccessListener { uri ->
-                    onComplete(uri.toString())
+                filePath.downloadUrl.addOnSuccessListener { imageUrl ->
+                    onComplete(imageUrl.toString())
                 }
             }
             .addOnFailureListener {
                 onComplete(null)
             }
     }
+
 
     fun getUserFictions(
         userId: String,
@@ -87,7 +90,7 @@ class DatabaseRepository {
         onSuccess: (FictionModel?) -> Unit
     ) {
 
-        fictionsRef.child(fictionId).equalTo(getUserId(), "uploaderId")
+        fictionsRef.child(fictionId)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
 
@@ -111,7 +114,7 @@ class DatabaseRepository {
 
         val fictionId = fictionsRef.push().key ?: "null"
 
-        uploadImage(imageUri) { imageUrl ->
+        uploadImage(imageUri, fictionId) { imageUrl ->
             if (imageUrl != null) {
                 val fiction = FictionModel(
                     uploaderId = uploaderId,
@@ -137,7 +140,7 @@ class DatabaseRepository {
         fictionsRef.child(fictionId)
             .removeValue()
             .addOnCompleteListener { result ->
-
+                fictionImagesRef.child(getUserId()).child(fictionId).delete()
                 onComplete.invoke(result.isSuccessful)
             }
     }
@@ -150,22 +153,31 @@ class DatabaseRepository {
         onResult: (Boolean) -> Unit
     ) {
 
-        uploadImage(imageUri) { imageUrl ->
-            if (imageUrl != null) {
-                val updateData = hashMapOf<String, Any>(
-                    "description" to description,
-                    "title" to title,
-                    "coverLink" to imageUrl
-                )
-
-
-                fictionsRef.child(fictionId)
-                    .updateChildren(updateData)
-                    .addOnCompleteListener { result ->
-
-                        onResult(result.isSuccessful)
-                    }
+        if (imageUri != Uri.EMPTY) {
+            uploadImage(imageUri, fictionId) { imageUrl ->
+                if (imageUrl != null) {
+                    val updateData = hashMapOf<String, Any>(
+                        "description" to description,
+                        "title" to title,
+                        "coverLink" to imageUrl
+                    )
+                    fictionsRef.child(fictionId)
+                        .updateChildren(updateData)
+                        .addOnCompleteListener { result ->
+                            onResult(result.isSuccessful)
+                        }
+                }
             }
+        } else {
+            val updateData = hashMapOf<String, Any>(
+                "description" to description,
+                "title" to title,
+            )
+            fictionsRef.child(fictionId)
+                .updateChildren(updateData)
+                .addOnCompleteListener { result ->
+                    onResult(result.isSuccessful)
+                }
         }
 
 
