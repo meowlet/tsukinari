@@ -50,6 +50,38 @@ class DatabaseRepository {
     }
 
 
+    fun getFictions(
+    ): Flow<Resources<List<FictionModel>>> = callbackFlow {
+
+        val valueEventListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+
+                if (snapshot.exists()) {
+
+                    val fictions =
+                        snapshot.children.mapNotNull { it.getValue(FictionModel::class.java) }
+
+                    trySend(Resources.Success(data = fictions))
+                } else {
+
+                    trySend(Resources.Error(throwable = Exception("No data")))
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+
+                trySend(Resources.Error(throwable = error.toException()))
+            }
+        }
+
+        fictionsRef.addValueEventListener(valueEventListener)
+
+        awaitClose {
+            fictionsRef.removeEventListener(valueEventListener)
+        }
+    }
+
+
     fun getUserFictions(
         userId: String,
     ): Flow<Resources<List<FictionModel>>> = callbackFlow {
