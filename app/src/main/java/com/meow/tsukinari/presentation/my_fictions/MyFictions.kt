@@ -1,14 +1,15 @@
 package com.meow.tsukinari.presentation.my_fictions
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -20,14 +21,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -39,10 +39,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
@@ -112,7 +110,7 @@ fun MyFictionsScreen(
         }
     ) { padding ->
 
-    when (myFictionsUiState.fictionsList) {
+        when (myFictionsUiState.fictionsList) {
             is Resources.Loading -> {
                 CircularProgressIndicator(
                     modifier = Modifier
@@ -151,24 +149,25 @@ fun MyFictionsScreen(
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FictionItem(
     fiction: FictionModel,
     onClick: () -> Unit
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+    OutlinedCard(
+//        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = RoundedCornerShape(8.dp),
+        onClick = {
+            onClick.invoke()
+        },
         modifier = Modifier
             .padding(horizontal = 18.dp, vertical = 6.dp)
-            .fillMaxWidth()
-            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
-            .clickable { onClick.invoke() }
+            .height(100.dp)
+
     ) {
         Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier
-                .padding(8.dp)
+            Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
         ) {
             Image(
                 painter = rememberAsyncImagePainter(
@@ -177,38 +176,43 @@ fun FictionItem(
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(86.dp)
+                    .padding(vertical = 4.dp)
+                    .aspectRatio(1f)
                     .clip(RoundedCornerShape(6.dp))
-                    .drawWithCache {
-                        onDrawWithContent {
-                            drawContent()
-                            drawRect(
-                                Brush.verticalGradient(
-                                    0.5f to Color.Black.copy(alpha = 0F),
-                                    1F to Color.Black.copy(alpha = 0.5F)
-                                )
-                            )
-                        }
-                    },
             )
             Spacer(modifier = Modifier.size(8.dp))
-            Column {
-                Text(
-                    text = "Title: ${fiction.title}",
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "Description: ${fiction.description}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = fiction.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = fiction.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+//                Text(
+//                    text = "Description: ${fiction.description}",
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    maxLines = 2,
+//                    overflow = TextOverflow.Ellipsis
+//                )
                 Text(
                     text = "${getTime(fiction.uploadedAt)}",
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 2.dp),
+                    textAlign = TextAlign.End
                 )
             }
         }
