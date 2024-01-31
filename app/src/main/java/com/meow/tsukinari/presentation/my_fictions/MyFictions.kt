@@ -1,5 +1,6 @@
 package com.meow.tsukinari.presentation.my_fictions
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,19 +19,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
@@ -57,6 +53,7 @@ fun getTime(uploadedAt: Long): String {
     return sdf.format(Date(uploadedAt))
 }
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyFictionsScreen(
@@ -89,28 +86,8 @@ fun MyFictionsScreen(
                 )
             }
         },
-        topBar = {
-            TopAppBar(
-                title = { "My Fictions" },
-                actions = {
-                    IconButton(onClick = { /*TODO*/ }) {
-                        Icon(imageVector = Icons.Default.Search, contentDescription = "")
-                    }
-                    IconButton(onClick = { /*TODO*/ }) {
-                        Icon(imageVector = Icons.Default.List, contentDescription = "")
-                    }
-                    IconButton(onClick = {
-                        myFictionsViewModel?.signOut()
-                        onNavToSignInPage.invoke()
-                    }) {
-                        Icon(imageVector = Icons.Default.Person, contentDescription = "")
-                    }
-                },
-                scrollBehavior = scrollBehavior
-            )
-        },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
-    ) { padding ->
+    ) {
 
         when (myFictionsUiState.fictionsList) {
             is Resources.Loading -> {
@@ -122,9 +99,7 @@ fun MyFictionsScreen(
             }
 
             is Resources.Success -> {
-                LazyColumn(
-                    modifier = Modifier.padding(padding)
-                ) {
+                LazyColumn {
                     items(
                         myFictionsUiState.fictionsList.data ?: emptyList()
                     ) { fiction ->
