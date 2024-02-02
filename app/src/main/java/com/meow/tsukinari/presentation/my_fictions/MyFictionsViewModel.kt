@@ -9,6 +9,9 @@ import com.meow.tsukinari.model.FictionModel
 import com.meow.tsukinari.repository.DatabaseRepository
 import com.meow.tsukinari.repository.Resources
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MyFictionsViewModel(
     private val repository: DatabaseRepository = DatabaseRepository()
@@ -16,6 +19,12 @@ class MyFictionsViewModel(
 
     var myFictionsUiState by mutableStateOf(MyFictionsUiState())
     val user = repository.user()
+
+    fun getTime(uploadedAt: Long): String {
+        val sdf = SimpleDateFormat("dd/MM/yyyy - HH:mm", Locale.getDefault())
+        return sdf.format(Date(uploadedAt))
+    }
+
     val hasUser: Boolean
         get() = repository.hasUser()
     private val userId: String

@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hierarchy
 import com.meow.tsukinari.model.HomeNav
 import com.meow.tsukinari.repository.DatabaseRepository
 
@@ -16,15 +17,17 @@ class MainLayoutViewModel(
     var mainLayoutUiState by mutableStateOf(MainLayoutUiState())
 
 
-    fun getNavItems() = listOf(
+    fun getHomeNavItems() = listOf(
         HomeNav.Browse,
-        HomeNav.More,
+        HomeNav.Profile,
     )
 
+    fun isNavItemSelected(currentDestination: NavDestination?, item: HomeNav) =
+        currentDestination?.hierarchy?.any { it.route == item.route } == true
 
     fun checkExclusive(currentDestination: NavDestination?) {
         val currentRoute = currentDestination?.route
-        val isMatched = getNavItems().any { it.route == currentRoute }
+        val isMatched = getHomeNavItems().any { it.route == currentRoute }
         mainLayoutUiState = mainLayoutUiState.copy(isExclisive = !isMatched)
     }
 

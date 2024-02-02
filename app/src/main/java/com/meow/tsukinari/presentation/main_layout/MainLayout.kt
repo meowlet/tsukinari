@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.meow.tsukinari.core.Navigation
@@ -38,6 +37,7 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
 
 
     TsukinariTheme {
+
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
@@ -47,9 +47,12 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
                     mainLayoutViewModel.checkExclusive(currentDestination)
                     if (!mainLayoutUiState.isExclisive) {
                         NavigationBar {
-                            mainLayoutViewModel.getNavItems().forEachIndexed { index, item ->
+                            mainLayoutViewModel.getHomeNavItems().forEachIndexed { index, item ->
                                 NavigationBarItem(
-                                    selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
+                                    selected = mainLayoutViewModel.isNavItemSelected(
+                                        currentDestination,
+                                        item
+                                    ),
                                     label = {
                                         Text(
                                             text = item.title,

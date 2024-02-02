@@ -43,15 +43,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.meow.tsukinari.model.FictionModel
 import com.meow.tsukinari.repository.Resources
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
-
-fun getTime(uploadedAt: Long): String {
-    val sdf = SimpleDateFormat("dd/MM/yyyy - HH:mm", Locale.getDefault())
-    return sdf.format(Date(uploadedAt))
-}
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,6 +97,7 @@ fun MyFictionsScreen(
                     ) { fiction ->
                         FictionItem(
                             fiction = fiction,
+                            uploadedAt = myFictionsViewModel!!.getTime(fiction.uploadedAt),
                             onClick = {
                                 onNavToUpdatingPage.invoke(fiction.fictionId)
                             }
@@ -130,6 +123,7 @@ fun MyFictionsScreen(
 @Composable
 fun FictionItem(
     fiction: FictionModel,
+    uploadedAt: String,
     onClick: () -> Unit
 ) {
     OutlinedCard(
@@ -184,7 +178,7 @@ fun FictionItem(
 //                    overflow = TextOverflow.Ellipsis
 //                )
                 Text(
-                    text = "${getTime(fiction.uploadedAt)}",
+                    text = uploadedAt,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier
                         .fillMaxWidth()

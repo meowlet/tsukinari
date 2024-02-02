@@ -9,7 +9,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.meow.tsukinari.model.ExclusiveNav
 import com.meow.tsukinari.model.HomeNav
+import com.meow.tsukinari.model.NestedNav
 import com.meow.tsukinari.presentation.authentication.AuthViewModel
 import com.meow.tsukinari.presentation.authentication.ForgotPasswordScreen
 import com.meow.tsukinari.presentation.authentication.SignInScreen
@@ -21,6 +23,7 @@ import com.meow.tsukinari.presentation.editor.UpdatingScreen
 import com.meow.tsukinari.presentation.editor.UploadingScreen
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsScreen
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsViewModel
+import com.meow.tsukinari.profile.ProfileScreen
 
 
 enum class AuthRoutes {
@@ -32,9 +35,6 @@ enum class HomeRoutes {
     MyFictions, Upload, Update,
 }
 
-enum class NestedRoutes {
-    Main, Auth
-}
 
 
 @Composable
@@ -46,7 +46,7 @@ fun Navigation(
     myFictionsViewModel: MyFictionsViewModel
 ) {
     NavHost(
-        navController = navController, startDestination = NestedRoutes.Main.name
+        navController = navController, startDestination = NestedNav.Authorization.route
     ) {
         authGraph(navController, authViewModel)
         homeGraph(
@@ -61,11 +61,11 @@ fun NavGraphBuilder.authGraph(
     navController: NavHostController, authViewModel: AuthViewModel
 ) {
     navigation(
-        startDestination = AuthRoutes.SignIn.name, route = NestedRoutes.Auth.name
+        startDestination = AuthRoutes.SignIn.name, route = NestedNav.Authorization.route
     ) {
         composable(route = AuthRoutes.SignIn.name) {
             SignInScreen(onNavToHomePage = {
-                navController.navigate(NestedRoutes.Main.name) {
+                navController.navigate(NestedNav.Main.route) {
                     launchSingleTop = true
                     popUpTo(route = AuthRoutes.SignIn.name) {
                         inclusive = true
@@ -89,7 +89,7 @@ fun NavGraphBuilder.authGraph(
 
         composable(route = AuthRoutes.SignUp.name) {
             SignUpScreen(onNavToHomePage = {
-                navController.navigate(HomeRoutes.MyFictions.name) {
+                navController.navigate(HomeNav.Browse.route) {
                     launchSingleTop = true
                     popUpTo(AuthRoutes.SignIn.name) {
                         inclusive = true
@@ -130,25 +130,30 @@ fun NavGraphBuilder.homeGraph(
 ) {
     navigation(
         startDestination = HomeNav.Browse.route,
-        route = NestedRoutes.Main.name,
+        route = NestedNav.Main.route,
     ) {
         composable(HomeNav.Browse.route) {
             BrowseScreen(
                 browseViewModel = browseViewModel,
-                onNavToMyFictions = { navController.navigate(HomeNav.More.route) })
+                onNavToMyFictions = { navController.navigate(ExclusiveNav.MyFictions.route) })
         }
-        composable(HomeNav.More.route) {
+        composable(HomeNav.Profile.route) {
+            ProfileScreen(onNavToMyFictions = {
+                navController.navigate(ExclusiveNav.MyFictions.route)
+            })
+        }
+        composable(ExclusiveNav.MyFictions.route) {
             MyFictionsScreen(
                 myFictionsViewModel = myFictionsViewModel,
                 onNavToUpdatingPage = { fictionId ->
                     navController.navigate(
-                        HomeRoutes.Update.name + "?id=$fictionId"
+                        ExclusiveNav.Update.route + "?id=$fictionId"
                     ) {
                         launchSingleTop = true
                     }
                 },
                 onNavToSignInPage = {
-                    navController.navigate(NestedRoutes.Auth.name) {
+                    navController.navigate(NestedNav.Authorization.route) {
                         launchSingleTop = true
                         popUpTo(0) {
                             inclusive = true
@@ -162,7 +167,7 @@ fun NavGraphBuilder.homeGraph(
         }
 
         composable(
-            route = HomeRoutes.Update.name + "?id={id}",
+            route = ExclusiveNav.Update.route + "?id={id}",
             arguments = listOf(navArgument("id") {
                 type = NavType.StringType
                 defaultValue = ""
@@ -172,7 +177,7 @@ fun NavGraphBuilder.homeGraph(
                 editorViewModel = editorViewModel,
                 fictionId = entry.arguments?.getString("id") as String,
                 onNavigate = {
-                    navController.navigate(HomeNav.More.route)
+                    navController.navigate(ExclusiveNav.MyFictions.route)
                 }
             )
 
@@ -180,10 +185,10 @@ fun NavGraphBuilder.homeGraph(
         }
 
         composable(
-            route = HomeRoutes.Upload.name
+            route = ExclusiveNav.Upload.route
         ) { entry ->
             UploadingScreen(
-                onNavigate = { navController.navigate(HomeNav.More.route) },
+                onNavigate = { navController.navigate(ExclusiveNav.MyFictions.route) },
                 editorViewModel = editorViewModel,
             )
         }
