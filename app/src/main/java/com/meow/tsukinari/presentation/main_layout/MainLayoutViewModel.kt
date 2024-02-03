@@ -14,8 +14,20 @@ class MainLayoutViewModel(
     private val repository: DatabaseRepository = DatabaseRepository()
 ) : ViewModel() {
 
+
     var mainLayoutUiState by mutableStateOf(MainLayoutUiState())
 
+    fun changeSearchingState() {
+        mainLayoutUiState = mainLayoutUiState.copy(isSearching = !mainLayoutUiState.isSearching)
+    }
+
+    fun changeSearchValue(searchValue: String) {
+        mainLayoutUiState = mainLayoutUiState.copy(searchValue = searchValue)
+    }
+
+    fun clearSearchValue() {
+        mainLayoutUiState = mainLayoutUiState.copy(searchValue = "")
+    }
 
     fun getHomeNavItems() = listOf(
         HomeNav.Browse,
@@ -28,7 +40,7 @@ class MainLayoutViewModel(
     fun checkExclusive(currentDestination: NavDestination?) {
         val currentRoute = currentDestination?.route
         val isMatched = getHomeNavItems().any { it.route == currentRoute }
-        mainLayoutUiState = mainLayoutUiState.copy(isExclisive = !isMatched)
+        mainLayoutUiState = mainLayoutUiState.copy(isExclusive = !isMatched)
     }
 
 
@@ -36,5 +48,7 @@ class MainLayoutViewModel(
 
 
 data class MainLayoutUiState(
-    val isExclisive: Boolean = false
+    val searchValue: String = "",
+    val isExclusive: Boolean = false,
+    val isSearching: Boolean = false
 )

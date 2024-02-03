@@ -23,7 +23,7 @@ import com.meow.tsukinari.presentation.editor.UpdatingScreen
 import com.meow.tsukinari.presentation.editor.UploadingScreen
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsScreen
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsViewModel
-import com.meow.tsukinari.profile.ProfileScreen
+import com.meow.tsukinari.presentation.profile.ProfileScreen
 
 
 enum class AuthRoutes {

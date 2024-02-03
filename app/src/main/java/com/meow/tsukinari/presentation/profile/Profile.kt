@@ -1,4 +1,4 @@
-package com.meow.tsukinari.profile
+package com.meow.tsukinari.presentation.profile
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
