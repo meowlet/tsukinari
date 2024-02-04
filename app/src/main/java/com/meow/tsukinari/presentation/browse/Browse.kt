@@ -32,8 +32,9 @@ import com.meow.tsukinari.model.FictionModel
 @Composable
 fun BrowseScreen(
     browseViewModel: BrowseViewModel? = null,
-    onNavToMyFictions: () -> Unit
+    onNavToDetailPage: (id: String) -> Unit
 ) {
+
 
     val browseUiState = browseViewModel?.browseUiState ?: BrowseUiState()
     LaunchedEffect(key1 = Unit) {
@@ -53,19 +54,25 @@ fun BrowseScreen(
             }
 
         ) { fiction ->
-            FictionItem(fiction = fiction)
+            FictionItem(fiction = fiction, onClick = {
+                onNavToDetailPage.invoke(fiction.fictionId)
+                println(browseViewModel?.getUserProfileImgae())
+            })
         }
     }
 }
 
 
 @Composable
-fun FictionItem(fiction: FictionModel) {
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .height(200.dp)
-        .clip(RoundedCornerShape(8.dp))
-        .clickable { }) {
+fun FictionItem(fiction: FictionModel, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .height(200.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .clickable {
+                onClick.invoke()
+            }) {
         Image(
             painter = rememberAsyncImagePainter(
                 fiction.coverLink
@@ -74,7 +81,6 @@ fun FictionItem(fiction: FictionModel) {
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxSize()
-
                 .drawWithCache {
                     onDrawWithContent {
                         drawContent()

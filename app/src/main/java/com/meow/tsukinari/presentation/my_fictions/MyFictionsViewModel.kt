@@ -28,7 +28,7 @@ class MyFictionsViewModel(
     val hasUser: Boolean
         get() = repository.hasUser()
     private val userId: String
-        get() = repository.getUserId()
+        get() = repository.getUserEmail()
 
     fun loadFictions() {
         if (hasUser) {

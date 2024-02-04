@@ -50,6 +50,11 @@ sealed class ExclusiveNav(
         route = "update",
         title = "Update fictions",
     )
+
+    object Detail : ExclusiveNav(
+        route = "detail",
+        title = "Fiction detail",
+    )
 }
 
 sealed class NestedNav(

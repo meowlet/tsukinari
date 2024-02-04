@@ -26,7 +26,7 @@ class DatabaseRepository {
 
     fun user() = Firebase.auth.currentUser
     fun hasUser(): Boolean = Firebase.auth.currentUser != null
-    fun getUserId(): String = Firebase.auth.currentUser?.uid.orEmpty()
+    fun getUserEmail(): String = Firebase.auth.currentUser?.email.orEmpty()
 
     private val usersRef = Firebase.database.getReference(USERS_COLLECTION_REF)
     private val fictionsRef = Firebase.database.getReference(FICTIONS_COLLECTION_REF)
@@ -37,7 +37,7 @@ class DatabaseRepository {
 
 
     fun uploadImage(imageUri: Uri, fictionId: String, onComplete: (String?) -> Unit) {
-        val filePath = fictionImagesRef.child(getUserId()).child("$fictionId")
+        val filePath = fictionImagesRef.child(getUserEmail()).child("$fictionId")
         filePath.putFile(imageUri)
             .addOnSuccessListener {
                 filePath.downloadUrl.addOnSuccessListener { imageUrl ->
@@ -172,7 +172,7 @@ class DatabaseRepository {
         fictionsRef.child(fictionId)
             .removeValue()
             .addOnCompleteListener { result ->
-                fictionImagesRef.child(getUserId()).child(fictionId).delete()
+                fictionImagesRef.child(getUserEmail()).child(fictionId).delete()
                 onComplete.invoke(result.isSuccessful)
             }
     }

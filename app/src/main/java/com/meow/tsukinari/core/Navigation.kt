@@ -18,6 +18,8 @@ import com.meow.tsukinari.presentation.authentication.SignInScreen
 import com.meow.tsukinari.presentation.authentication.SignUpScreen
 import com.meow.tsukinari.presentation.browse.BrowseScreen
 import com.meow.tsukinari.presentation.browse.BrowseViewModel
+import com.meow.tsukinari.presentation.detail.DetailScreen
+import com.meow.tsukinari.presentation.detail.DetailViewModel
 import com.meow.tsukinari.presentation.editor.EditorViewModel
 import com.meow.tsukinari.presentation.editor.UpdatingScreen
 import com.meow.tsukinari.presentation.editor.UploadingScreen
@@ -36,21 +38,25 @@ enum class HomeRoutes {
 }
 
 
-
 @Composable
 fun Navigation(
     navController: NavHostController = rememberNavController(),
     browseViewModel: BrowseViewModel,
     authViewModel: AuthViewModel,
     editorViewModel: EditorViewModel,
-    myFictionsViewModel: MyFictionsViewModel
+    myFictionsViewModel: MyFictionsViewModel,
+    detailViewModel: DetailViewModel
 ) {
     NavHost(
         navController = navController, startDestination = NestedNav.Authorization.route
     ) {
         authGraph(navController, authViewModel)
         homeGraph(
-            navController = navController, browseViewModel, editorViewModel, myFictionsViewModel
+            navController = navController,
+            browseViewModel,
+            editorViewModel,
+            myFictionsViewModel,
+            detailViewModel
         )
     }
 
@@ -126,7 +132,8 @@ fun NavGraphBuilder.homeGraph(
     navController: NavHostController,
     browseViewModel: BrowseViewModel,
     editorViewModel: EditorViewModel,
-    myFictionsViewModel: MyFictionsViewModel
+    myFictionsViewModel: MyFictionsViewModel,
+    detailViewModel: DetailViewModel
 ) {
     navigation(
         startDestination = HomeNav.Browse.route,
@@ -135,7 +142,13 @@ fun NavGraphBuilder.homeGraph(
         composable(HomeNav.Browse.route) {
             BrowseScreen(
                 browseViewModel = browseViewModel,
-                onNavToMyFictions = { navController.navigate(ExclusiveNav.MyFictions.route) })
+                onNavToDetailPage = { fictionId ->
+                    navController.navigate(ExclusiveNav.Detail.route + "?id=$fictionId") {
+
+                        launchSingleTop = true
+
+                    }
+                })
         }
         composable(HomeNav.Profile.route) {
             ProfileScreen(onNavToMyFictions = {
@@ -161,7 +174,7 @@ fun NavGraphBuilder.homeGraph(
                     }
                 },
                 onNavToAddingPage = {
-                    navController.navigate(HomeRoutes.Upload.name)
+                    navController.navigate(ExclusiveNav.Upload.route)
                 },
             )
         }
@@ -191,6 +204,24 @@ fun NavGraphBuilder.homeGraph(
                 onNavigate = { navController.navigate(ExclusiveNav.MyFictions.route) },
                 editorViewModel = editorViewModel,
             )
+        }
+
+        composable(
+            route = ExclusiveNav.Detail.route + "?id={id}",
+            arguments = listOf(navArgument("id") {
+                type = NavType.StringType
+                defaultValue = ""
+            })
+        ) { entry ->
+            DetailScreen(
+                detailViewModel = detailViewModel,
+                fictionId = entry.arguments?.getString("id") as String,
+                onNavigate = {
+                    navController.navigate(HomeNav.Browse.route)
+                }
+            )
+
+
         }
 
 

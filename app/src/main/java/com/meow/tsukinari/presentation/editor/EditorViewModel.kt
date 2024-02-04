@@ -29,6 +29,8 @@ class EditorViewModel(
 
     private val user: FirebaseUser?
         get() = repository.user()
+    private val userEmail: String
+        get() = repository.getUserEmail()
 
 
     fun onTitleChange(title: String) {
@@ -73,7 +75,7 @@ class EditorViewModel(
         if (hasUser) {
             editorUiState = editorUiState.copy(isLoading = true)
             repository.addFiction(
-                uploaderId = user!!.uid,
+                uploaderId = userEmail,
                 title = editorUiState.title,
                 description = editorUiState.description,
                 imageUri = compressImage(editorUiState.imageUri, context)

@@ -17,6 +17,7 @@ class BrowseViewModel(
 
     var browseUiState by mutableStateOf(BrowseUiState())
 
+    fun getUserProfileImgae() = repository.user()?.uid
 
     fun loadFictions() = viewModelScope.launch {
         repository.getFictions().collect {

@@ -38,6 +38,7 @@ import androidx.navigation.compose.rememberNavController
 import com.meow.tsukinari.core.Navigation
 import com.meow.tsukinari.presentation.authentication.AuthViewModel
 import com.meow.tsukinari.presentation.browse.BrowseViewModel
+import com.meow.tsukinari.presentation.detail.DetailViewModel
 import com.meow.tsukinari.presentation.editor.EditorViewModel
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsViewModel
 import com.meow.tsukinari.ui.theme.TsukinariTheme
@@ -49,6 +50,7 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
     val editorViewModel = viewModel(modelClass = EditorViewModel::class.java)
     val myFictionsViewModel = viewModel(modelClass = MyFictionsViewModel::class.java)
     val browseViewModel = viewModel(modelClass = BrowseViewModel::class.java)
+    val detailViewModel = viewModel(modelClass = DetailViewModel::class.java)
     val focusManager = LocalFocusManager.current
 
     val navController = rememberNavController()
@@ -173,13 +175,14 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
                     }
                 }
             ) { padding ->
-                Surface(modifier = Modifier.padding(padding)) {
+                Surface(modifier = if (!mainLayoutUiState.isExclusive) Modifier.padding(padding) else Modifier) {
                     Navigation(
                         navController = navController,
                         authViewModel = authViewModel,
                         browseViewModel = browseViewModel,
                         editorViewModel = editorViewModel,
-                        myFictionsViewModel = myFictionsViewModel
+                        myFictionsViewModel = myFictionsViewModel,
+                        detailViewModel = detailViewModel
                     )
                 }
             }
