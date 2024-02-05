@@ -26,6 +26,7 @@ import com.meow.tsukinari.presentation.editor.UploadingScreen
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsScreen
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsViewModel
 import com.meow.tsukinari.presentation.profile.ProfileScreen
+import com.meow.tsukinari.presentation.profile.ProfileViewModel
 
 
 enum class AuthRoutes {
@@ -45,7 +46,8 @@ fun Navigation(
     authViewModel: AuthViewModel,
     editorViewModel: EditorViewModel,
     myFictionsViewModel: MyFictionsViewModel,
-    detailViewModel: DetailViewModel
+    detailViewModel: DetailViewModel,
+    profileViewModel: ProfileViewModel
 ) {
     NavHost(
         navController = navController, startDestination = NestedNav.Authorization.route
@@ -56,7 +58,8 @@ fun Navigation(
             browseViewModel,
             editorViewModel,
             myFictionsViewModel,
-            detailViewModel
+            detailViewModel,
+            profileViewModel
         )
     }
 
@@ -133,7 +136,8 @@ fun NavGraphBuilder.homeGraph(
     browseViewModel: BrowseViewModel,
     editorViewModel: EditorViewModel,
     myFictionsViewModel: MyFictionsViewModel,
-    detailViewModel: DetailViewModel
+    detailViewModel: DetailViewModel,
+    profileViewModel: ProfileViewModel
 ) {
     navigation(
         startDestination = HomeNav.Browse.route,
@@ -153,7 +157,7 @@ fun NavGraphBuilder.homeGraph(
         composable(HomeNav.Profile.route) {
             ProfileScreen(onNavToMyFictions = {
                 navController.navigate(ExclusiveNav.MyFictions.route)
-            })
+            }, profileViewModel = profileViewModel)
         }
         composable(ExclusiveNav.MyFictions.route) {
             MyFictionsScreen(
@@ -220,14 +224,8 @@ fun NavGraphBuilder.homeGraph(
                     navController.navigate(HomeNav.Browse.route)
                 }
             )
-
-
         }
-
-
     }
-
-
 }
 
 

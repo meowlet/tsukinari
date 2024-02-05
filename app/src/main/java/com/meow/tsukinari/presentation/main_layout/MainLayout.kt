@@ -41,6 +41,7 @@ import com.meow.tsukinari.presentation.browse.BrowseViewModel
 import com.meow.tsukinari.presentation.detail.DetailViewModel
 import com.meow.tsukinari.presentation.editor.EditorViewModel
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsViewModel
+import com.meow.tsukinari.presentation.profile.ProfileViewModel
 import com.meow.tsukinari.ui.theme.TsukinariTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,6 +52,7 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
     val myFictionsViewModel = viewModel(modelClass = MyFictionsViewModel::class.java)
     val browseViewModel = viewModel(modelClass = BrowseViewModel::class.java)
     val detailViewModel = viewModel(modelClass = DetailViewModel::class.java)
+    val profileViewModel = viewModel(modelClass = ProfileViewModel::class.java)
     val focusManager = LocalFocusManager.current
 
     val navController = rememberNavController()
@@ -164,7 +166,7 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
                                 IconButton(onClick = { }) {
                                     Icon(imageVector = Icons.Default.List, contentDescription = "")
                                 }
-                                IconButton(onClick = { }) {
+                                IconButton(onClick = { mainLayoutViewModel.signOut() }) {
                                     Icon(
                                         imageVector = Icons.Default.AccountCircle,
                                         contentDescription = ""
@@ -182,7 +184,8 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
                         browseViewModel = browseViewModel,
                         editorViewModel = editorViewModel,
                         myFictionsViewModel = myFictionsViewModel,
-                        detailViewModel = detailViewModel
+                        detailViewModel = detailViewModel,
+                        profileViewModel = profileViewModel
                     )
                 }
             }
