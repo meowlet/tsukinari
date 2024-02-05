@@ -24,7 +24,7 @@ const val IMAGES_COLLECTION_REF = "images"
 
 class DatabaseRepository {
 
-    fun user() = Firebase.auth.currentUser
+     fun user() = Firebase.auth.currentUser
     fun hasUser(): Boolean = Firebase.auth.currentUser != null
     fun getUserEmail(): String = Firebase.auth.currentUser?.email.orEmpty()
 

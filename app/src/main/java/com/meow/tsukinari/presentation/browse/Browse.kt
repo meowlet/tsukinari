@@ -56,7 +56,6 @@ fun BrowseScreen(
         ) { fiction ->
             FictionItem(fiction = fiction, onClick = {
                 onNavToDetailPage.invoke(fiction.fictionId)
-                println(browseViewModel?.getUserProfileImgae())
             })
         }
     }

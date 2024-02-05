@@ -18,7 +18,6 @@ class MyFictionsViewModel(
 ) : ViewModel() {
 
     var myFictionsUiState by mutableStateOf(MyFictionsUiState())
-    val user = repository.user()
 
     fun getTime(uploadedAt: Long): String {
         val sdf = SimpleDateFormat("dd/MM/yyyy - HH:mm", Locale.getDefault())

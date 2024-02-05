@@ -4,10 +4,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import com.meow.tsukinari.model.HomeNav
 import com.meow.tsukinari.repository.DatabaseRepository
+import kotlinx.coroutines.launch
 
 
 class MainLayoutViewModel(
@@ -41,6 +43,10 @@ class MainLayoutViewModel(
         val currentRoute = currentDestination?.route
         val isMatched = getHomeNavItems().any { it.route == currentRoute }
         mainLayoutUiState = mainLayoutUiState.copy(isExclusive = !isMatched)
+    }
+
+    fun signOut() = viewModelScope.launch {
+        repository.signOut()
     }
 
 

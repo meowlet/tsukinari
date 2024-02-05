@@ -12,7 +12,6 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
-import com.google.firebase.auth.FirebaseUser
 import com.meow.tsukinari.repository.DatabaseRepository
 import java.io.File
 import java.io.FileOutputStream
@@ -27,8 +26,6 @@ class EditorViewModel(
     private val hasUser: Boolean
         get() = repository.hasUser()
 
-    private val user: FirebaseUser?
-        get() = repository.user()
     private val userEmail: String
         get() = repository.getUserEmail()
 
