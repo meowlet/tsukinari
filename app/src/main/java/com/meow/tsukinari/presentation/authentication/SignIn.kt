@@ -129,7 +129,6 @@ fun SignInScreen(
                 modifier = Modifier.clickable { onNavToSignUpPage.invoke() })
         }
     }
-
     LaunchedEffect(key1 = authViewModel?.hasUser) {
         if (authViewModel?.hasUser == true) {
             onNavToHomePage.invoke()

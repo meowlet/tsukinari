@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,7 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -25,53 +26,90 @@ import coil.compose.AsyncImage
 @Composable
 fun ProfileScreen(
     profileViewModel: ProfileViewModel? = null,
-    onNavToMyFictions: () -> Unit
+    onNavToMyFictions: () -> Unit,
+    onNavToSignIn: () -> Unit,
 ) {
-    val context = LocalContext.current
 
     val profileUiState = profileViewModel?.profileUiState
+
     LaunchedEffect(key1 = Unit) {
         profileViewModel?.getUserProfile()
     }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        Column(
-            modifier = Modifier.weight(0.5f),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            AsyncImage(
-                model = profileUiState?.profilePicUri,
-                contentDescription = null,
+        if (!profileUiState!!.hasUser) {
+            Column(
                 modifier = Modifier
-                    .size(128.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                    .padding(8.dp)
-            )
-            Spacer(modifier = Modifier.size(12.dp))
-            Text(
-                text = "${profileUiState?.displayName}",
-                style = MaterialTheme.typography.titleLarge
-            )
-            Text(text = "${profileUiState?.username}", style = MaterialTheme.typography.titleMedium)
-            Text(text = "${profileUiState?.email}", style = MaterialTheme.typography.titleSmall)
-        }
-        Column(Modifier.weight(0.5f)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
+                    .padding(18.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
-                    text = "Follower: ${profileUiState?.follower}",
-                    style = MaterialTheme.typography.titleMedium
+                    text = "Please consider signing in to enjoy these features",
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center
                 )
-                Text(
-                    text = "Following: ${profileUiState?.following}",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Spacer(modifier = Modifier.size(8.dp))
+                Button(onClick = { onNavToSignIn.invoke() }) {
+                    Text(text = "Sign in now")
+                }
             }
-        }
+        } else {
+            profileViewModel.isSetup()
+            if (!profileUiState.isSetup) {
+                Text(text = "not setup")
+            } else {
+                profileViewModel.getUserProfile()
+                Column(
+                    modifier = Modifier.weight(0.5f),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    AsyncImage(
+                        model = profileUiState.profilePicUri,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(128.dp)
+                            .clip(CircleShape)
+                            .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                            .padding(8.dp)
+                    )
+                    Spacer(modifier = Modifier.size(12.dp))
+                    Text(
+                        text = "${profileUiState.displayName}",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        text = "${profileUiState.username}",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = "${profileUiState.email}",
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                }
+                Column(Modifier.weight(0.5f)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
+                        Text(
+                            text = "Follower: ${profileUiState.follower}",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = "Following: ${profileUiState.following}",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    Button(onClick = { onNavToMyFictions.invoke() }) {
+                        Text(text = "Edit")
+                    }
+                }
+            }
 
+        }
     }
 }
 
@@ -79,7 +117,5 @@ fun ProfileScreen(
 @Preview(showSystemUi = true)
 @Composable
 fun ProfilePrev() {
-    ProfileScreen {
-
-    }
+    ProfileScreen(onNavToSignIn = {}, onNavToMyFictions = {})
 }

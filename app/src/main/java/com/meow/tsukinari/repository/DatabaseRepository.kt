@@ -1,6 +1,7 @@
 package com.meow.tsukinari.repository
 
 import android.net.Uri
+import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.database.DataSnapshot
@@ -24,20 +25,46 @@ const val IMAGES_COLLECTION_REF = "images"
 
 class DatabaseRepository {
 
-     fun user() = Firebase.auth.currentUser
-    fun hasUser(): Boolean = Firebase.auth.currentUser != null
-    fun getUserEmail(): String = Firebase.auth.currentUser?.email.orEmpty()
+    val user = Firebase.auth.currentUser
 
+    val userId = Firebase.auth.currentUser?.uid.orEmpty()
+
+    val userEmail = user?.email.orEmpty()
     private val usersRef = Firebase.database.getReference(USERS_COLLECTION_REF)
     private val fictionsRef = Firebase.database.getReference(FICTIONS_COLLECTION_REF)
     private val chaptersRef = Firebase.database.getReference(CHAPTERS_COLLECTION_REF)
     private val followsRef = Firebase.database.getReference(FOLLOWS_COLLECTION_REF)
-
     private val fictionImagesRef = Firebase.storage.reference.child(IMAGES_COLLECTION_REF)
+
+    fun hasUser(): Boolean {
+        return Firebase.auth.currentUser != null
+    }
+
+    // Hàm kiểm tra người dùng đã setup account hay chưa
+    fun isSetup(uid: String): Boolean {
+        // Tạo một biến để lưu kết quả
+        var isSetup = false
+        // Kiểm tra xem uid có tồn tại trong userref hay không bằng cách sử dụng phương thức addListenerForSingleValueEvent
+        usersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                // Nếu snapshot có chứa uid, thì gán isSetup bằng true
+                if (snapshot.hasChild("qp4KaFuumTgPUzlgf7U7NlX6fqI2")) {
+                    isSetup = true
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Xử lý lỗi nếu có
+                Log.e("DatabaseRepository", "Error checking user setup: ${error.message}")
+            }
+        })
+        // Trả về giá trị của isSetup
+        return isSetup
+    }
 
 
     fun uploadImage(imageUri: Uri, fictionId: String, onComplete: (String?) -> Unit) {
-        val filePath = fictionImagesRef.child(getUserEmail()).child("$fictionId")
+        val filePath = fictionImagesRef.child(userEmail).child(fictionId)
         filePath.putFile(imageUri)
             .addOnSuccessListener {
                 filePath.downloadUrl.addOnSuccessListener { imageUrl ->
@@ -49,27 +76,15 @@ class DatabaseRepository {
             }
     }
 
-
-    fun getFictions(
-    ): Flow<Resources<List<FictionModel>>> = callbackFlow {
-
+    fun getFictions(): Flow<Resources<List<FictionModel>>> = callbackFlow {
         val valueEventListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-
-                if (snapshot.exists()) {
-
-                    val fictions =
-                        snapshot.children.mapNotNull { it.getValue(FictionModel::class.java) }
-
-                    trySend(Resources.Success(data = fictions))
-                } else {
-
-                    trySend(Resources.Error(throwable = Exception("No data")))
-                }
+                val fictions =
+                    snapshot.children.mapNotNull { it.getValue(FictionModel::class.java) }
+                trySend(Resources.Success(data = fictions))
             }
 
             override fun onCancelled(error: DatabaseError) {
-
                 trySend(Resources.Error(throwable = error.toException()))
             }
         }
@@ -81,28 +96,15 @@ class DatabaseRepository {
         }
     }
 
-
-    fun getUserFictions(
-        userId: String,
-    ): Flow<Resources<List<FictionModel>>> = callbackFlow {
-
+    fun getUserFictions(userId: String): Flow<Resources<List<FictionModel>>> = callbackFlow {
         val valueEventListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-
-                if (snapshot.exists()) {
-
-                    val fictions =
-                        snapshot.children.mapNotNull { it.getValue(FictionModel::class.java) }
-
-                    trySend(Resources.Success(data = fictions))
-                } else {
-
-                    trySend(Resources.Error(throwable = Exception("No data")))
-                }
+                val fictions =
+                    snapshot.children.mapNotNull { it.getValue(FictionModel::class.java) }
+                trySend(Resources.Success(data = fictions))
             }
 
             override fun onCancelled(error: DatabaseError) {
-
                 trySend(Resources.Error(throwable = error.toException()))
             }
         }
@@ -121,17 +123,14 @@ class DatabaseRepository {
         onError: (Throwable?) -> Unit,
         onSuccess: (FictionModel?) -> Unit
     ) {
-
         fictionsRef.child(fictionId)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-
-                    onSuccess.invoke(snapshot.getValue(FictionModel::class.java))
+                    onSuccess(snapshot.getValue(FictionModel::class.java))
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-
-                    onError.invoke(error.toException())
+                    onError(error.toException())
                 }
             })
     }
@@ -143,11 +142,10 @@ class DatabaseRepository {
         imageUri: Uri,
         onComplete: (Boolean) -> Unit,
     ) {
-
         val fictionId = fictionsRef.push().key ?: "null"
 
         uploadImage(imageUri, fictionId) { imageUrl ->
-            if (imageUrl != null) {
+            imageUrl?.let {
                 val fiction = FictionModel(
                     uploaderId = uploaderId,
                     title = title,
@@ -161,20 +159,19 @@ class DatabaseRepository {
                     .addOnCompleteListener { result ->
                         onComplete(result.isSuccessful)
                     }
-            } else {
-                onComplete(false)
-            }
+            } ?: onComplete(false)
         }
     }
 
     fun deleteFiction(fictionId: String, onComplete: (Boolean) -> Unit) {
-
-        fictionsRef.child(fictionId)
-            .removeValue()
-            .addOnCompleteListener { result ->
-                fictionImagesRef.child(getUserEmail()).child(fictionId).delete()
-                onComplete.invoke(result.isSuccessful)
-            }
+        fictionId.let {
+            fictionsRef.child(it)
+                .removeValue()
+                .addOnCompleteListener { result ->
+                    fictionImagesRef.child(userEmail).child(it).delete()
+                    onComplete(result.isSuccessful)
+                }
+        }
     }
 
     fun updateFiction(
@@ -184,35 +181,38 @@ class DatabaseRepository {
         imageUri: Uri,
         onResult: (Boolean) -> Unit
     ) {
+        when (imageUri) {
+            Uri.EMPTY -> {
+                // update data without image
+                val updateData = hashMapOf<String, Any>(
+                    "description" to description,
+                    "title" to title,
+                )
+                fictionsRef.child(fictionId)
+                    .updateChildren(updateData)
+                    .addOnCompleteListener { result ->
+                        onResult(result.isSuccessful)
+                    }
+            }
 
-        if (imageUri != Uri.EMPTY) {
-            uploadImage(imageUri, fictionId) { imageUrl ->
-                if (imageUrl != null) {
-                    val updateData = hashMapOf<String, Any>(
-                        "description" to description,
-                        "title" to title,
-                        "coverLink" to imageUrl
-                    )
-                    fictionsRef.child(fictionId)
-                        .updateChildren(updateData)
-                        .addOnCompleteListener { result ->
-                            onResult(result.isSuccessful)
-                        }
+            else -> {
+                // upload image and update data with image
+                uploadImage(imageUri, fictionId) { imageUrl ->
+                    imageUrl?.let {
+                        val updateData = hashMapOf<String, Any>(
+                            "description" to description,
+                            "title" to title,
+                            "coverLink" to it
+                        )
+                        fictionsRef.child(fictionId)
+                            .updateChildren(updateData)
+                            .addOnCompleteListener { result ->
+                                onResult(result.isSuccessful)
+                            }
+                    }
                 }
             }
-        } else {
-            val updateData = hashMapOf<String, Any>(
-                "description" to description,
-                "title" to title,
-            )
-            fictionsRef.child(fictionId)
-                .updateChildren(updateData)
-                .addOnCompleteListener { result ->
-                    onResult(result.isSuccessful)
-                }
         }
-
-
     }
 
     fun signOut() = Firebase.auth.signOut()

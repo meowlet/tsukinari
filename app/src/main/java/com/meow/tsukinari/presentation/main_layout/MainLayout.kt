@@ -1,5 +1,8 @@
 package com.meow.tsukinari.presentation.main_layout
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -72,33 +75,37 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
         ) {
             Scaffold(
                 bottomBar = {
-                    if (!mainLayoutUiState.isExclusive) {
-                        NavigationBar {
-                            mainLayoutViewModel.getHomeNavItems().forEachIndexed { _, item ->
-                                NavigationBarItem(
-                                    selected = mainLayoutViewModel.isNavItemSelected(
-                                        currentDestination,
-                                        item
-                                    ),
-                                    label = {
-                                        Text(
-                                            text = item.title,
-                                            style = MaterialTheme.typography.labelMedium
-                                        )
-                                    },
-                                    onClick = {
-                                        navController.navigate(item.route)
-                                    },
-                                    icon = {
-                                        Icon(
-                                            imageVector = item.icon,
-                                            contentDescription = null
-                                        )
-                                    }
-                                )
+                    AnimatedVisibility(
+                        visible = !mainLayoutUiState.isExclusive,
+                        enter = slideInVertically(initialOffsetY = { it }),
+                        exit = slideOutVertically(targetOffsetY = { it }),
+                        content = {
+                            NavigationBar {
+                                mainLayoutViewModel.getHomeNavItems().forEachIndexed { _, item ->
+                                    NavigationBarItem(
+                                        selected = mainLayoutViewModel.isNavItemSelected(
+                                            currentDestination,
+                                            item
+                                        ),
+                                        label = {
+                                            Text(
+                                                text = item.title,
+                                                style = MaterialTheme.typography.labelMedium
+                                            )
+                                        },
+                                        onClick = {
+                                            navController.navigate(item.route)
+                                        },
+                                        icon = {
+                                            Icon(
+                                                imageVector = item.icon,
+                                                contentDescription = null
+                                            )
+                                        }
+                                    )
+                                }
                             }
-                        }
-                    }
+                        })
                 },
                 topBar = {
                     if (!mainLayoutUiState.isExclusive) {
@@ -166,7 +173,10 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
                                 IconButton(onClick = { }) {
                                     Icon(imageVector = Icons.Default.List, contentDescription = "")
                                 }
-                                IconButton(onClick = { mainLayoutViewModel.signOut() }) {
+                                IconButton(onClick = {
+                                    mainLayoutViewModel.signOut()
+                                    navController.navigate("signin")
+                                }) {
                                     Icon(
                                         imageVector = Icons.Default.AccountCircle,
                                         contentDescription = ""

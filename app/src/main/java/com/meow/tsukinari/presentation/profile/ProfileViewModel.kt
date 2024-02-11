@@ -12,21 +12,43 @@ import com.meow.tsukinari.repository.DatabaseRepository
 class ProfileViewModel(
     private val repository: DatabaseRepository = DatabaseRepository(),
 ) : ViewModel() {
-    val user = repository.user()
+
+
+    val user = repository.user
+
     var profileUiState by mutableStateOf(ProfileUiState())
+        private set
+
+    fun isSetup() {
+        if (repository.isSetup(user!!.uid)) {
+            println("vllll")
+            profileUiState = profileUiState.copy(isSetup = true)
+        } else {
+            println("vllllccc")
+            profileUiState = profileUiState.copy(isSetup = false)
+        }
+    }
 
     fun getUserProfile() {
-        profileUiState = profileUiState.copy(displayName = user?.displayName)
-        profileUiState = profileUiState.copy(email = user?.email)
-        profileUiState = profileUiState.copy(profilePicUri = user?.photoUrl)
-        profileUiState = profileUiState.copy(isVerified = user?.isEmailVerified)
-        profileUiState = profileUiState.copy(uid = user?.uid)
+        if (repository.hasUser()) {
+            profileUiState = profileUiState.copy(hasUser = true)
+            profileUiState = profileUiState.copy(displayName = user?.displayName)
+            profileUiState = profileUiState.copy(email = user?.email)
+            profileUiState = profileUiState.copy(profilePicUri = user?.photoUrl)
+            profileUiState = profileUiState.copy(isVerified = user?.isEmailVerified)
+            profileUiState = profileUiState.copy(uid = user?.uid)
+        } else {
+            profileUiState = profileUiState.copy(hasUser = false)
+        }
     }
 
 
 }
 
 data class ProfileUiState(
+
+    val isSetup: Boolean = false,
+    val hasUser: Boolean = false,
     val email: String? = "",
     val uid: String? = "",
     val username: String? = "username",

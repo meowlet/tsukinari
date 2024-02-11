@@ -50,7 +50,7 @@ fun Navigation(
     profileViewModel: ProfileViewModel
 ) {
     NavHost(
-        navController = navController, startDestination = NestedNav.Authorization.route
+        navController = navController, startDestination = NestedNav.Main.route
     ) {
         authGraph(navController, authViewModel)
         homeGraph(
@@ -157,6 +157,8 @@ fun NavGraphBuilder.homeGraph(
         composable(HomeNav.Profile.route) {
             ProfileScreen(onNavToMyFictions = {
                 navController.navigate(ExclusiveNav.MyFictions.route)
+            }, onNavToSignIn = {
+                navController.navigate(AuthRoutes.SignIn.name)
             }, profileViewModel = profileViewModel)
         }
         composable(ExclusiveNav.MyFictions.route) {

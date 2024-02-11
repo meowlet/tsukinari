@@ -36,6 +36,12 @@ sealed class ExclusiveNav(
         title = "My Fictions",
     )
 
+    data object Setup : ExclusiveNav(
+        route = "setup",
+        title = "Setup",
+    )
+
+
     object FictionDetail : ExclusiveNav(
         route = "explore",
         title = "Explore",
