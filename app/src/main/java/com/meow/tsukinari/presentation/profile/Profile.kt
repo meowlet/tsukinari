@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -35,33 +36,36 @@ fun ProfileScreen(
     LaunchedEffect(key1 = Unit) {
         profileViewModel?.getUserProfile()
     }
+    println(profileUiState?.isSetup)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(18.dp)
     ) {
         if (!profileUiState!!.hasUser) {
-            Column(
-                modifier = Modifier
-                    .padding(18.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Please consider signing in to enjoy these features",
-                    style = MaterialTheme.typography.titleLarge,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.size(8.dp))
-                Button(onClick = { onNavToSignIn.invoke() }) {
-                    Text(text = "Sign in now")
-                }
+            Text(
+                text = "Please consider signing in to enjoy these features",
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.size(8.dp))
+            Button(onClick = { onNavToSignIn.invoke() }) {
+                Text(text = "Sign in now")
             }
         } else {
             profileViewModel.isSetup()
             if (!profileUiState.isSetup) {
-                Text(text = "not setup")
+                TextField(
+                    value = profileUiState.usernameSetup,
+                    placeholder = { Text(text = "Username") },
+                    onValueChange = { profileViewModel.onUsernameChange(it) })
+                TextField(
+                    value = profileUiState.displayNameSetup,
+                    placeholder = { Text(text = "Displayname") },
+                    onValueChange = { profileViewModel.onDiplayNameChange(it) })
             } else {
                 profileViewModel.getUserProfile()
                 Column(

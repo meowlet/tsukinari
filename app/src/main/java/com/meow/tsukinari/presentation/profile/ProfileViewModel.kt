@@ -20,13 +20,19 @@ class ProfileViewModel(
         private set
 
     fun isSetup() {
-        if (repository.isSetup(user!!.uid)) {
-            println("vllll")
-            profileUiState = profileUiState.copy(isSetup = true)
-        } else {
-            println("vllllccc")
-            profileUiState = profileUiState.copy(isSetup = false)
+        if (user!!.uid.isNotEmpty()) {
+            repository.isSetup(user.uid) {
+                profileUiState = profileUiState.copy(isSetup = it)
+            }
         }
+    }
+
+    fun onUsernameChange(username: String) {
+        profileUiState = profileUiState.copy(usernameSetup = username)
+    }
+
+    fun onDiplayNameChange(name: String) {
+        profileUiState = profileUiState.copy(displayNameSetup = name)
     }
 
     fun getUserProfile() {
@@ -46,9 +52,16 @@ class ProfileViewModel(
 }
 
 data class ProfileUiState(
+    // setting up
+    val usernameSetup: String = "",
+    val displayNameSetup: String = "",
+    val profilePicUriSetup: Uri = Uri.EMPTY,
 
+    // validate
     val isSetup: Boolean = false,
     val hasUser: Boolean = false,
+
+    //display
     val email: String? = "",
     val uid: String? = "",
     val username: String? = "username",

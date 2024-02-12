@@ -1,7 +1,6 @@
 package com.meow.tsukinari.repository
 
 import android.net.Uri
-import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.database.DataSnapshot
@@ -37,30 +36,45 @@ class DatabaseRepository {
     private val fictionImagesRef = Firebase.storage.reference.child(IMAGES_COLLECTION_REF)
 
     fun hasUser(): Boolean {
+
         return Firebase.auth.currentUser != null
+
     }
 
-    // Hàm kiểm tra người dùng đã setup account hay chưa
-    fun isSetup(uid: String): Boolean {
-        // Tạo một biến để lưu kết quả
-        var isSetup = false
-        // Kiểm tra xem uid có tồn tại trong userref hay không bằng cách sử dụng phương thức addListenerForSingleValueEvent
-        usersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+    fun isSetup(userId: String, callback: (Boolean) -> Unit) {
+        usersRef.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                // Nếu snapshot có chứa uid, thì gán isSetup bằng true
-                if (snapshot.hasChild("qp4KaFuumTgPUzlgf7U7NlX6fqI2")) {
-                    isSetup = true
-                }
+                // Nếu snapshot tồn tại, có nghĩa là người dùng đã setup
+                val isSetup = snapshot.exists()
+                callback(isSetup)
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // Xử lý lỗi nếu có
-                Log.e("DatabaseRepository", "Error checking user setup: ${error.message}")
+                // Xử lý lỗi nếu cần thiết
+                // Trong trường hợp này, chỉ cần thông báo lỗi ra log
+                error.toException().printStackTrace()
+                // Trả về false vì không thể xác định trạng thái của việc setup
+                callback(false)
             }
         })
-        // Trả về giá trị của isSetup
-        return isSetup
     }
+
+//    fun userSetup (userId: String, username:String, displayName:String){
+//        val user = UserModel(
+//            username = username,
+//        )
+//        usersRef.child(userId).setValue(user)
+//
+//        var userUpdate:UserProfileChangeRequest = UserProfileChangeRequest(displayName = displayName)
+//
+//        this.user!!.updateProfile(userUpdate)
+//            .addOnCompleteListener { task ->
+//                if (task.isSuccessful) {
+//                    Log.d(TAG, "User profile updated.")
+//                }
+//            }
+//
+//        }
 
 
     fun uploadImage(imageUri: Uri, fictionId: String, onComplete: (String?) -> Unit) {
