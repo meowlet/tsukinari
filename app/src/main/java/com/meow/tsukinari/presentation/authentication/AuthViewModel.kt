@@ -20,8 +20,8 @@ class AuthViewModel(
     var authUiState by mutableStateOf(AuthUiState())
         private set
 
-    fun onUserNameChange(userName: String) {
-        authUiState = authUiState.copy(email = userName)
+    fun onEmailChange(email: String) {
+        authUiState = authUiState.copy(email = email)
         authUiState = authUiState.copy(signInError = "")
     }
 
@@ -30,8 +30,13 @@ class AuthViewModel(
         authUiState = authUiState.copy(signInError = "")
     }
 
-    fun onUserNameSignUpChange(userName: String) {
-        authUiState = authUiState.copy(userNameSignUp = userName)
+    fun onUsernameSignUpChange(username: String) {
+        authUiState = authUiState.copy(usernameSignUp = username)
+        authUiState = authUiState.copy(signUpError = "")
+    }
+
+    fun onEmailSignUpChange(email: String) {
+        authUiState = authUiState.copy(emailSignUp = email)
         authUiState = authUiState.copy(signUpError = "")
     }
 
@@ -55,7 +60,7 @@ class AuthViewModel(
     }
 
     fun validateSignUpForm(): Boolean {
-        return authUiState.userNameSignUp.isNotEmpty() && authUiState.passwordSignUp.isNotEmpty()
+        return authUiState.emailSignUp.isNotEmpty() && authUiState.passwordSignUp.isNotEmpty() && authUiState.usernameSignUp.isNotEmpty()
     }
 
     fun signUp(
@@ -72,7 +77,7 @@ class AuthViewModel(
             }
             authUiState = authUiState.copy(signUpError = "")
             repository.signUp(
-                authUiState.userNameSignUp,
+                authUiState.emailSignUp,
                 authUiState.passwordSignUp
             ) { isCompleted ->
                 if (isCompleted) {
@@ -94,7 +99,7 @@ class AuthViewModel(
     }
 
     fun clearSignUpForm() {
-        authUiState = authUiState.copy(userNameSignUp = "")
+        authUiState = authUiState.copy(emailSignUp = "")
         authUiState = authUiState.copy(passwordSignUp = "")
         authUiState = authUiState.copy(confirmPasswordSignUp = "")
     }
@@ -166,7 +171,8 @@ class AuthViewModel(
 data class AuthUiState(
     val email: String = "",
     val password: String = "",
-    val userNameSignUp: String = "",
+    val usernameSignUp: String = "",
+    val emailSignUp: String = "",
     val passwordSignUp: String = "",
     val confirmPasswordSignUp: String = "",
     val emailReset: String = "",

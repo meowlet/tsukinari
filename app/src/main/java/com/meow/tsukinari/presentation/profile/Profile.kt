@@ -13,7 +13,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -36,7 +35,6 @@ fun ProfileScreen(
     LaunchedEffect(key1 = Unit) {
         profileViewModel?.getUserProfile()
     }
-    println(profileUiState?.isSetup)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -56,64 +54,52 @@ fun ProfileScreen(
                 Text(text = "Sign in now")
             }
         } else {
-            profileViewModel.isSetup()
-            if (!profileUiState.isSetup) {
-                TextField(
-                    value = profileUiState.usernameSetup,
-                    placeholder = { Text(text = "Username") },
-                    onValueChange = { profileViewModel.onUsernameChange(it) })
-                TextField(
-                    value = profileUiState.displayNameSetup,
-                    placeholder = { Text(text = "Displayname") },
-                    onValueChange = { profileViewModel.onDiplayNameChange(it) })
-            } else {
-                profileViewModel.getUserProfile()
-                Column(
-                    modifier = Modifier.weight(0.5f),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    AsyncImage(
-                        model = profileUiState.profilePicUri,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(128.dp)
-                            .clip(CircleShape)
-                            .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                            .padding(8.dp)
-                    )
-                    Spacer(modifier = Modifier.size(12.dp))
+            profileViewModel.getUserProfile()
+            Column(
+                modifier = Modifier.weight(0.5f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                AsyncImage(
+                    model = profileUiState.profilePicUri,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(128.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                        .padding(8.dp)
+                )
+                Spacer(modifier = Modifier.size(12.dp))
+                Text(
+                    text = "${profileUiState.displayName}",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    text = "${profileUiState.username}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "${profileUiState.email}",
+                    style = MaterialTheme.typography.titleSmall
+                )
+            }
+            Column(Modifier.weight(0.5f)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
                     Text(
-                        text = "${profileUiState.displayName}",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Text(
-                        text = "${profileUiState.username}",
+                        text = "Follower: ${profileUiState.follower}",
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = "${profileUiState.email}",
-                        style = MaterialTheme.typography.titleSmall
+                        text = "Following: ${profileUiState.following}",
+                        style = MaterialTheme.typography.titleMedium
                     )
                 }
-                Column(Modifier.weight(0.5f)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-                        Text(
-                            text = "Follower: ${profileUiState.follower}",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = "Following: ${profileUiState.following}",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                    Button(onClick = { onNavToMyFictions.invoke() }) {
-                        Text(text = "Edit")
-                    }
+                Button(onClick = { onNavToMyFictions.invoke() }) {
+                    Text(text = "Edit")
                 }
             }
-
         }
+
     }
 }
 

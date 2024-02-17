@@ -36,9 +36,7 @@ class DatabaseRepository {
     private val fictionImagesRef = Firebase.storage.reference.child(IMAGES_COLLECTION_REF)
 
     fun hasUser(): Boolean {
-
         return Firebase.auth.currentUser != null
-
     }
 
     fun isSetup(userId: String, callback: (Boolean) -> Unit) {

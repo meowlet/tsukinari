@@ -19,13 +19,6 @@ class ProfileViewModel(
     var profileUiState by mutableStateOf(ProfileUiState())
         private set
 
-    fun isSetup() {
-        if (user!!.uid.isNotEmpty()) {
-            repository.isSetup(user.uid) {
-                profileUiState = profileUiState.copy(isSetup = it)
-            }
-        }
-    }
 
     fun onUsernameChange(username: String) {
         profileUiState = profileUiState.copy(usernameSetup = username)
@@ -56,9 +49,6 @@ data class ProfileUiState(
     val usernameSetup: String = "",
     val displayNameSetup: String = "",
     val profilePicUriSetup: Uri = Uri.EMPTY,
-
-    // validate
-    val isSetup: Boolean = false,
     val hasUser: Boolean = false,
 
     //display

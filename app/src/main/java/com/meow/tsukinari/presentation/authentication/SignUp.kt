@@ -20,7 +20,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -68,8 +67,25 @@ fun SignUpScreen(
             modifier = Modifier.weight(0.6f), horizontalAlignment = Alignment.CenterHorizontally
         ) {
             OutlinedTextField(
-                value = authUiState?.userNameSignUp ?: "",
-                onValueChange = { authViewModel?.onUserNameSignUpChange(it) },
+                value = authUiState?.usernameSignUp ?: "",
+                onValueChange = { authViewModel?.onUsernameSignUpChange(it) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Info, contentDescription = ""
+                    )
+                },
+                label = {
+                    Text(
+                        text = "Type your username here",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = authUiState?.emailSignUp ?: "",
+                onValueChange = { authViewModel?.onEmailSignUpChange(it) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Email, contentDescription = ""
@@ -148,12 +164,6 @@ fun SignUpScreen(
         }
     }
 
-
-    LaunchedEffect(key1 = authViewModel?.hasUser) {
-        if (authViewModel?.hasUser == true) {
-            onNavToHomePage.invoke()
-        }
-    }
 }
 
 @Preview

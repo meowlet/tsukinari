@@ -73,7 +73,7 @@ fun SignInScreen(
         ) {
             OutlinedTextField(
                 value = authUiState?.email ?: "",
-                onValueChange = { authViewModel?.onUserNameChange(it) },
+                onValueChange = { authViewModel?.onEmailChange(it) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Email, contentDescription = ""
