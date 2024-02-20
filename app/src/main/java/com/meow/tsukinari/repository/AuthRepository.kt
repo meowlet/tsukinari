@@ -3,12 +3,20 @@ package com.meow.tsukinari.repository
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
+import com.google.firebase.database.database
+import com.meow.tsukinari.model.UserModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
+const val USERS_COLLECTION_REF = "users"
+
 class AuthRepository {
     val currentUser: FirebaseUser? = Firebase.auth.currentUser
+
+    private val usersRef = Firebase.database.getReference(USERS_COLLECTION_REF)
 
     fun hasUser(): Boolean {
         return Firebase.auth.currentUser != null
@@ -16,6 +24,26 @@ class AuthRepository {
 
     fun getUserId(): String {
         return Firebase.auth.currentUser?.uid.orEmpty()
+    }
+
+
+    suspend fun checkUsername(userName: String): Boolean {
+        return coroutineScope {
+            val deferred = async {
+                val query = usersRef.orderByChild("username").equalTo(userName)
+                    .get()
+                query.result.exists()
+            }
+            deferred.await()
+        }
+    }
+
+
+    fun registerUser(
+        userId: String, userName: String,
+    ) {
+        val user = UserModel(id = userId, username = userName) // add username property to user
+        usersRef.child(userId).setValue(user) // use userId as key for child node
     }
 
 

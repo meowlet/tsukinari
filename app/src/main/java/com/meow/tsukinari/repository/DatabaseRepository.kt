@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
 //Small data
-const val USERS_COLLECTION_REF = "users"
+
 const val FICTIONS_COLLECTION_REF = "fictions"
 const val FOLLOWS_COLLECTION_REF = "follows"
 const val CHAPTERS_COLLECTION_REF = "chapters"
@@ -29,7 +29,7 @@ class DatabaseRepository {
     val userId = Firebase.auth.currentUser?.uid.orEmpty()
 
     val userEmail = user?.email.orEmpty()
-    private val usersRef = Firebase.database.getReference(USERS_COLLECTION_REF)
+
     private val fictionsRef = Firebase.database.getReference(FICTIONS_COLLECTION_REF)
     private val chaptersRef = Firebase.database.getReference(CHAPTERS_COLLECTION_REF)
     private val followsRef = Firebase.database.getReference(FOLLOWS_COLLECTION_REF)
@@ -39,40 +39,7 @@ class DatabaseRepository {
         return Firebase.auth.currentUser != null
     }
 
-    fun isSetup(userId: String, callback: (Boolean) -> Unit) {
-        usersRef.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                // Nếu snapshot tồn tại, có nghĩa là người dùng đã setup
-                val isSetup = snapshot.exists()
-                callback(isSetup)
-            }
 
-            override fun onCancelled(error: DatabaseError) {
-                // Xử lý lỗi nếu cần thiết
-                // Trong trường hợp này, chỉ cần thông báo lỗi ra log
-                error.toException().printStackTrace()
-                // Trả về false vì không thể xác định trạng thái của việc setup
-                callback(false)
-            }
-        })
-    }
-
-//    fun userSetup (userId: String, username:String, displayName:String){
-//        val user = UserModel(
-//            username = username,
-//        )
-//        usersRef.child(userId).setValue(user)
-//
-//        var userUpdate:UserProfileChangeRequest = UserProfileChangeRequest(displayName = displayName)
-//
-//        this.user!!.updateProfile(userUpdate)
-//            .addOnCompleteListener { task ->
-//                if (task.isSuccessful) {
-//                    Log.d(TAG, "User profile updated.")
-//                }
-//            }
-//
-//        }
 
 
     fun uploadImage(imageUri: Uri, fictionId: String, onComplete: (String?) -> Unit) {

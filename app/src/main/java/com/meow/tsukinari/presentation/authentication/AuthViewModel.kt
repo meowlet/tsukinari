@@ -63,6 +63,7 @@ class AuthViewModel(
         return authUiState.emailSignUp.isNotEmpty() && authUiState.passwordSignUp.isNotEmpty() && authUiState.usernameSignUp.isNotEmpty()
     }
 
+
     fun signUp(
         context: Context,
         onSignUpCompleted: () -> Unit
@@ -75,7 +76,14 @@ class AuthViewModel(
             if (authUiState.passwordSignUp != authUiState.confirmPasswordSignUp) {
                 throw IllegalArgumentException("Password does not match")
             }
+
+            val available = repository.checkUsername(authUiState.usernameSignUp)
+            if (!available) {
+                throw IllegalArgumentException("Username is already taken")
+            }
             authUiState = authUiState.copy(signUpError = "")
+
+
             repository.signUp(
                 authUiState.emailSignUp,
                 authUiState.passwordSignUp
@@ -83,6 +91,10 @@ class AuthViewModel(
                 if (isCompleted) {
                     Toast.makeText(context, "Successfully signed up!", Toast.LENGTH_SHORT).show()
                     authUiState = authUiState.copy(isSuccessful = true)
+                    // register user before signing out
+                    val userId = currentUser!!.uid
+                    repository.registerUser(userId, authUiState.usernameSignUp)
+                    // sign out after registering user
                     signOut()
                     onSignUpCompleted.invoke()
                 } else {
