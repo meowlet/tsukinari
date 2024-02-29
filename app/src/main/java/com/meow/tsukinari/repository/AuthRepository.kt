@@ -3,11 +3,12 @@ package com.meow.tsukinari.repository
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 import com.meow.tsukinari.model.UserModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
@@ -27,15 +28,22 @@ class AuthRepository {
     }
 
 
-    suspend fun checkUsername(userName: String): Boolean {
-        return coroutineScope {
-            val deferred = async {
-                val query = usersRef.orderByChild("username").equalTo(userName)
-                    .get()
-                query.result.exists()
+    fun insertUsername(username: String, callback: (success: Boolean) -> Unit) {
+
+        usersRef.child(username).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                // Username đã tồn tại
+                if (dataSnapshot.exists()) {
+                    callback(false)
+                    return
+                }
+                callback(true)
             }
-            deferred.await()
-        }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                callback(false)
+            }
+        })
     }
 
 
@@ -47,15 +55,28 @@ class AuthRepository {
     }
 
 
-    suspend fun signUp(email: String, password: String, isCompleted: (Boolean) -> Unit) =
+    suspend fun signUp(
+        username: String,
+        email: String,
+        password: String,
+        isCompleted: (Boolean) -> Unit
+    ) =
         withContext(Dispatchers.IO) {
-            Firebase.auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {
-                if (it.isSuccessful) {
-                    isCompleted.invoke(true)
+            insertUsername(username) {
+                if (it) {
+                    Firebase.auth.createUserWithEmailAndPassword(email, password)
+                        .addOnCompleteListener {
+                            if (it.isSuccessful) {
+                                isCompleted.invoke(true)
+                            } else {
+                                isCompleted.invoke(false)
+                            }
+                        }
                 } else {
                     isCompleted.invoke(false)
                 }
-            }.await()
+            }
+
         }
 
     suspend fun signIn(email: String, password: String, isCompleted: (Boolean) -> Unit) =

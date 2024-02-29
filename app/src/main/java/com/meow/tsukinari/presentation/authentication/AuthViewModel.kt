@@ -72,29 +72,22 @@ class AuthViewModel(
             if (!validateSignUpForm()) {
                 throw IllegalArgumentException("Fields must not be empty.")
             }
-            authUiState = authUiState.copy(isLoading = true)
             if (authUiState.passwordSignUp != authUiState.confirmPasswordSignUp) {
                 throw IllegalArgumentException("Password does not match")
             }
 
-            val available = repository.checkUsername(authUiState.usernameSignUp)
-            if (!available) {
-                throw IllegalArgumentException("Username is already taken")
-            }
             authUiState = authUiState.copy(signUpError = "")
 
 
             repository.signUp(
+                authUiState.usernameSignUp,
                 authUiState.emailSignUp,
                 authUiState.passwordSignUp
             ) { isCompleted ->
+                authUiState = authUiState.copy(isLoading = true)
                 if (isCompleted) {
-                    Toast.makeText(context, "Successfully signed up!", Toast.LENGTH_SHORT).show()
                     authUiState = authUiState.copy(isSuccessful = true)
-                    // register user before signing out
-                    val userId = currentUser!!.uid
-                    repository.registerUser(userId, authUiState.usernameSignUp)
-                    // sign out after registering user
+                    Toast.makeText(context, "Successfully signed up!", Toast.LENGTH_SHORT).show()
                     signOut()
                     onSignUpCompleted.invoke()
                 } else {
@@ -102,6 +95,8 @@ class AuthViewModel(
                     authUiState = authUiState.copy(isSuccessful = false)
                 }
             }
+
+
         } catch (e: Exception) {
             authUiState = authUiState.copy(signUpError = e.localizedMessage)
             e.printStackTrace()
