@@ -64,6 +64,7 @@ class AuthViewModel(
     }
 
 
+    // Sign up function
     fun signUp(
         context: Context,
         onSignUpCompleted: () -> Unit
@@ -78,9 +79,11 @@ class AuthViewModel(
 
             authUiState = authUiState.copy(signUpError = "")
 
+            if (repository.checkUsername(authUiState.usernameSignUp)) {
+                throw IllegalArgumentException("Username is already taken")
+            }
 
             repository.signUp(
-                authUiState.usernameSignUp,
                 authUiState.emailSignUp,
                 authUiState.passwordSignUp
             ) { isCompleted ->
@@ -95,8 +98,6 @@ class AuthViewModel(
                     authUiState = authUiState.copy(isSuccessful = false)
                 }
             }
-
-
         } catch (e: Exception) {
             authUiState = authUiState.copy(signUpError = e.localizedMessage)
             e.printStackTrace()
@@ -104,6 +105,7 @@ class AuthViewModel(
             authUiState = authUiState.copy(isLoading = false)
         }
     }
+
 
     fun clearSignUpForm() {
         authUiState = authUiState.copy(emailSignUp = "")
@@ -116,14 +118,19 @@ class AuthViewModel(
         context: Context
     ) = viewModelScope.launch {
         try {
+            authUiState = authUiState.copy(isLoading = true)
             if (!validateSignInForm()) {
                 throw IllegalArgumentException("Fields must not be empty.")
             }
-            authUiState = authUiState.copy(isLoading = true)
+            if (authUiState.passwordSignUp != authUiState.confirmPasswordSignUp) {
+                throw IllegalArgumentException("Password does not match")
+            }
             authUiState = authUiState.copy(signInError = "")
             repository.signIn(authUiState.email, authUiState.password) { isCompleted ->
                 if (isCompleted) {
                     Toast.makeText(context, "Successfully signed in!", Toast.LENGTH_SHORT).show()
+                    // Insert user info to database
+                    repository.insertUserInfo(currentUser!!.uid, authUiState.email)
                     authUiState = authUiState.copy(isSuccessful = true)
                 } else {
                     Toast.makeText(context, "Failed signing in!", Toast.LENGTH_SHORT).show()
@@ -131,7 +138,7 @@ class AuthViewModel(
                 }
             }
         } catch (e: Exception) {
-            authUiState = authUiState.copy(signInError = e.localizedMessage)
+            authUiState = authUiState.copy(signInError = e.localizedMessage as String)
             e.printStackTrace()
         } finally {
             authUiState = authUiState.copy(isLoading = false)

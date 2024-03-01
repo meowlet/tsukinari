@@ -46,6 +46,35 @@ class AuthRepository {
         })
     }
 
+    // Check username availability
+    suspend fun checkUsername(username: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            usersRef.child(username).get().await().exists()
+        }
+    }
+
+    // Insert userinfo to database
+    fun insertUserInfo(userId: String, username: String) {
+        val user = UserModel(id = userId) // add id property to user
+        usersRef.child(username).setValue(user) // use username as key for child node
+    }
+
+
+    suspend fun signUp(
+        email: String,
+        password: String,
+        isCompleted: (Boolean) -> Unit
+    ) =
+        withContext(Dispatchers.IO) {
+            Firebase.auth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        isCompleted.invoke(true)
+                    } else {
+                        isCompleted.invoke(false)
+                    }
+                }.await()
+        }
 
     fun registerUser(
         userId: String, userName: String,
@@ -53,31 +82,6 @@ class AuthRepository {
         val user = UserModel(id = userId, username = userName) // add username property to user
         usersRef.child(userId).setValue(user) // use userId as key for child node
     }
-
-
-    suspend fun signUp(
-        username: String,
-        email: String,
-        password: String,
-        isCompleted: (Boolean) -> Unit
-    ) =
-        withContext(Dispatchers.IO) {
-            insertUsername(username) {
-                if (it) {
-                    Firebase.auth.createUserWithEmailAndPassword(email, password)
-                        .addOnCompleteListener {
-                            if (it.isSuccessful) {
-                                isCompleted.invoke(true)
-                            } else {
-                                isCompleted.invoke(false)
-                            }
-                        }
-                } else {
-                    isCompleted.invoke(false)
-                }
-            }
-
-        }
 
     suspend fun signIn(email: String, password: String, isCompleted: (Boolean) -> Unit) =
         withContext(Dispatchers.IO) {
@@ -90,7 +94,7 @@ class AuthRepository {
             }.await()
         }
 
-    suspend fun signOut() {
+    fun signOut() {
         Firebase.auth.signOut()
     }
 
