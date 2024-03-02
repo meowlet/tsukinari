@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 class AuthViewModel(
     private val repository: AuthRepository = AuthRepository()
 ) : ViewModel() {
-    val currentUser = repository.currentUser
+
 
     val hasUser: Boolean get() = repository.hasUser()
 
@@ -64,7 +64,7 @@ class AuthViewModel(
     }
 
 
-    // Sign up function
+    //rewrite the signUp function in an optimized way (imporve the code quality and readability)
     fun signUp(
         context: Context,
         onSignUpCompleted: () -> Unit
@@ -76,7 +76,7 @@ class AuthViewModel(
             if (authUiState.passwordSignUp != authUiState.confirmPasswordSignUp) {
                 throw IllegalArgumentException("Password does not match")
             }
-
+            authUiState = authUiState.copy(isLoading = true)
             authUiState = authUiState.copy(signUpError = "")
 
             if (repository.checkUsername(authUiState.usernameSignUp)) {
@@ -87,12 +87,24 @@ class AuthViewModel(
                 authUiState.emailSignUp,
                 authUiState.passwordSignUp
             ) { isCompleted ->
-                authUiState = authUiState.copy(isLoading = true)
                 if (isCompleted) {
-                    authUiState = authUiState.copy(isSuccessful = true)
-                    Toast.makeText(context, "Successfully signed up!", Toast.LENGTH_SHORT).show()
-                    signOut()
-                    onSignUpCompleted.invoke()
+                    Toast.makeText(context, repository.getUserId(), Toast.LENGTH_SHORT).show()
+                    repository.registerUser(
+                        repository.getUserId(),
+                        authUiState.usernameSignUp,
+                        System.currentTimeMillis()
+                    ) { isRegistered ->
+                        if (isRegistered) {
+                            Toast.makeText(context, "Successfully signed up!", Toast.LENGTH_SHORT)
+                                .show()
+                            authUiState = authUiState.copy(isSuccessful = true)
+                            signOut()
+                            onSignUpCompleted.invoke()
+                        } else {
+                            Toast.makeText(context, "Failed signing up!", Toast.LENGTH_SHORT).show()
+                            authUiState = authUiState.copy(isSuccessful = false)
+                        }
+                    }
                 } else {
                     Toast.makeText(context, "Failed signing up!", Toast.LENGTH_SHORT).show()
                     authUiState = authUiState.copy(isSuccessful = false)
@@ -118,19 +130,14 @@ class AuthViewModel(
         context: Context
     ) = viewModelScope.launch {
         try {
-            authUiState = authUiState.copy(isLoading = true)
             if (!validateSignInForm()) {
                 throw IllegalArgumentException("Fields must not be empty.")
             }
-            if (authUiState.passwordSignUp != authUiState.confirmPasswordSignUp) {
-                throw IllegalArgumentException("Password does not match")
-            }
+            authUiState = authUiState.copy(isLoading = true)
             authUiState = authUiState.copy(signInError = "")
             repository.signIn(authUiState.email, authUiState.password) { isCompleted ->
                 if (isCompleted) {
                     Toast.makeText(context, "Successfully signed in!", Toast.LENGTH_SHORT).show()
-                    // Insert user info to database
-                    repository.insertUserInfo(currentUser!!.uid, authUiState.email)
                     authUiState = authUiState.copy(isSuccessful = true)
                 } else {
                     Toast.makeText(context, "Failed signing in!", Toast.LENGTH_SHORT).show()
@@ -196,4 +203,3 @@ data class AuthUiState(
     val signUpError: String = "",
     val resetPasswordError: String = "",
 )
-

@@ -12,7 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
-const val USERS_COLLECTION_REF = "users"
+const val USERS_COLLECTION_REF = "user2s"
 
 class AuthRepository {
     val currentUser: FirebaseUser? = Firebase.auth.currentUser
@@ -53,10 +53,22 @@ class AuthRepository {
         }
     }
 
-    // Insert userinfo to database
-    fun insertUserInfo(userId: String, username: String) {
-        val user = UserModel(id = userId) // add id property to user
-        usersRef.child(username).setValue(user) // use username as key for child node
+    // Register user
+    fun registerUser(
+        userId: String, userName: String, createdAt: Long, isCompleted: (Boolean) -> Unit
+    ) {
+        val user = UserModel(
+            id = userId,
+            username = userName,
+            createdAt = createdAt
+        ) // add username property to user
+        usersRef.child(userName).setValue(user).addOnCompleteListener {
+            if (it.isSuccessful) {
+                isCompleted.invoke(true)
+            } else {
+                isCompleted.invoke(false)
+            }
+        } // use userId as key for child node
     }
 
 
@@ -76,12 +88,6 @@ class AuthRepository {
                 }.await()
         }
 
-    fun registerUser(
-        userId: String, userName: String,
-    ) {
-        val user = UserModel(id = userId, username = userName) // add username property to user
-        usersRef.child(userId).setValue(user) // use userId as key for child node
-    }
 
     suspend fun signIn(email: String, password: String, isCompleted: (Boolean) -> Unit) =
         withContext(Dispatchers.IO) {
