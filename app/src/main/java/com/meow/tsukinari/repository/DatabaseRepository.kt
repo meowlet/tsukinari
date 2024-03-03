@@ -12,6 +12,7 @@ import com.meow.tsukinari.model.FictionModel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 
 //Small data
 
@@ -40,6 +41,18 @@ class DatabaseRepository {
     }
 
 
+    //search fictions
+    suspend fun searchFictions(searchValue: String): Resources<List<FictionModel>> {
+        return try {
+            val snapshot =
+                fictionsRef.orderByChild("title").startAt(searchValue).endAt(searchValue + "\uf8ff")
+                    .get().await()
+            val fictions = snapshot.children.mapNotNull { it.getValue(FictionModel::class.java) }
+            Resources.Success(data = fictions)
+        } catch (e: Exception) {
+            Resources.Error(throwable = e)
+        }
+    }
 
 
     fun uploadImage(imageUri: Uri, fictionId: String, onComplete: (String?) -> Unit) {
@@ -55,25 +68,37 @@ class DatabaseRepository {
             }
     }
 
-    fun getFictions(): Flow<Resources<List<FictionModel>>> = callbackFlow {
-        val valueEventListener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val fictions =
-                    snapshot.children.mapNotNull { it.getValue(FictionModel::class.java) }
-                trySend(Resources.Success(data = fictions))
-            }
 
-            override fun onCancelled(error: DatabaseError) {
-                trySend(Resources.Error(throwable = error.toException()))
-            }
-        }
-
-        fictionsRef.addValueEventListener(valueEventListener)
-
-        awaitClose {
-            fictionsRef.removeEventListener(valueEventListener)
+    //rewrite thif getfictions function to only load fictions and return it, no need to listen after the data is loaded
+    suspend fun getFictions(): Resources<List<FictionModel>> {
+        return try {
+            val snapshot = fictionsRef.get().await()
+            val fictions = snapshot.children.mapNotNull { it.getValue(FictionModel::class.java) }
+            Resources.Success(data = fictions)
+        } catch (e: Exception) {
+            Resources.Error(throwable = e)
         }
     }
+
+//    fun getFictions(): Flow<Resources<List<FictionModel>>> = callbackFlow {
+//        val valueEventListener = object : ValueEventListener {
+//            override fun onDataChange(snapshot: DataSnapshot) {
+//                val fictions =
+//                    snapshot.children.mapNotNull { it.getValue(FictionModel::class.java) }
+//                trySend(Resources.Success(data = fictions))
+//            }
+//
+//            override fun onCancelled(error: DatabaseError) {
+//                trySend(Resources.Error(throwable = error.toException()))
+//            }
+//        }
+//
+//        fictionsRef.addValueEventListener(valueEventListener)
+//
+//        awaitClose {
+//            fictionsRef.removeEventListener(valueEventListener)
+//        }
+//    }
 
     fun getUserFictions(userId: String): Flow<Resources<List<FictionModel>>> = callbackFlow {
         val valueEventListener = object : ValueEventListener {

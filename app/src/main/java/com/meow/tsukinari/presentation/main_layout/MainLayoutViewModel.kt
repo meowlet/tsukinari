@@ -18,18 +18,7 @@ class MainLayoutViewModel(
 
 
     var mainLayoutUiState by mutableStateOf(MainLayoutUiState())
-
-    fun changeSearchingState() {
-        mainLayoutUiState = mainLayoutUiState.copy(isSearching = !mainLayoutUiState.isSearching)
-    }
-
-    fun changeSearchValue(searchValue: String) {
-        mainLayoutUiState = mainLayoutUiState.copy(searchValue = searchValue)
-    }
-
-    fun clearSearchValue() {
-        mainLayoutUiState = mainLayoutUiState.copy(searchValue = "")
-    }
+        private set
 
     fun getHomeNavItems() = listOf(
         HomeNav.Browse,
@@ -48,7 +37,6 @@ class MainLayoutViewModel(
     fun signOut() = viewModelScope.launch {
         repository.signOut()
     }
-
 
 }
 
