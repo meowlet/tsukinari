@@ -18,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,6 +45,7 @@ fun ProfileScreen(
             .padding(18.dp)
     ) {
         if (!profileUiState!!.hasUser) {
+            profileViewModel.getUserProfile()
             Text(
                 text = "Please consider signing in to enjoy these features",
                 style = MaterialTheme.typography.titleLarge,
@@ -61,14 +63,16 @@ fun ProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 AsyncImage(
-                    model = profileUiState.profilePicUri,
+                    model = profileUiState.profilePicUrl,
                     contentDescription = null,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(128.dp)
                         .clip(CircleShape)
                         .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                        .padding(8.dp)
-                )
+                        .padding(8.dp),
+
+                    )
                 Spacer(modifier = Modifier.size(12.dp))
                 Text(
                     text = "${profileUiState.displayName}",

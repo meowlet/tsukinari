@@ -91,6 +91,7 @@ class AuthViewModel(
                     Toast.makeText(context, repository.getUserId(), Toast.LENGTH_SHORT).show()
                     repository.registerUser(
                         repository.getUserId(),
+                        repository.getUserEmail(),
                         authUiState.usernameSignUp,
                         System.currentTimeMillis()
                     ) { isRegistered ->

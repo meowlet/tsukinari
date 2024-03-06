@@ -9,6 +9,7 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 import com.google.firebase.storage.storage
 import com.meow.tsukinari.model.FictionModel
+import com.meow.tsukinari.model.UserModel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -27,7 +28,6 @@ class DatabaseRepository {
 
     val user = Firebase.auth.currentUser
 
-    val userId = Firebase.auth.currentUser?.uid.orEmpty()
 
     val userEmail = user?.email.orEmpty()
 
@@ -35,9 +35,37 @@ class DatabaseRepository {
     private val chaptersRef = Firebase.database.getReference(CHAPTERS_COLLECTION_REF)
     private val followsRef = Firebase.database.getReference(FOLLOWS_COLLECTION_REF)
     private val fictionImagesRef = Firebase.storage.reference.child(IMAGES_COLLECTION_REF)
+    private val usersRef = Firebase.database.getReference("users")
 
     fun hasUser(): Boolean {
         return Firebase.auth.currentUser != null
+    }
+
+    fun getUserId(): String {
+        return Firebase.auth.currentUser?.uid.orEmpty()
+    }
+
+    //get user info from database by user id (search for the node that has the id value (not the key) is equal to the user id) return UserModel
+    fun getUserInfo(
+        userId: String,
+        onError: (Throwable?) -> Unit,
+        onSuccess: (UserModel?) -> Unit
+    ) {
+        //
+        usersRef.orderByChild("id").equalTo(userId)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val user = snapshot.children.mapNotNull { it.getValue(UserModel::class.java) }
+                        .firstOrNull()
+                    onSuccess(user)
+                    //print the data to console
+                    println(user)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    onError(error.toException())
+                }
+            })
     }
 
 

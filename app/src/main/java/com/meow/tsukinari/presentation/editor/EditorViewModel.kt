@@ -27,7 +27,7 @@ class EditorViewModel(
         get() = repository.hasUser()
 
     private val userId: String
-        get() = repository.userId
+        get() = repository.getUserId()
 
 
     fun onTitleChange(title: String) {

@@ -14,7 +14,7 @@ class ProfileViewModel(
 ) : ViewModel() {
 
 
-    val user = repository.user
+    val user get() = repository.user
 
     var profileUiState by mutableStateOf(ProfileUiState())
         private set
@@ -31,11 +31,16 @@ class ProfileViewModel(
     fun getUserProfile() {
         if (repository.hasUser()) {
             profileUiState = profileUiState.copy(hasUser = true)
-            profileUiState = profileUiState.copy(displayName = user?.displayName)
-            profileUiState = profileUiState.copy(email = user?.email)
-            profileUiState = profileUiState.copy(profilePicUri = user?.photoUrl)
-            profileUiState = profileUiState.copy(isVerified = user?.isEmailVerified)
-            profileUiState = profileUiState.copy(uid = user?.uid)
+            repository.getUserInfo(user!!.uid, {
+            }) {
+                profileUiState = profileUiState.copy(
+                    username = it?.username,
+                    displayName = it?.displayName,
+                    createdAt = it?.createdAt,
+                    profilePicUrl = it?.profileImageUrl,
+                    email = it?.email,
+                )
+            }
         } else {
             profileUiState = profileUiState.copy(hasUser = false)
         }
@@ -61,7 +66,7 @@ data class ProfileUiState(
     val profilePicUrl: String? = "",
     val follower: Int? = 0,
     val following: Int? = 0,
-    val createdAt: String? = ""
+    val createdAt: Long? = 0
 )
 
 @Preview

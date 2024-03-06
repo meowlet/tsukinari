@@ -12,7 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
-const val USERS_COLLECTION_REF = "user2s"
+const val USERS_COLLECTION_REF = "users"
 
 class AuthRepository {
     val currentUser: FirebaseUser? = Firebase.auth.currentUser
@@ -25,6 +25,10 @@ class AuthRepository {
 
     fun getUserId(): String {
         return Firebase.auth.currentUser?.uid.orEmpty()
+    }
+
+    fun getUserEmail(): String {
+        return Firebase.auth.currentUser?.email.orEmpty()
     }
 
 
@@ -55,10 +59,15 @@ class AuthRepository {
 
     // Register user
     fun registerUser(
-        userId: String, userName: String, createdAt: Long, isCompleted: (Boolean) -> Unit
+        userId: String,
+        email: String,
+        userName: String,
+        createdAt: Long,
+        isCompleted: (Boolean) -> Unit
     ) {
         val user = UserModel(
             id = userId,
+            email = email,
             username = userName,
             createdAt = createdAt
         ) // add username property to user
