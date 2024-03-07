@@ -70,14 +70,14 @@ class AuthViewModel(
         onSignUpCompleted: () -> Unit
     ) = viewModelScope.launch {
         try {
-//            if (!validateSignUpForm()) {
-//                throw IllegalArgumentException("Fields must not be empty.")
-//            }
-//            if (authUiState.passwordSignUp != authUiState.confirmPasswordSignUp) {
-//                throw IllegalArgumentException("Password does not match")
-//            }
-//            authUiState = authUiState.copy(isLoading = true)
-//            authUiState = authUiState.copy(signUpError = "")
+            if (!validateSignUpForm()) {
+                throw IllegalArgumentException("Fields must not be empty.")
+            }
+            if (authUiState.passwordSignUp != authUiState.confirmPasswordSignUp) {
+                throw IllegalArgumentException("Password does not match")
+            }
+            authUiState = authUiState.copy(isLoading = true)
+            authUiState = authUiState.copy(signUpError = "")
 
             if (repository.checkUsername(authUiState.usernameSignUp)) {
                 throw IllegalArgumentException("Username is already taken")
@@ -90,9 +90,8 @@ class AuthViewModel(
                 if (isCompleted) {
                     Toast.makeText(context, repository.getUserId(), Toast.LENGTH_SHORT).show()
                     repository.registerUser(
-                        repository.getUserId(),
-                        repository.getUserEmail(),
                         authUiState.usernameSignUp,
+                        authUiState.emailSignUp,
                         System.currentTimeMillis()
                     ) { isRegistered ->
                         if (isRegistered) {
@@ -103,6 +102,8 @@ class AuthViewModel(
                             onSignUpCompleted.invoke()
                         } else {
                             Toast.makeText(context, "Failed signing up!", Toast.LENGTH_SHORT).show()
+                            //delete the user if the registration failed
+                            repository.deleteUser()
                             authUiState = authUiState.copy(isSuccessful = false)
                         }
                     }

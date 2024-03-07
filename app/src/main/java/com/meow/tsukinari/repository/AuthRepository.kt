@@ -59,19 +59,17 @@ class AuthRepository {
 
     // Register user
     fun registerUser(
-        userId: String,
-        email: String,
         userName: String,
+        email: String,
         createdAt: Long,
         isCompleted: (Boolean) -> Unit
     ) {
         val user = UserModel(
-            id = userId,
+            userName = userName,
             email = email,
-            username = userName,
             createdAt = createdAt
         ) // add username property to user
-        usersRef.child(userName).setValue(user).addOnCompleteListener {
+        usersRef.child(getUserId()).setValue(user).addOnCompleteListener {
             if (it.isSuccessful) {
                 isCompleted.invoke(true)
             } else {
@@ -108,6 +106,11 @@ class AuthRepository {
                 }
             }.await()
         }
+
+    //delete user
+    fun deleteUser() {
+        Firebase.auth.currentUser?.delete()
+    }
 
     fun signOut() {
         Firebase.auth.signOut()

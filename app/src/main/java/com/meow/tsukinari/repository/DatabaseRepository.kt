@@ -51,14 +51,11 @@ class DatabaseRepository {
         onError: (Throwable?) -> Unit,
         onSuccess: (UserModel?) -> Unit
     ) {
-        //
-        usersRef.orderByChild("id").equalTo(userId)
+        //get all the info in the uid child node
+        usersRef.child(userId)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val user = snapshot.children.mapNotNull { it.getValue(UserModel::class.java) }
-                        .firstOrNull()
-                    onSuccess(user)
-                    println(user)
+                    onSuccess(snapshot.getValue(UserModel::class.java))
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -147,7 +144,27 @@ class DatabaseRepository {
             fictionsRef.orderByChild("uploaderId").equalTo(userId)
                 .removeEventListener(valueEventListener)
         }
+
     }
+
+    //get fictions's uploader's full info by passing the uploader id
+    fun getUploaderInfo(
+        uploaderId: String,
+        onError: (Throwable?) -> Unit,
+        onSuccess: (UserModel?) -> Unit
+    ) {
+        usersRef.child(uploaderId)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    onSuccess(snapshot.getValue(UserModel::class.java))
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    onError(error.toException())
+                }
+            })
+    }
+
 
     fun getFiction(
         fictionId: String,
@@ -173,7 +190,7 @@ class DatabaseRepository {
         imageUri: Uri,
         onComplete: (Boolean) -> Unit,
     ) {
-        val fictionId = fictionsRef.push().key ?: "null"
+        val fictionId = fictionsRef.push().key.orEmpty()
 
         uploadImage(imageUri, fictionId) { imageUrl ->
             imageUrl?.let {

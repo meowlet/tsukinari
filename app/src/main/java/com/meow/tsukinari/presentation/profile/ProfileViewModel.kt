@@ -37,7 +37,7 @@ class ProfileViewModel(
             repository.getUserInfo(userId, {
             }) {
                 profileUiState = profileUiState.copy(
-                    username = it?.username,
+                    username = it?.userName,
                     displayName = it?.displayName,
                     createdAt = it?.createdAt,
                     profilePicUrl = it?.profileImageUrl,

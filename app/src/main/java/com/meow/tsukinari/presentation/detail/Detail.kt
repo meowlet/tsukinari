@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Notifications
@@ -37,6 +37,10 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -67,7 +71,10 @@ fun DetailScreen(
                 title = { },
                 navigationIcon = {
                     IconButton(onClick = { onNavigate.invoke() }) {
-                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = ""
+                        )
                     }
                 },
                 actions = {
@@ -143,9 +150,20 @@ fun DetailScreen(
                             )
                             Spacer(modifier = Modifier.size(8.dp))
                             Text(
-                                text = detailUiState.uploader,
-                                style = MaterialTheme.typography.titleSmall
+                                text = buildAnnotatedString {
+                                    append("Author: ")
+                                    withStyle(
+                                        SpanStyle(
+                                            color = MaterialTheme.colorScheme.primary,
+                                            textDecoration = TextDecoration.Underline
+                                        )
+                                    ) {
+                                        append(detailUiState.uploader)
+                                    }
+                                }
+
                             )
+                            Spacer(modifier = Modifier.size(8.dp))
                             Text(
                                 text = "Status: Ongoing",
                                 style = MaterialTheme.typography.labelMedium

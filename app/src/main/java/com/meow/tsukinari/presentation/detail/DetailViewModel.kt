@@ -21,7 +21,11 @@ class DetailViewModel(
             detailUiState = detailUiState.copy(imageUrl = fiction.coverLink)
             detailUiState = detailUiState.copy(uploadedAt = fiction.uploadedAt)
             detailUiState = detailUiState.copy(uploadedAt = fiction.uploadedAt)
-            detailUiState = detailUiState.copy(uploader = fiction.uploaderId)
+            repository.getUploaderInfo(fiction.uploaderId, onError = {
+                detailUiState = detailUiState.copy(uploader = "Unknown")
+            }, onSuccess = {
+                detailUiState = detailUiState.copy(uploader = it!!.userName)
+            })
         })
 }
 
