@@ -7,7 +7,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.meow.tsukinari.repository.DatabaseRepository
+import kotlinx.coroutines.launch
 
 class AddChapterViewModel(val repository: DatabaseRepository = DatabaseRepository()) : ViewModel() {
 
@@ -29,7 +31,7 @@ class AddChapterViewModel(val repository: DatabaseRepository = DatabaseRepositor
 
 
     //upload chapter images to storage
-    fun uploadChapter(context: Context, fictionId: String) {
+    fun uploadChapter(context: Context, fictionId: String) = viewModelScope.launch {
 
         try {
             if (!validateForm()) {
@@ -58,6 +60,7 @@ class AddChapterViewModel(val repository: DatabaseRepository = DatabaseRepositor
             ) {
                 //clear the selected images
                 selectedImages.clear()
+                addChapterUiState = addChapterUiState.copy(isLoading = false)
             }
         } catch (e: Exception) {
             addChapterUiState = addChapterUiState.copy(addingChapterError = e.localizedMessage)
@@ -79,11 +82,15 @@ class AddChapterViewModel(val repository: DatabaseRepository = DatabaseRepositor
 
     // validate the adding chapter form
     fun validateForm(): Boolean {
-        return validateTitle() && validateIndex()
+        return validateTitle() && addChapterUiState.chapterIndex.isNotEmpty() && selectedImages.isNotEmpty()
     }
 
     fun onChapterIndexChange(index: String) {
         addChapterUiState = addChapterUiState.copy(chapterIndex = index)
+    }
+
+    fun clearSelectedImages() {
+        selectedImages.clear()
     }
 }
 

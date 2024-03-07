@@ -240,6 +240,9 @@ fun NavGraphBuilder.homeGraph(
         ) { entry ->
             AddChapterScreen(
                 addChapterViewModel = addChapterViewModel,
+                onNavigateUp = {
+                    navController.navigate(ExclusiveNav.Update.route)
+                },
                 fictionId = entry.arguments?.getString("id") as String
             )
         }

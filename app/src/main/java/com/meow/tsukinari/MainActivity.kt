@@ -15,6 +15,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             val mainLayoutViewModel = viewModel(modelClass = MainLayoutViewModel::class.java)
             MainLayout(mainLayoutViewModel)
+
+//            // test case for the adding chapter screen
+//            val addChapterViewModel = viewModel(modelClass = AddChapterViewModel::class.java)
+//            AddChapterScreen(addChapterViewModel, fictionId = "fictionId")
+
+
         }
     }
 }

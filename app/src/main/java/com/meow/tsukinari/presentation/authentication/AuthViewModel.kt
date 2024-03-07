@@ -112,7 +112,6 @@ class AuthViewModel(
                             onSignUpCompleted.invoke()
                         } else {
                             Toast.makeText(context, "Failed signing up!", Toast.LENGTH_SHORT).show()
-                            //delete the user if the registration failed
                             repository.deleteUser()
                             authUiState = authUiState.copy(isSuccessful = false)
                         }

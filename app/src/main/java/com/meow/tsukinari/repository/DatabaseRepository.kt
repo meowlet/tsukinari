@@ -324,7 +324,7 @@ class DatabaseRepository {
     }
 
     //upload several images for a chapter, store the image url in the database, and return the image url the pass the image url to the chapter model, write the chapter model to the database
-    fun addChapter(
+    suspend fun addChapter(
         context: Context,
         fictionId: String,
         chapterNumber: Int,
@@ -335,9 +335,9 @@ class DatabaseRepository {
         val chapterId = chaptersRef.push().key.orEmpty()
         val chapterPages = mutableListOf<String>()
 
-        val compressImages = compressImage(imageUris, context)
+        val compressedImages = compressImage(imageUris, context)
 
-        compressImages.forEachIndexed { index, uri ->
+        compressedImages.forEachIndexed { index, uri ->
             uploadPage(uri, index, fictionId) { imageUrl ->
                 imageUrl?.let {
                     chapterPages.add(it)
@@ -360,6 +360,7 @@ class DatabaseRepository {
             }
         }
     }
+
 
     fun signOut() = Firebase.auth.signOut()
 }

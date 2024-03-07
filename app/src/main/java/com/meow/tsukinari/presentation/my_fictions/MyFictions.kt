@@ -26,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
@@ -80,41 +81,46 @@ fun MyFictionsScreen(
         },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it)
+        ) {
+            when (myFictionsUiState.fictionsList) {
+                is Resources.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .wrapContentSize(align = Alignment.Center)
+                    )
+                }
 
-        when (myFictionsUiState.fictionsList) {
-            is Resources.Loading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .wrapContentSize(align = Alignment.Center)
-                )
-            }
-
-            is Resources.Success -> {
-                LazyColumn {
-                    items(
-                        myFictionsUiState.fictionsList.data ?: emptyList()
-                    ) { fiction ->
-                        FictionItem(
-                            fiction = fiction,
-                            uploadedAt = myFictionsViewModel!!.getTime(fiction.uploadedAt),
-                            onClick = {
-                                onNavToUpdatingPage.invoke(fiction.fictionId)
-                            }
-                        )
+                is Resources.Success -> {
+                    LazyColumn {
+                        items(
+                            myFictionsUiState.fictionsList.data ?: emptyList()
+                        ) { fiction ->
+                            FictionItem(
+                                fiction = fiction,
+                                uploadedAt = myFictionsViewModel!!.getTime(fiction.uploadedAt),
+                                onClick = {
+                                    onNavToUpdatingPage.invoke(fiction.fictionId)
+                                }
+                            )
+                        }
                     }
+                }
+
+                else -> {
+                    Text(
+                        text = myFictionsUiState
+                            .fictionsList.throwable?.localizedMessage ?: "Unknown Error",
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
             }
 
-            else -> {
-                Text(
-                    text = myFictionsUiState
-                        .fictionsList.throwable?.localizedMessage ?: "Unknown Error",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
         }
-
     }
 
 }
