@@ -1,6 +1,5 @@
 package com.meow.tsukinari.presentation.browse
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -70,10 +69,7 @@ fun BrowseScreen(
 
     // Load fictions on first launch
     LaunchedEffect(key1 = Unit) {
-        if (browseUiState.fictionsList.data == null) {
-            Toast.makeText(context, "nigger", Toast.LENGTH_SHORT).show()
-            browseViewModel?.loadFictions()
-        }
+        browseViewModel?.loadFictions()
     }
 
     Scaffold(

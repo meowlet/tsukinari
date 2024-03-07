@@ -2,6 +2,7 @@ package com.meow.tsukinari.presentation.profile
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -31,10 +33,13 @@ fun ProfileScreen(
     onNavToSignIn: () -> Unit,
 ) {
 
+    val context = LocalContext.current
     val profileUiState = profileViewModel?.profileUiState
 
     LaunchedEffect(key1 = Unit) {
-        profileViewModel?.getUserProfile()
+        if (profileViewModel?.hasUser == true) {
+            profileViewModel.getUserProfile()
+        }
     }
 
     Column(
@@ -44,8 +49,7 @@ fun ProfileScreen(
             .fillMaxSize()
             .padding(18.dp)
     ) {
-        if (!profileUiState!!.hasUser) {
-            profileViewModel.getUserProfile()
+        if (profileViewModel?.hasUser != true) {
             Text(
                 text = "Please consider signing in to enjoy these features",
                 style = MaterialTheme.typography.titleLarge,
@@ -56,45 +60,49 @@ fun ProfileScreen(
                 Text(text = "Sign in now")
             }
         } else {
-            profileViewModel.getUserProfile()
             Column(
                 modifier = Modifier.weight(0.5f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                AsyncImage(
-                    model = profileUiState.profilePicUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                Box(
+
+                    contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .size(128.dp)
                         .clip(CircleShape)
                         .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                        .padding(8.dp),
 
+                ) {
+                    AsyncImage(
+                        model = profileUiState?.profilePicUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
                     )
+                }
+
                 Spacer(modifier = Modifier.size(12.dp))
                 Text(
-                    text = "${profileUiState.displayName}",
+                    text = "${profileUiState?.displayName}",
                     style = MaterialTheme.typography.titleLarge
                 )
                 Text(
-                    text = "${profileUiState.username}",
+                    text = "${profileUiState?.username}",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = "${profileUiState.email}",
+                    text = "${profileUiState?.email}",
                     style = MaterialTheme.typography.titleSmall
                 )
             }
             Column(Modifier.weight(0.5f)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
                     Text(
-                        text = "Follower: ${profileUiState.follower}",
+                        text = "Follower: ${profileUiState?.follower}",
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = "Following: ${profileUiState.following}",
+                        text = "Following: ${profileUiState?.following}",
                         style = MaterialTheme.typography.titleMedium
                     )
                 }

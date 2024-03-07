@@ -58,7 +58,6 @@ class DatabaseRepository {
                     val user = snapshot.children.mapNotNull { it.getValue(UserModel::class.java) }
                         .firstOrNull()
                     onSuccess(user)
-                    //print the data to console
                     println(user)
                 }
 

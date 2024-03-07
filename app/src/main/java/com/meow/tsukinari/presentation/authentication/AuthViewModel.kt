@@ -70,14 +70,14 @@ class AuthViewModel(
         onSignUpCompleted: () -> Unit
     ) = viewModelScope.launch {
         try {
-            if (!validateSignUpForm()) {
-                throw IllegalArgumentException("Fields must not be empty.")
-            }
-            if (authUiState.passwordSignUp != authUiState.confirmPasswordSignUp) {
-                throw IllegalArgumentException("Password does not match")
-            }
-            authUiState = authUiState.copy(isLoading = true)
-            authUiState = authUiState.copy(signUpError = "")
+//            if (!validateSignUpForm()) {
+//                throw IllegalArgumentException("Fields must not be empty.")
+//            }
+//            if (authUiState.passwordSignUp != authUiState.confirmPasswordSignUp) {
+//                throw IllegalArgumentException("Password does not match")
+//            }
+//            authUiState = authUiState.copy(isLoading = true)
+//            authUiState = authUiState.copy(signUpError = "")
 
             if (repository.checkUsername(authUiState.usernameSignUp)) {
                 throw IllegalArgumentException("Username is already taken")

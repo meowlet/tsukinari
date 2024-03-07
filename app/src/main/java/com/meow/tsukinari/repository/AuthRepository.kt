@@ -53,7 +53,7 @@ class AuthRepository {
     // Check username availability
     suspend fun checkUsername(username: String): Boolean {
         return withContext(Dispatchers.IO) {
-            usersRef.child(username).get().await().exists()
+            usersRef.orderByChild("username").equalTo(username).get().await().value != null
         }
     }
 

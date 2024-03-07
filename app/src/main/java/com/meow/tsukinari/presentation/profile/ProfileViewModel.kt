@@ -14,7 +14,11 @@ class ProfileViewModel(
 ) : ViewModel() {
 
 
-    val user get() = repository.user
+    val hasUser: Boolean
+        get() = repository.hasUser()
+
+    val userId: String
+        get() = repository.getUserId()
 
     var profileUiState by mutableStateOf(ProfileUiState())
         private set
@@ -29,9 +33,8 @@ class ProfileViewModel(
     }
 
     fun getUserProfile() {
-        if (repository.hasUser()) {
-            profileUiState = profileUiState.copy(hasUser = true)
-            repository.getUserInfo(user!!.uid, {
+        if (hasUser) {
+            repository.getUserInfo(userId, {
             }) {
                 profileUiState = profileUiState.copy(
                     username = it?.username,
@@ -42,11 +45,13 @@ class ProfileViewModel(
                 )
             }
         } else {
-            profileUiState = profileUiState.copy(hasUser = false)
+            profileUiState = profileUiState.copy(
+                username = "username",
+                displayName = "Display Name",
+                email = "email",
+            )
         }
     }
-
-
 }
 
 data class ProfileUiState(
@@ -54,7 +59,6 @@ data class ProfileUiState(
     val usernameSetup: String = "",
     val displayNameSetup: String = "",
     val profilePicUriSetup: Uri = Uri.EMPTY,
-    val hasUser: Boolean = false,
 
     //display
     val email: String? = "",
