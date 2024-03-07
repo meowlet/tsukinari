@@ -23,6 +23,8 @@ import com.meow.tsukinari.presentation.detail.DetailViewModel
 import com.meow.tsukinari.presentation.editor.EditorViewModel
 import com.meow.tsukinari.presentation.editor.UpdatingScreen
 import com.meow.tsukinari.presentation.editor.UploadingScreen
+import com.meow.tsukinari.presentation.editor.add_chapter.AddChapterScreen
+import com.meow.tsukinari.presentation.editor.add_chapter.AddChapterViewModel
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsScreen
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsViewModel
 import com.meow.tsukinari.presentation.profile.ProfileScreen
@@ -47,7 +49,8 @@ fun Navigation(
     editorViewModel: EditorViewModel,
     myFictionsViewModel: MyFictionsViewModel,
     detailViewModel: DetailViewModel,
-    profileViewModel: ProfileViewModel
+    profileViewModel: ProfileViewModel,
+    addChapterViewModel: AddChapterViewModel
 ) {
     NavHost(
         navController = navController, startDestination = NestedNav.Main.route
@@ -59,7 +62,8 @@ fun Navigation(
             editorViewModel,
             myFictionsViewModel,
             detailViewModel,
-            profileViewModel
+            profileViewModel,
+            addChapterViewModel
         )
     }
 
@@ -137,7 +141,8 @@ fun NavGraphBuilder.homeGraph(
     editorViewModel: EditorViewModel,
     myFictionsViewModel: MyFictionsViewModel,
     detailViewModel: DetailViewModel,
-    profileViewModel: ProfileViewModel
+    profileViewModel: ProfileViewModel,
+    addChapterViewModel: AddChapterViewModel
 ) {
     navigation(
         startDestination = HomeNav.Browse.route,
@@ -195,6 +200,9 @@ fun NavGraphBuilder.homeGraph(
             UpdatingScreen(
                 editorViewModel = editorViewModel,
                 fictionId = entry.arguments?.getString("id") as String,
+                onNavToAddingChapterPage = { id ->
+                    navController.navigate(ExclusiveNav.AddChapter.route + "?id=$id")
+                },
                 onNavigate = {
                     navController.navigate(ExclusiveNav.MyFictions.route)
                 }
@@ -225,6 +233,14 @@ fun NavGraphBuilder.homeGraph(
                 onNavigate = {
                     navController.navigate(HomeNav.Browse.route)
                 }
+            )
+        }
+        composable(
+            route = ExclusiveNav.AddChapter.route + "?id={id}",
+        ) { entry ->
+            AddChapterScreen(
+                addChapterViewModel = addChapterViewModel,
+                fictionId = entry.arguments?.getString("id") as String
             )
         }
     }

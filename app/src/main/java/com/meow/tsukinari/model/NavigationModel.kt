@@ -42,9 +42,9 @@ sealed class ExclusiveNav(
     )
 
 
-    object FictionDetail : ExclusiveNav(
-        route = "explore",
-        title = "Explore",
+    object AddChapter : ExclusiveNav(
+        route = "add-chapter",
+        title = "Add chapter",
     )
 
     object Upload : ExclusiveNav(

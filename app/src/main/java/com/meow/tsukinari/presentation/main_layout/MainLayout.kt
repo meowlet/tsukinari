@@ -27,6 +27,7 @@ import com.meow.tsukinari.presentation.authentication.AuthViewModel
 import com.meow.tsukinari.presentation.browse.BrowseViewModel
 import com.meow.tsukinari.presentation.detail.DetailViewModel
 import com.meow.tsukinari.presentation.editor.EditorViewModel
+import com.meow.tsukinari.presentation.editor.add_chapter.AddChapterViewModel
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsViewModel
 import com.meow.tsukinari.presentation.profile.ProfileViewModel
 import com.meow.tsukinari.ui.theme.TsukinariTheme
@@ -40,6 +41,7 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
     val browseViewModel = viewModel(modelClass = BrowseViewModel::class.java)
     val detailViewModel = viewModel(modelClass = DetailViewModel::class.java)
     val profileViewModel = viewModel(modelClass = ProfileViewModel::class.java)
+    val addChapterViewModel = viewModel(modelClass = AddChapterViewModel::class.java)
     val focusManager = LocalFocusManager.current
 
     val navController = rememberNavController()
@@ -100,7 +102,8 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
                         editorViewModel = editorViewModel,
                         myFictionsViewModel = myFictionsViewModel,
                         detailViewModel = detailViewModel,
-                        profileViewModel = profileViewModel
+                        profileViewModel = profileViewModel,
+                        addChapterViewModel = addChapterViewModel
                     )
                 }
             }

@@ -1,6 +1,13 @@
 package com.meow.tsukinari.repository
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.net.Uri
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.database.DataSnapshot
@@ -14,6 +21,8 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import java.io.File
+import java.io.FileOutputStream
 
 //Small data
 
@@ -79,8 +88,27 @@ class DatabaseRepository {
     }
 
 
-    fun uploadImage(imageUri: Uri, fictionId: String, onComplete: (String?) -> Unit) {
-        val filePath = fictionImagesRef.child(userEmail).child(fictionId)
+    fun uploadCover(imageUri: Uri, fictionId: String, onComplete: (String?) -> Unit) {
+        val filePath = fictionImagesRef.child(getUserId()).child(fictionId).child("cover")
+        filePath.putFile(imageUri)
+            .addOnSuccessListener {
+                filePath.downloadUrl.addOnSuccessListener { imageUrl ->
+                    onComplete(imageUrl.toString())
+                }
+            }
+            .addOnFailureListener {
+                onComplete(null)
+            }
+    }
+
+    fun uploadPage(
+        imageUri: Uri,
+        pageNumber: Int,
+        fictionId: String,
+        onComplete: (String?) -> Unit
+    ) {
+        val filePath =
+            fictionImagesRef.child(getUserId()).child(fictionId).child(pageNumber.toString())
         filePath.putFile(imageUri)
             .addOnSuccessListener {
                 filePath.downloadUrl.addOnSuccessListener { imageUrl ->
@@ -147,6 +175,38 @@ class DatabaseRepository {
 
     }
 
+
+    fun compressImage(uncompressedImages: List<Uri>, context: Context): List<Uri> {
+        //compress the image and return the compressed image uri
+        val compressedImages = mutableListOf<Uri>()
+        uncompressedImages.forEach { uri ->
+            val tempFile = File.createTempFile("temp", "jpg")
+
+            Glide.with(context)
+                .asBitmap()
+                .load(uri)
+                .apply(RequestOptions().override(1080))
+                .into(object : CustomTarget<Bitmap>() {
+                    override fun onResourceReady(
+                        resource: Bitmap,
+                        transition: Transition<in Bitmap>?
+                    ) {
+                        resource.compress(
+                            Bitmap.CompressFormat.JPEG,
+                            80,
+                            FileOutputStream(tempFile)
+                        )
+                    }
+
+                    override fun onLoadCleared(placeholder: Drawable?) {
+                    }
+                })
+            compressedImages.add(Uri.fromFile(tempFile))
+        }
+        return compressedImages
+    }
+
+
     //get fictions's uploader's full info by passing the uploader id
     fun getUploaderInfo(
         uploaderId: String,
@@ -192,7 +252,7 @@ class DatabaseRepository {
     ) {
         val fictionId = fictionsRef.push().key.orEmpty()
 
-        uploadImage(imageUri, fictionId) { imageUrl ->
+        uploadCover(imageUri, fictionId) { imageUrl ->
             imageUrl?.let {
                 val fiction = FictionModel(
                     uploaderId = uploaderId,
@@ -245,7 +305,7 @@ class DatabaseRepository {
 
             else -> {
                 // upload image and update data with image
-                uploadImage(imageUri, fictionId) { imageUrl ->
+                uploadCover(imageUri, fictionId) { imageUrl ->
                     imageUrl?.let {
                         val updateData = hashMapOf<String, Any>(
                             "description" to description,
@@ -265,6 +325,7 @@ class DatabaseRepository {
 
     //upload several images for a chapter, store the image url in the database, and return the image url the pass the image url to the chapter model, write the chapter model to the database
     fun addChapter(
+        context: Context,
         fictionId: String,
         chapterNumber: Int,
         chapterTitle: String,
@@ -274,8 +335,10 @@ class DatabaseRepository {
         val chapterId = chaptersRef.push().key.orEmpty()
         val chapterPages = mutableListOf<String>()
 
-        imageUris.forEachIndexed { index, uri ->
-            uploadImage(uri, fictionId) { imageUrl ->
+        val compressImages = compressImage(imageUris, context)
+
+        compressImages.forEachIndexed { index, uri ->
+            uploadPage(uri, index, fictionId) { imageUrl ->
                 imageUrl?.let {
                     chapterPages.add(it)
                     if (index == imageUris.size - 1) {

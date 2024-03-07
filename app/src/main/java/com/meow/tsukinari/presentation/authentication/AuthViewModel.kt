@@ -76,12 +76,22 @@ class AuthViewModel(
             if (authUiState.passwordSignUp != authUiState.confirmPasswordSignUp) {
                 throw IllegalArgumentException("Password does not match")
             }
-            authUiState = authUiState.copy(isLoading = true)
-            authUiState = authUiState.copy(signUpError = "")
 
+            //validate the username is valid or not (contains only letters, numbers, and underscores)
+            if (!authUiState.usernameSignUp.matches(Regex("^[a-zA-Z0-9_]*$"))) {
+                throw IllegalArgumentException("Username must contain only letters, numbers, and underscores")
+            }
+
+            //validate the username's availability
             if (repository.checkUsername(authUiState.usernameSignUp)) {
                 throw IllegalArgumentException("Username is already taken")
             }
+
+
+            authUiState = authUiState.copy(isLoading = true)
+            authUiState = authUiState.copy(signUpError = "")
+
+
 
             repository.signUp(
                 authUiState.emailSignUp,

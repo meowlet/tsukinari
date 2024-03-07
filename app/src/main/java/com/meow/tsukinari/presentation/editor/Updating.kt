@@ -44,11 +44,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.Wallpapers
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.meow.tsukinari.ui.theme.TsukinariTheme
 import kotlinx.coroutines.launch
 
 
@@ -57,6 +54,7 @@ import kotlinx.coroutines.launch
 fun UpdatingScreen(
     editorViewModel: EditorViewModel? = null,
     fictionId: String,
+    onNavToAddingChapterPage: (id: String) -> Unit,
     onNavigate: () -> Unit,
 ) {
 
@@ -234,16 +232,17 @@ fun UpdatingScreen(
             ) {
                 Text(text = "Delete")
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedButton(
+                onClick = { onNavToAddingChapterPage.invoke(fictionId) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Add Chapter")
+            }
         }
     }
 
 
 }
 
-@Preview(showSystemUi = true, wallpaper = Wallpapers.RED_DOMINATED_EXAMPLE)
-@Composable
-fun UpdatingPrev() {
-    TsukinariTheme {
-        UpdatingScreen(fictionId = "nigga") {}
-    }
-}

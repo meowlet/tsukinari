@@ -15,8 +15,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             val mainLayoutViewModel = viewModel(modelClass = MainLayoutViewModel::class.java)
             MainLayout(mainLayoutViewModel)
-
-
         }
     }
 }
