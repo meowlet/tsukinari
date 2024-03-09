@@ -405,6 +405,19 @@ class DatabaseRepository {
 
 
     fun signOut() = Firebase.auth.signOut()
+    fun getChapter(chapterId: String, onSuccess: (ChapterModel) -> Unit) {
+        //get the chapter from the database using the chapter id
+        chaptersRef.child(chapterId)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val chapter = snapshot.getValue(ChapterModel::class.java)
+                    onSuccess(chapter!!)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                }
+            })
+    }
 }
 
 
