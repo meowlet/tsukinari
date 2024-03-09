@@ -15,6 +15,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 import com.google.firebase.storage.storage
+import com.meow.tsukinari.model.ChapterModel
 import com.meow.tsukinari.model.FictionModel
 import com.meow.tsukinari.model.UserModel
 import kotlinx.coroutines.channels.awaitClose
@@ -324,7 +325,7 @@ class DatabaseRepository {
     }
 
     //upload several images for a chapter, store the image url in the database, and return the image url the pass the image url to the chapter model, write the chapter model to the database
-    suspend fun addChapter(
+    fun addChapter(
         context: Context,
         fictionId: String,
         chapterNumber: Int,
@@ -358,7 +359,48 @@ class DatabaseRepository {
                     }
                 }
             }
+            //
         }
+    }
+
+    //get chapters of a fiction
+    fun getChapters(
+        fictionId: String,
+        onError: (Throwable?) -> Unit,
+        onSuccess: (List<ChapterModel>?) -> Unit
+    ) {
+        chaptersRef.orderByChild("fictionId").equalTo(fictionId)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val chapters =
+                        snapshot.children.mapNotNull { it.getValue(ChapterModel::class.java) }
+                    onSuccess(chapters)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    onError(error.toException())
+                }
+            })
+    }
+
+    //get all images of a chapter
+    fun getChapterImages(
+        fictionId: String,
+        chapterId: String,
+        onError: (Throwable?) -> Unit,
+        onSuccess: (List<String>?) -> Unit
+    ) {
+        chaptersRef.child(chapterId).child("chapterPages")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val images = snapshot.children.mapNotNull { it.value.toString() }
+                    onSuccess(images)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    onError(error.toException())
+                }
+            })
     }
 
 

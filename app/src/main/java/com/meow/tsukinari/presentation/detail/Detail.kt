@@ -1,5 +1,6 @@
 package com.meow.tsukinari.presentation.detail
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -44,6 +46,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.meow.tsukinari.model.ChapterModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +58,7 @@ fun DetailScreen(
     val detailUiState = detailViewModel?.detailUiState ?: DetailUiState()
     LaunchedEffect(key1 = Unit) {
         detailViewModel?.getFiction(fictionId)
+        detailViewModel?.getChapterList(fictionId)
     }
 
 
@@ -203,6 +207,21 @@ fun DetailScreen(
                     )
                 }
             }
+            detailUiState.chapters.forEachIndexed { index, chapter ->
+                item {
+                    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                        Text(
+                            text = "Chapter ${chapter.chapterNumber}: ${chapter.chapterTitle}",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text(
+                            text = "Uploaded at: ${chapter.uploadedAt}",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                }
+            }
         }
 
     }
@@ -211,6 +230,54 @@ fun DetailScreen(
 @Preview
 @Composable
 fun DetailPreview() {
-    DetailScreen(fictionId = "-NpSa55XzRjb7kqCnrkp") {
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        LazyColumn(content = {
+            item {
+                generateChapterList().forEach {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .background(MaterialTheme.colorScheme.surface)
+                    ) {
+                        Text(text = it.chapterTitle)
+                    }
+                }
+            }
+        })
     }
+}
+
+@Composable
+fun ChapterItem() {
+    Column {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .background(MaterialTheme.colorScheme.surface)
+        ) {
+
+        }
+        Text(text = "Chapter 1")
+        Text(text = "Uploaded at: 2021-09-01")
+    }
+}
+
+//generate data for testing chapter list design
+fun generateChapterList(): List<ChapterModel> {
+    val list = mutableListOf<ChapterModel>()
+    for (i in 1..10) {
+        list.add(
+            ChapterModel(
+                chapterNumber = i,
+                chapterTitle = "A very long name $i",
+                uploadedAt = System.currentTimeMillis()
+            )
+        )
+    }
+    return list
 }

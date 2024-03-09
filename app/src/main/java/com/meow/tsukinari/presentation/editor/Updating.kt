@@ -58,6 +58,7 @@ fun UpdatingScreen(
     onNavigate: () -> Unit,
 ) {
 
+
     val context = LocalContext.current
     val singlePhotoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),

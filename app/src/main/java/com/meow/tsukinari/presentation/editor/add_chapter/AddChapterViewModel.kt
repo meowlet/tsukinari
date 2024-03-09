@@ -46,29 +46,29 @@ class AddChapterViewModel(val repository: DatabaseRepository = DatabaseRepositor
                 throw IllegalArgumentException("Please provide a valid index")
             }
 
+            addChapterUiState = addChapterUiState.copy(isLoading = true)
             //clear the error
             addChapterUiState = addChapterUiState.copy(addingChapterError = "")
-
-            addChapterUiState = addChapterUiState.copy(isLoading = true)
 
             repository.addChapter(
                 context,
                 fictionId,
                 addChapterUiState.chapterIndex.toInt(),
                 addChapterUiState.chapterTitle,
-                selectedImages
-            ) {
+                selectedImages,
+            ) { success ->
                 //clear the selected images
-                selectedImages.clear()
-                addChapterUiState = addChapterUiState.copy(isLoading = false)
+                // Update isLoading state based on the success of addChapter
+                addChapterUiState = addChapterUiState.copy(isLoading = !success)
+                // Update the uploadedChapterStatus based on the success of addChapter
+                addChapterUiState = addChapterUiState.copy(uploadedChapterStatus = success)
             }
         } catch (e: Exception) {
             addChapterUiState = addChapterUiState.copy(addingChapterError = e.localizedMessage)
             e.printStackTrace()
-        } finally {
-            addChapterUiState = addChapterUiState.copy(isLoading = false)
         }
     }
+
 
     //validate title field
     fun validateTitle(): Boolean {
@@ -89,7 +89,20 @@ class AddChapterViewModel(val repository: DatabaseRepository = DatabaseRepositor
         addChapterUiState = addChapterUiState.copy(chapterIndex = index)
     }
 
-    fun clearSelectedImages() {
+    fun clearForm() {
+        selectedImages.clear()
+        addChapterUiState = addChapterUiState.copy(
+            chapterTitle = "",
+            chapterIndex = "",
+            addingChapterError = ""
+        )
+    }
+
+    fun resetSnackbar() {
+        addChapterUiState = addChapterUiState.copy(uploadedChapterStatus = false)
+    }
+
+    fun clearAllImages() {
         selectedImages.clear()
     }
 }
@@ -98,5 +111,6 @@ data class AddChapterUiState(
     val chapterTitle: String = "",
     val chapterIndex: String = "",
     val addingChapterError: String = "",
+    val uploadedChapterStatus: Boolean = false,
     val isLoading: Boolean = false,
 )

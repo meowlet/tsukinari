@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.meow.tsukinari.model.ChapterModel
 import com.meow.tsukinari.repository.DatabaseRepository
 
 class DetailViewModel(
@@ -27,6 +28,11 @@ class DetailViewModel(
                 detailUiState = detailUiState.copy(uploader = it!!.userName)
             })
         })
+
+    fun getChapterList(fictionId: String) =
+        repository.getChapters(fictionId, onError = {}, onSuccess = { chapters ->
+            detailUiState = detailUiState.copy(chapters = chapters!!)
+        })
 }
 
 
@@ -36,6 +42,7 @@ data class DetailUiState(
     val imageUrl: String = "",
     val uploadedAt: Long = 0,
     val uploader: String = "",
+    val chapters: List<ChapterModel> = emptyList(),
     val isLoading: Boolean = false
 )
 
