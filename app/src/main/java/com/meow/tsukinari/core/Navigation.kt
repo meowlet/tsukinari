@@ -29,6 +29,8 @@ import com.meow.tsukinari.presentation.my_fictions.MyFictionsScreen
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsViewModel
 import com.meow.tsukinari.presentation.profile.ProfileScreen
 import com.meow.tsukinari.presentation.profile.ProfileViewModel
+import com.meow.tsukinari.presentation.reader.ReaderScreen
+import com.meow.tsukinari.presentation.reader.ReaderViewModel
 
 
 enum class AuthRoutes {
@@ -50,7 +52,8 @@ fun Navigation(
     myFictionsViewModel: MyFictionsViewModel,
     detailViewModel: DetailViewModel,
     profileViewModel: ProfileViewModel,
-    addChapterViewModel: AddChapterViewModel
+    addChapterViewModel: AddChapterViewModel,
+    readerViewModel: ReaderViewModel
 ) {
     NavHost(
         navController = navController, startDestination = NestedNav.Main.route
@@ -63,7 +66,8 @@ fun Navigation(
             myFictionsViewModel,
             detailViewModel,
             profileViewModel,
-            addChapterViewModel
+            addChapterViewModel,
+            readerViewModel
         )
     }
 
@@ -142,7 +146,8 @@ fun NavGraphBuilder.homeGraph(
     myFictionsViewModel: MyFictionsViewModel,
     detailViewModel: DetailViewModel,
     profileViewModel: ProfileViewModel,
-    addChapterViewModel: AddChapterViewModel
+    addChapterViewModel: AddChapterViewModel,
+    readerViewModel: ReaderViewModel
 ) {
     navigation(
         startDestination = HomeNav.Browse.route,
@@ -231,10 +236,31 @@ fun NavGraphBuilder.homeGraph(
                 detailViewModel = detailViewModel,
                 fictionId = entry.arguments?.getString("id") as String,
                 onNavigate = {
-                    navController.navigate(HomeNav.Browse.route)
+                    //nav up
+                    navController.navigateUp()
+                },
+                onNavToReader = { chapterId ->
+                    navController.navigate(ExclusiveNav.Reader.route + "?chapterId=$chapterId") {
+
+                        launchSingleTop = true
+
+                    }
                 }
             )
         }
+        composable(
+            route = ExclusiveNav.Reader.route + "?chapterId={chapterId}",
+            arguments = listOf(navArgument("chapterId") {
+                type = NavType.StringType
+                defaultValue = ""
+            })
+        ) { entry ->
+            ReaderScreen(
+                viewModel = readerViewModel,
+                fictionId = entry.arguments?.getString("chapterId") as String
+            )
+        }
+
         composable(
             route = ExclusiveNav.AddChapter.route + "?id={id}",
         ) { entry ->

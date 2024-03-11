@@ -47,6 +47,11 @@ sealed class ExclusiveNav(
         title = "Add chapter",
     )
 
+    object Reader : ExclusiveNav(
+        route = "reader",
+        title = "Reader",
+    )
+
     object Upload : ExclusiveNav(
         route = "upload",
         title = "Upload fictions",

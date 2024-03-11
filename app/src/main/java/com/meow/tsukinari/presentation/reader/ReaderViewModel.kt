@@ -20,8 +20,8 @@ class ReaderViewModel(
     }
 
     //fun to fetch the chapter
-    fun fetchChapter() {
-        repository.getChapter("-NsSW-RL61VBgY1hvLrn") {
+    fun fetchChapter(fictionId: String) {
+        repository.getChapterData(fictionId) {
             onChapterChanged(it.chapterId, it.chapterTitle, it.chapterPages)
         }
     }

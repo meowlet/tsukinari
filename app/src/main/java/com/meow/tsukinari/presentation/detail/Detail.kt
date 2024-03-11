@@ -1,6 +1,7 @@
 package com.meow.tsukinari.presentation.detail
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,6 +55,7 @@ fun DetailScreen(
     detailViewModel: DetailViewModel? = null,
     fictionId: String,
     onNavigate: () -> Unit,
+    onNavToReader: (fictionId: String) -> Unit,
 ) {
     val detailUiState = detailViewModel?.detailUiState ?: DetailUiState()
     LaunchedEffect(key1 = Unit) {
@@ -74,7 +76,10 @@ fun DetailScreen(
             TopAppBar(
                 title = { },
                 navigationIcon = {
-                    IconButton(onClick = { onNavigate.invoke() }) {
+                    IconButton(
+                        //navigate back
+                        onClick = { onNavigate.invoke() }
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = ""
@@ -209,7 +214,13 @@ fun DetailScreen(
             }
             detailUiState.chapters.forEachIndexed { index, chapter ->
                 item {
-                    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .padding(horizontal = 20.dp)
+                            .clickable {
+                                onNavToReader.invoke(chapter.chapterId)
+                            }
+                    ) {
                         Text(
                             text = "Chapter ${chapter.chapterNumber}: ${chapter.chapterTitle}",
                             style = MaterialTheme.typography.titleMedium

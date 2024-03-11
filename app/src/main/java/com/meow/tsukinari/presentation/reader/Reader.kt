@@ -4,13 +4,14 @@ import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -23,24 +24,20 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
+import coil.compose.AsyncImage
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ReaderScreen(
     viewModel: ReaderViewModel? = null,
+    fictionId: String = "fictionId",
 ) {
     //uistate
     val readerUiState = viewModel?.readerUiState
 
     LaunchedEffect(key1 = Unit) {
-        viewModel?.fetchChapter()
+        viewModel?.fetchChapter(fictionId)
     }
 
     //make the reader screen inspired by the design from the Tachiyomi app
@@ -74,7 +71,7 @@ fun ReaderScreen(
                 exit = slideOutVertically(targetOffsetY = { it }),
                 content = {
                     NavigationBar {
-                        viewModel!!.bottomBarItems.forEach { item ->
+                        viewModel?.bottomBarItems?.forEach { item ->
                             NavigationBarItem(
                                 selected = false,
                                 icon = {
@@ -90,39 +87,35 @@ fun ReaderScreen(
                     }
                 }
             )
-        },
-        content = {
-            //make the reader screen inspired by the design from the Tachiyomi app
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable { viewModel?.onToolbarVisibilityChanged() },
+        }) {
+        val pagerState = rememberPagerState(pageCount = {
+            readerUiState?.chapterImages?.size ?: 0
+        })
 
-                content = {
-                    items(readerUiState!!.chapterImages.size) { index ->
-                        Image(
-                            painter = rememberAsyncImagePainter(
-                                ImageRequest.Builder(LocalContext.current)
-                                    .data(data = readerUiState.chapterImages[index]).apply(block = fun ImageRequest.Builder.() {
-                                        crossfade(true)
-                                    }).build()
-                            ),
-                            contentDescription = null,
-                            contentScale = ContentScale.FillWidth,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(300.dp)
-                        )
-                    }
+        HorizontalPager(
+            state = pagerState,
+            //if clicked the right side of the screen, go to the next page, if clicked the left side of the screen, go to the previous page
+
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable {
+                    viewModel?.onToolbarVisibilityChanged()
                 }
+
+        ) { page ->
+            // Our page content
+            readerUiState?.chapterImages?.get(page)?.let { imageUrl ->
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = null,
+                )
+            }
+            Text(
+                text = "Page: $page",
+                modifier = Modifier.fillMaxWidth()
             )
         }
-    )
+    }
+
 }
 
-
-@Preview
-@Composable
-fun ReaderPreview() {
-    ReaderScreen()
-}

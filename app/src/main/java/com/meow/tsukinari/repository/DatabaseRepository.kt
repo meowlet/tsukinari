@@ -405,7 +405,7 @@ class DatabaseRepository {
 
 
     fun signOut() = Firebase.auth.signOut()
-    fun getChapter(chapterId: String, onSuccess: (ChapterModel) -> Unit) {
+    fun getChapterData(chapterId: String, onSuccess: (ChapterModel) -> Unit) {
         //get the chapter from the database using the chapter id
         chaptersRef.child(chapterId)
             .addListenerForSingleValueEvent(object : ValueEventListener {
