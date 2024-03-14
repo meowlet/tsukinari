@@ -32,7 +32,6 @@ class BrowseViewModel(
         // Khởi tạo bộ đếm thời gian
         val timer = Timer()
 
-        // Lên lịch nhiệm vụ tìm kiếm sau 1 giây
         timer.schedule(object : TimerTask() {
             override fun run() {
                 // Kiểm tra nếu giá trị tìm kiếm không thay đổi
@@ -53,6 +52,7 @@ class BrowseViewModel(
 
     fun clearSearchValue() {
         browseUiState = browseUiState.copy(searchValue = "")
+        searchFictions("")
     }
 
     fun signOut() = viewModelScope.launch {

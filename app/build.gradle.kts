@@ -105,4 +105,7 @@ dependencies {
     //Swipe
     implementation("com.google.accompanist:accompanist-swiperefresh:0.34.0")
 
+    //Zoom
+    implementation("net.engawapg.lib:zoomable:1.6.1")
+
 }

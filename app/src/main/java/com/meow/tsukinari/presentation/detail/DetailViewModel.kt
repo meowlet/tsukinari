@@ -6,6 +6,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.meow.tsukinari.model.ChapterModel
 import com.meow.tsukinari.repository.DatabaseRepository
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class DetailViewModel(
     private val repository: DatabaseRepository = DatabaseRepository(),
@@ -14,6 +17,11 @@ class DetailViewModel(
 
     var detailUiState by mutableStateOf(DetailUiState())
         private set
+
+    fun getTime(uploadedAt: Long): String {
+        val sdf = SimpleDateFormat("dd/MM/yyyy - HH:mm", Locale.getDefault())
+        return sdf.format(Date(uploadedAt))
+    }
 
     fun getFiction(fictionId: String) =
         repository.getFiction(fictionId, onError = {}, onSuccess = { fiction ->

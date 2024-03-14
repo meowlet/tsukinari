@@ -1,6 +1,5 @@
 package com.meow.tsukinari.presentation.detail
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,7 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -212,69 +210,87 @@ fun DetailScreen(
                     )
                 }
             }
+            item {
+                Text(
+                    text = "Chapters List:",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.secondary,
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier.padding(
+                        start = 20.dp,
+                        end = 20.dp,
+                        top = 24.dp,
+                        bottom = 4.dp
+                    )
+                )
+            }
             detailUiState.chapters.forEachIndexed { index, chapter ->
                 item {
-                    Column(
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .clickable {
-                                onNavToReader.invoke(chapter.chapterId)
-                            }
+                    ChapterItem(
+                        chapter.chapterTitle,
+                        chapter.chapterNumber,
+                        detailViewModel!!.getTime(chapter.uploadedAt)
                     ) {
-                        Text(
-                            text = "Chapter ${chapter.chapterNumber}: ${chapter.chapterTitle}",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Spacer(modifier = Modifier.size(8.dp))
-                        Text(
-                            text = "Uploaded at: ${chapter.uploadedAt}",
-                            style = MaterialTheme.typography.labelMedium
-                        )
+                        onNavToReader.invoke(chapter.chapterId)
                     }
                 }
             }
         }
 
     }
+}
+
+@Composable
+fun ChapterList() {
+    LazyColumn(content = {
+        item {
+            Text(
+                text = "Chapters List:",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.secondary,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp)
+            )
+        }
+        item {
+            generateChapterList().forEach {
+                ChapterItem(it.chapterTitle, 3, it.uploadedAt.toString()) {
+
+                }
+            }
+        }
+    })
 }
 
 @Preview
 @Composable
-fun DetailPreview() {
-    Surface(
-        color = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        LazyColumn(content = {
-            item {
-                generateChapterList().forEach {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .background(MaterialTheme.colorScheme.surface)
-                    ) {
-                        Text(text = it.chapterTitle)
-                    }
-                }
-            }
-        })
-    }
+fun CTLP() {
+    ChapterList()
 }
 
-@Composable
-fun ChapterItem() {
-    Column {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .background(MaterialTheme.colorScheme.surface)
-        ) {
 
-        }
-        Text(text = "Chapter 1")
-        Text(text = "Uploaded at: 2021-09-01")
+@Composable
+fun ChapterItem(
+    chapterName: String,
+    chapterNum: Int,
+    uploadedAt: String,
+    navagateToChapter: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .fillMaxWidth()
+            .clickable { navagateToChapter.invoke() }
+    ) {
+        Text(
+            text = "Chapter $chapterNum: $chapterName",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.size(6.dp))
+        Text(
+            text = "Uploaded at: $uploadedAt",
+            style = MaterialTheme.typography.labelMedium
+        )
     }
 }
 

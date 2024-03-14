@@ -117,6 +117,7 @@ fun BrowseScreen(
                     if (browseUiState.isSearching) {
                         IconButton(onClick = {
                             browseViewModel?.changeSearchingState()
+                            browseViewModel?.clearSearchValue()
                         }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,

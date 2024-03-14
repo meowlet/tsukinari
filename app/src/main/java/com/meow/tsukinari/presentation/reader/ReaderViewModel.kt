@@ -26,6 +26,11 @@ class ReaderViewModel(
         }
     }
 
+    //hide the toolbar
+    fun hideToolbar() {
+        readerUiState = readerUiState.copy(isToolbarVisible = false)
+    }
+
     fun onChapterChanged(chapterId: String, chapterTitle: String, chapterImages: List<String>) {
         readerUiState = readerUiState.copy(
             chapterId = chapterId,
@@ -36,11 +41,13 @@ class ReaderViewModel(
         )
     }
 
+
     val bottomBarItems = listOf(
         BottomBarItem.PreviousChapter,
         BottomBarItem.NextChapter,
         BottomBarItem.Settings
     )
+
 
 
 }
@@ -52,7 +59,13 @@ data class ReaderUiState(
     val currentPage: Int = 0,
     val totalPages: Int = 0,
     val isToolbarVisible: Boolean = false,
-)
+
+
+    //image properties
+    val targetScale: Float = 3.0f,
+
+
+    )
 
 // bottom bar items (with icons)
 sealed class BottomBarItem(val title: String, val icon: Int) {

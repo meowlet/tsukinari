@@ -5,11 +5,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
@@ -23,8 +25,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import net.engawapg.lib.zoomable.rememberZoomState
+import net.engawapg.lib.zoomable.toggleScale
+import net.engawapg.lib.zoomable.zoomable
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -32,6 +41,7 @@ import coil.compose.AsyncImage
 fun ReaderScreen(
     viewModel: ReaderViewModel? = null,
     fictionId: String = "fictionId",
+    onNavUp: () -> Unit
 ) {
     //uistate
     val readerUiState = viewModel?.readerUiState
@@ -39,6 +49,10 @@ fun ReaderScreen(
     LaunchedEffect(key1 = Unit) {
         viewModel?.fetchChapter(fictionId)
     }
+
+    val zoomState = rememberZoomState(
+        maxScale = 5f
+    )
 
     //make the reader screen inspired by the design from the Tachiyomi app
     Scaffold(
@@ -51,8 +65,13 @@ fun ReaderScreen(
                     TopAppBar(
                         title = { Text(text = readerUiState?.chapterTitle ?: "Chapter 1") },
                         navigationIcon = {
-                            IconButton(onClick = { /*TODO*/ }) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            IconButton(onClick = {
+                                onNavUp()
+                            }) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back"
+                                )
                             }
                         },
                         actions = {
@@ -92,30 +111,54 @@ fun ReaderScreen(
             readerUiState?.chapterImages?.size ?: 0
         })
 
-        HorizontalPager(
-            state = pagerState,
-            //if clicked the right side of the screen, go to the next page, if clicked the left side of the screen, go to the previous page
+        LaunchedEffect(pagerState.currentPage) {
+            zoomState.reset()
+            viewModel?.hideToolbar()
+        }
 
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .clickable {
-                    viewModel?.onToolbarVisibilityChanged()
-                }
+                .background(Color.Black)
+        ) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+            ) { page ->
+                readerUiState?.chapterImages?.get(page)?.let { imageUrl ->
+                    AsyncImage(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .zoomable(
+                                zoomState = zoomState,
+                                onTap = {
+                                    viewModel.onToolbarVisibilityChanged()
+                                },
+                                onDoubleTap = { position ->
+                                    zoomState.toggleScale(
+                                        readerUiState.targetScale,
+                                        position
+                                    )
+                                }
+                            ),
+                        model = imageUrl,
+                        contentDescription = null,
+                    )
 
-        ) { page ->
-            // Our page content
-            readerUiState?.chapterImages?.get(page)?.let { imageUrl ->
-                AsyncImage(
-                    model = imageUrl,
-                    contentDescription = null,
-                )
+                }
             }
             Text(
-                text = "Page: $page",
-                modifier = Modifier.fillMaxWidth()
+                text = "Page ${pagerState.currentPage + 1} / ${pagerState.pageCount}",
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+                    .clip(CircleShape)
+                    .padding(8.dp),
+                color = Color.White,
             )
         }
     }
-
 }
+
+
 

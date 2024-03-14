@@ -179,6 +179,7 @@ fun NavGraphBuilder.homeGraph(
                         ExclusiveNav.Update.route + "?id=$fictionId"
                     ) {
                         launchSingleTop = true
+                        popUpTo(ExclusiveNav.MyFictions.route)
                     }
                 },
                 onNavToSignInPage = {
@@ -202,6 +203,8 @@ fun NavGraphBuilder.homeGraph(
                 defaultValue = ""
             })
         ) { entry ->
+            //pop up to the my fictions page
+
             UpdatingScreen(
                 editorViewModel = editorViewModel,
                 fictionId = entry.arguments?.getString("id") as String,
@@ -257,7 +260,10 @@ fun NavGraphBuilder.homeGraph(
         ) { entry ->
             ReaderScreen(
                 viewModel = readerViewModel,
-                fictionId = entry.arguments?.getString("chapterId") as String
+                fictionId = entry.arguments?.getString("chapterId") as String,
+                onNavUp = {
+                    navController.navigateUp()
+                }
             )
         }
 
