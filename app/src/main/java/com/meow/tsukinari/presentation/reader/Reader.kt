@@ -6,15 +6,24 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -75,8 +84,37 @@ fun ReaderScreen(
                             }
                         },
                         actions = {
-                            IconButton(onClick = { /*TODO*/ }) {
-                                Icon(Icons.Default.MoreVert, contentDescription = "More")
+                            Box {
+                                IconButton(onClick = {
+                                    viewModel?.onContextMenuVisibilityChanged()
+                                }) {
+                                    Icon(
+                                        Icons.Filled.MoreVert,
+                                        contentDescription = "More"
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = readerUiState?.contextMenuVisible ?: false,
+                                    onDismissRequest = {
+                                        viewModel?.onContextMenuVisibilityChanged()
+                                    }
+                                ) {
+                                    DropdownMenuItem(
+                                        onClick = {},
+                                        text = {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.padding(end = 8.dp)
+                                            ) {
+                                                Checkbox(checked = readerUiState?.verticalReader
+                                                    ?: false,
+                                                    onCheckedChange = { viewModel?.verticalReaderToggle() }
+                                                )
+                                                Text(text = "Vertical Reader")
+                                            }
+                                        }
+                                    )
+                                }
                             }
                         }
                     )
@@ -90,16 +128,29 @@ fun ReaderScreen(
                 exit = slideOutVertically(targetOffsetY = { it }),
                 content = {
                     NavigationBar {
-                        viewModel?.bottomBarItems?.forEach { item ->
+                        if (readerUiState?.previousChapter != null) {
                             NavigationBarItem(
                                 selected = false,
                                 icon = {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = item.title
+                                        contentDescription = null
                                     )
                                 },
-                                label = { Text(text = item.title) },
+                                label = { Text(text = "Previous chapter") },
+                                onClick = { /*TODO*/ }
+                            )
+                        }
+                        if (readerUiState?.nextChapter != null) {
+                            NavigationBarItem(
+                                selected = false,
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                        contentDescription = null
+                                    )
+                                },
+                                label = { Text(text = "Next chapter") },
                                 onClick = { /*TODO*/ }
                             )
                         }
@@ -116,46 +167,86 @@ fun ReaderScreen(
             viewModel?.hideToolbar()
         }
 
+        LaunchedEffect(readerUiState?.verticalReader) {
+            zoomState.reset()
+            //jump to the first page
+            pagerState.scrollToPage(0)
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black)
         ) {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize(),
-            ) { page ->
-                readerUiState?.chapterImages?.get(page)?.let { imageUrl ->
-                    AsyncImage(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .zoomable(
-                                zoomState = zoomState,
-                                onTap = {
-                                    viewModel.onToolbarVisibilityChanged()
-                                },
-                                onDoubleTap = { position ->
-                                    zoomState.toggleScale(
-                                        readerUiState.targetScale,
-                                        position
-                                    )
-                                }
-                            ),
-                        model = imageUrl,
-                        contentDescription = null,
-                    )
-
+            if (readerUiState!!.verticalReader) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .zoomable(
+                            zoomState = zoomState,
+                            onTap = {
+                                viewModel.onToolbarVisibilityChanged()
+                            },
+                            onDoubleTap = { position ->
+                                zoomState.toggleScale(
+                                    readerUiState.targetScale,
+                                    position
+                                )
+                            }
+                        ),
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    //show images vertically
+                    readerUiState.chapterImages?.forEach { imageUrl ->
+                        AsyncImage(
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally),
+                            model = imageUrl,
+                            contentDescription = null,
+                        )
+                    }
                 }
+            } else {
+
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize(),
+                ) { page ->
+                    readerUiState.chapterImages?.get(page)?.let { imageUrl ->
+                        AsyncImage(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .zoomable(
+                                    zoomState = zoomState,
+                                    onTap = {
+                                        viewModel.onToolbarVisibilityChanged()
+                                    },
+                                    onDoubleTap = { position ->
+                                        zoomState.toggleScale(
+                                            readerUiState.targetScale,
+                                            position
+                                        )
+                                    }
+                                ),
+                            model = imageUrl,
+                            contentDescription = null,
+                        )
+
+                    }
+                }
+                Text(
+                    text = "Page ${pagerState.currentPage + 1} / ${pagerState.pageCount}",
+//                    text = if (readerUiState.previousChapter == null){"No previous chapters"} else {"${readerUiState.previousChapter?.chapterTitle}"}  + "/" +
+//                            if (readerUiState.nextChapter == null){"No more chapters"} else {"${readerUiState.nextChapter?.chapterTitle}"},
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp)
+                        .clip(CircleShape)
+                        .padding(8.dp),
+                    color = Color.White,
+                )
             }
-            Text(
-                text = "Page ${pagerState.currentPage + 1} / ${pagerState.pageCount}",
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp)
-                    .clip(CircleShape)
-                    .padding(8.dp),
-                color = Color.White,
-            )
         }
     }
 }
