@@ -27,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -59,6 +60,7 @@ fun DetailScreen(
     LaunchedEffect(key1 = Unit) {
         detailViewModel?.getFiction(fictionId)
         detailViewModel?.getChapterList(fictionId)
+        detailViewModel?.getCommentList(fictionId)
     }
 
 
@@ -235,8 +237,74 @@ fun DetailScreen(
                     }
                 }
             }
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            start = 20.dp,
+                            end = 20.dp,
+                            top = 24.dp,
+                            bottom = 4.dp
+                        )
+                ) {
+                    Text(
+                        text = "Comments:",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.secondary,
+                        textDecoration = TextDecoration.Underline,
+
+                        )
+                    if (detailViewModel!!.hasUser) {
+                        //comment input
+                        TextField(value = detailUiState.comment, onValueChange = {
+                            detailViewModel.onCommentChanged(it)
+                        }, label = { Text("Write a comment") }, modifier = Modifier.fillMaxWidth())
+                        //submit button
+                        IconButton(onClick = {
+                            detailViewModel.addComment(fictionId, detailViewModel.userId)
+                        }) {
+                            Icon(imageVector = Icons.Default.Done, contentDescription = "")
+                        }
+                    } else {
+                        Text(
+                            text = "Please login to comment",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                }
+
+
+            }
+            detailUiState.commentList.forEach {
+
+                detailViewModel?.getCommentUserInfoList()
+
+                //for user info
+
+            }
         }
 
+    }
+}
+
+@Composable
+fun CommentItem(displayName: String, userName: String, comment: String, time: String) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .fillMaxWidth()
+    ) {
+        Text(
+            text = "$displayName: (@$userName)",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.size(6.dp))
+        Text(
+            text = "$comment",
+            style = MaterialTheme.typography.labelMedium
+        )
+        Text(text = "Commented at: $time", style = MaterialTheme.typography.labelMedium)
     }
 }
 

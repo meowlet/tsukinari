@@ -16,6 +16,7 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 import com.google.firebase.storage.storage
 import com.meow.tsukinari.model.ChapterModel
+import com.meow.tsukinari.model.FictionCommentModel
 import com.meow.tsukinari.model.FictionModel
 import com.meow.tsukinari.model.UserModel
 import kotlinx.coroutines.channels.awaitClose
@@ -30,6 +31,7 @@ import java.io.FileOutputStream
 const val FICTIONS_COLLECTION_REF = "fictions"
 const val FOLLOWS_COLLECTION_REF = "follows"
 const val CHAPTERS_COLLECTION_REF = "chapters"
+const val STATS_COLLECTION_REF = "stats"
 
 //Large data
 const val IMAGES_COLLECTION_REF = "images"
@@ -45,7 +47,8 @@ class DatabaseRepository {
     private val chaptersRef = Firebase.database.getReference(CHAPTERS_COLLECTION_REF)
     private val followsRef = Firebase.database.getReference(FOLLOWS_COLLECTION_REF)
     private val fictionImagesRef = Firebase.storage.reference.child(IMAGES_COLLECTION_REF)
-    private val usersRef = Firebase.database.getReference("users")
+    private val statsRef = Firebase.database.getReference(STATS_COLLECTION_REF)
+    private val usersRef = Firebase.database.getReference(USERS_COLLECTION_REF)
 
     fun hasUser(): Boolean {
         return Firebase.auth.currentUser != null
@@ -415,6 +418,86 @@ class DatabaseRepository {
                 }
 
                 override fun onCancelled(error: DatabaseError) {
+                }
+            })
+    }
+
+    //comment on a fiction
+    fun commentOnFiction(
+        fictionId: String,
+        comment: String,
+        onComplete: (Boolean) -> Unit
+    ) {
+        val commentId = statsRef.child(fictionId).child("comments").push().key.orEmpty()
+        val commentModel = FictionCommentModel(
+            commentId = commentId,
+            userId = getUserId(),
+            comment = comment,
+            commentTime = System.currentTimeMillis()
+        )
+        statsRef.child(fictionId).child("comments").child(commentId)
+            .setValue(commentModel)
+            .addOnCompleteListener { result ->
+                onComplete(result.isSuccessful)
+            }
+    }
+
+    //get all comment of a fiction
+    fun getFictionComments(
+        fictionId: String,
+        onError: (Throwable?) -> Unit,
+        onSuccess: (List<FictionCommentModel>?) -> Unit
+    ) {
+        statsRef.child(fictionId).child("comments")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val comments =
+                        snapshot.children.mapNotNull { it.getValue(FictionCommentModel::class.java) }
+                    onSuccess(comments)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    onError(error.toException())
+                }
+            })
+    }
+
+    //comment on a chapter
+    fun commentOnChapter(
+        chapterId: String,
+        comment: String,
+        onComplete: (Boolean) -> Unit
+    ) {
+        val commentId = statsRef.child(chapterId).child("comments").push().key.orEmpty()
+        val commentModel = FictionCommentModel(
+            commentId = commentId,
+            userId = getUserId(),
+            comment = comment,
+            commentTime = System.currentTimeMillis()
+        )
+        statsRef.child(chapterId).child("comments").child(commentId)
+            .setValue(commentModel)
+            .addOnCompleteListener { result ->
+                onComplete(result.isSuccessful)
+            }
+    }
+
+    //get all comment of a chapter
+    fun getChapterComments(
+        chapterId: String,
+        onError: (Throwable?) -> Unit,
+        onSuccess: (List<FictionCommentModel>?) -> Unit
+    ) {
+        statsRef.child(chapterId).child("comments")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val comments =
+                        snapshot.children.mapNotNull { it.getValue(FictionCommentModel::class.java) }
+                    onSuccess(comments)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    onError(error.toException())
                 }
             })
     }

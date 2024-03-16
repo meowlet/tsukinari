@@ -15,6 +15,10 @@ class ReaderViewModel(
     var readerUiState by mutableStateOf(ReaderUiState())
         private set
 
+    //hasUser val
+    val hasUser: Boolean
+        get() = repository.hasUser()
+
     fun onToolbarVisibilityChanged() {
         readerUiState = readerUiState.copy(isToolbarVisible = !readerUiState.isToolbarVisible)
     }
