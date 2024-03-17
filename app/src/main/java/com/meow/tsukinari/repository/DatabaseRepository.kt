@@ -31,7 +31,7 @@ import java.io.FileOutputStream
 const val FICTIONS_COLLECTION_REF = "fictions"
 const val FOLLOWS_COLLECTION_REF = "follows"
 const val CHAPTERS_COLLECTION_REF = "chapters"
-const val STATS_COLLECTION_REF = "stats"
+const val STATS_COLLECTION_REF = "comments"
 
 //Large data
 const val IMAGES_COLLECTION_REF = "images"
@@ -75,6 +75,17 @@ class DatabaseRepository {
                     onError(error.toException())
                 }
             })
+    }
+
+    //suspend get user info
+    suspend fun getUserInfo(userId: String): Resources<UserModel> {
+        return try {
+            val snapshot = usersRef.child(userId).get().await()
+            val user = snapshot.getValue(UserModel::class.java)
+            Resources.Success(data = user)
+        } catch (e: Exception) {
+            Resources.Error(throwable = e)
+        }
     }
 
 
@@ -428,7 +439,7 @@ class DatabaseRepository {
         comment: String,
         onComplete: (Boolean) -> Unit
     ) {
-        val commentId = statsRef.child(fictionId).child("comments").push().key.orEmpty()
+        val commentId = statsRef.child(fictionId).push().key.orEmpty()
         val commentModel = FictionCommentModel(
             fictionId = fictionId,
             commentId = commentId,
@@ -436,7 +447,7 @@ class DatabaseRepository {
             comment = comment,
             commentTime = System.currentTimeMillis()
         )
-        statsRef.child(fictionId).child("comments").child(commentId)
+        statsRef.child(fictionId).child(commentId)
             .setValue(commentModel)
             .addOnCompleteListener { result ->
                 onComplete(result.isSuccessful)
@@ -449,8 +460,7 @@ class DatabaseRepository {
         onError: (Throwable?) -> Unit,
         onSuccess: (List<FictionCommentModel>?) -> Unit
     ) {
-        statsRef.child(fictionId).child("comments")
-            .orderByChild("commentTime")
+        statsRef.child(fictionId)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val comments =
@@ -503,6 +513,24 @@ class DatabaseRepository {
                     onError(error.toException())
                 }
             })
+    }
+
+
+    //get all available user's info
+    fun getAllUserInfo(
+        onError: (Throwable?) -> Unit,
+        onSuccess: (List<UserModel>?) -> Unit
+    ) {
+        usersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val users = snapshot.children.mapNotNull { it.getValue(UserModel::class.java) }
+                onSuccess(users)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                onError(error.toException())
+            }
+        })
     }
 }
 

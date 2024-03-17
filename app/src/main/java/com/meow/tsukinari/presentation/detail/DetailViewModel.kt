@@ -8,10 +8,6 @@ import com.meow.tsukinari.model.ChapterModel
 import com.meow.tsukinari.model.FictionCommentModel
 import com.meow.tsukinari.model.UserModel
 import com.meow.tsukinari.repository.DatabaseRepository
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -32,50 +28,51 @@ class DetailViewModel(
     val hasUser: Boolean
         get() = repository.hasUser()
 
+    //get all user info
+    var userList = emptyList<UserModel>()
+
+    //get all user info
+    fun getUserList() {
+        repository.getAllUserInfo(onError = {}, onSuccess = { users ->
+            userList = users!!
+        })
+    }
+
+    fun hasComments(): Boolean {
+        return detailUiState.commentList.isNotEmpty()
+    }
+
     fun getTime(uploadedAt: Long): String {
         val sdf = SimpleDateFormat("dd/MM/yyyy - HH:mm", Locale.getDefault())
         return sdf.format(Date(uploadedAt))
     }
 
-
-    private suspend fun getCommentUserInfo(): List<UserModel> {
-        val userIdList = detailUiState.commentList.map { it.userId }.distinct()
-        val userList = mutableListOf<UserModel>()
-
-        val deferreds = userIdList.map { userId ->
-            GlobalScope.async {
-                repository.getUserInfo(userId, onError = {}, onSuccess = {
-                    userList.add(it!!)
-                })
-            }
-        }
-
-        deferreds.awaitAll()
-
-        return userList
-    }
-
-
+    //get comment of this fiction in reverse order
     fun getCommentList(fictionId: String) {
         detailUiState = detailUiState.copy(isCommentLoading = true)
         repository.getFictionComments(fictionId, onError = {}, onSuccess = { comments ->
             //reverse the list to get the latest comment first
-            detailUiState = detailUiState.copy(commentList = comments!!.reversed())
 
-            GlobalScope.launch {
-                val fetchedUserList = getCommentUserInfo()
-
-                detailUiState = detailUiState.copy(fetchedUserList = fetchedUserList)
-
-                val userList = mutableListOf<UserModel>()
-                detailUiState.commentList.forEach { comment ->
-                    val user = fetchedUserList.find { it.userId == comment.userId }
-                    user?.let { userList.add(it) }
+            val finalUserList = mutableListOf<UserModel>()
+            comments?.forEach { comment ->
+                val user = userList.find { it.userId == comment.userId }
+                if (user != null) {
+                    finalUserList.add(user)
                 }
-                detailUiState =
-                    detailUiState.copy(commentUserList = userList, isCommentLoading = false)
             }
+            detailUiState = detailUiState.copy(commentList = comments!!.reversed())
+            detailUiState = detailUiState.copy(commentUserList = finalUserList.reversed())
+            detailUiState = detailUiState.copy(isCommentLoading = false)
         })
+    }
+
+    //try catch validate the comment field
+    fun validateCommentField(): Boolean {
+        return detailUiState.comment.isNotEmpty()
+    }
+
+    fun validateCommentSize(comment: String): Boolean {
+        return comment.length <= 100
     }
 
     //fetch the user info of the users who commented
@@ -83,16 +80,41 @@ class DetailViewModel(
 
     //add comment to this fiction
     fun addComment(fictionId: String, userId: String) {
-        detailUiState = detailUiState.copy(isCommentLoading = true)
-        repository.commentOnFiction(fictionId, detailUiState.comment) {
+
+        try {
+            if (!validateCommentField()) {
+                throw IllegalArgumentException("Fields must not be empty.")
+            }
+            if (!validateCommentSize(detailUiState.comment)) {
+                throw IllegalArgumentException("Comment must not exceed 100 characters.")
+            }
+            detailUiState = detailUiState.copy(isCommentLoading = true)
+
+            detailUiState = detailUiState.copy(commentFieldError = "")
+            repository.commentOnFiction(fictionId, detailUiState.comment) {
+                if (it) {
+                    detailUiState = detailUiState.copy(comment = "")
+                    getCommentList(fictionId)
+                }
+            }
+
+        } catch (e: Exception) {
+            detailUiState = detailUiState.copy(commentFieldError = e.localizedMessage as String)
+        } finally {
             detailUiState = detailUiState.copy(isCommentLoading = false)
-            detailUiState = detailUiState.copy(isCommentLoading = false)
-            detailUiState = detailUiState.copy(comment = "")
-            getCommentList(fictionId)
         }
+
+
     }
 
     //reset the user list once the comment list is fetched
+    fun getCommentUserInfo() {
+        // Get info of all the users who commented (don't get a user info more than once)
+        // Get user info of all the users who commented
+        //for each user id, call the suspend function to get the user info
+
+
+    }
 
 
     fun getFiction(fictionId: String) =
@@ -116,6 +138,7 @@ class DetailViewModel(
 
     fun onCommentChanged(comment: String) {
         detailUiState = detailUiState.copy(comment = comment)
+        detailUiState = detailUiState.copy(commentFieldError = "")
     }
 }
 
@@ -132,6 +155,7 @@ data class DetailUiState(
 
     // comment
     val comment: String = "",
+    val commentFieldError: String = "",
     val commentList: List<FictionCommentModel> = emptyList(),
     val isCommentLoading: Boolean = false,
     val commentUserList: List<UserModel> = emptyList(),

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -58,9 +59,16 @@ fun DetailScreen(
 ) {
     val detailUiState = detailViewModel?.detailUiState ?: DetailUiState()
     LaunchedEffect(key1 = Unit) {
+        detailViewModel?.getUserList()
         detailViewModel?.getFiction(fictionId)
-        detailViewModel?.getChapterList(fictionId)
         detailViewModel?.getCommentList(fictionId)
+        detailViewModel?.getChapterList(fictionId)
+
+    }
+
+    LaunchedEffect(key1 = detailViewModel?.hasComments()) {
+        if (detailUiState.commentList.isNotEmpty()) {
+        }
     }
 
 
@@ -260,11 +268,26 @@ fun DetailScreen(
                         TextField(value = detailUiState.comment, onValueChange = {
                             detailViewModel.onCommentChanged(it)
                         }, label = { Text("Write a comment") }, modifier = Modifier.fillMaxWidth())
+                        //error message
+                        if (detailUiState.commentFieldError.isNotEmpty()) {
+                            Text(
+                                text = detailUiState.commentFieldError,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                         //submit button
                         IconButton(onClick = {
                             detailViewModel.addComment(fictionId, detailViewModel.userId)
                         }) {
-                            Icon(imageVector = Icons.Default.Done, contentDescription = "")
+                            if (detailUiState.isCommentLoading) {
+                                CircularProgressIndicator()
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Done,
+                                    contentDescription = ""
+                                )
+                            }
                         }
                     } else {
                         Text(
@@ -275,18 +298,21 @@ fun DetailScreen(
                 }
             }
 
-            detailUiState.commentList.forEachIndexed { index, comment ->
-                if (detailUiState.commentUserList.isNotEmpty()) {
-                    item {
-                        CommentItem(
-                            detailUiState.commentUserList[index].userName,
-                            detailUiState.commentUserList[index].userName,
-                            comment.comment,
-                            detailViewModel!!.getTime(comment.commentTime)
-                        )
+            if (detailUiState.commentList.isNotEmpty()) {
+                detailUiState.commentList.forEachIndexed { index, comment ->
+                    if (detailUiState.commentUserList.isNotEmpty()) {
+                        item {
+                            CommentItem(
+                                detailUiState.commentUserList[index].displayName,
+                                detailUiState.commentUserList[index].userName,
+                                detailUiState.commentUserList[index].profileImageUrl,
+                                comment.comment,
+                                detailViewModel!!.getTime(comment.commentTime)
+                            )
+                        }
                     }
-                }
 
+                }
             }
         }
 
@@ -294,22 +320,41 @@ fun DetailScreen(
 }
 
 @Composable
-fun CommentItem(displayName: String, userName: String, comment: String, time: String) {
-    Column(
+fun CommentItem(
+    displayName: String,
+    userName: String,
+    avatarUrl: String,
+    comment: String,
+    time: String
+) {
+    Row(
         modifier = Modifier
             .padding(horizontal = 20.dp, vertical = 12.dp)
             .fillMaxWidth()
     ) {
-        Text(
-            text = "$displayName: (@$userName)",
-            style = MaterialTheme.typography.titleMedium
+        AsyncImage(
+            model = avatarUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(20.dp))
         )
-        Spacer(modifier = Modifier.size(6.dp))
-        Text(
-            text = "$comment",
-            style = MaterialTheme.typography.labelMedium
-        )
-        Text(text = "Commented at: $time", style = MaterialTheme.typography.labelMedium)
+        Column(
+            modifier = Modifier
+
+        ) {
+            Text(
+                text = "$displayName: (@$userName)",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(modifier = Modifier.size(6.dp))
+            Text(
+                text = "$comment",
+                style = MaterialTheme.typography.labelMedium
+            )
+            Text(text = "Commented at: $time", style = MaterialTheme.typography.labelMedium)
+        }
     }
 }
 
