@@ -8,6 +8,10 @@ import com.meow.tsukinari.model.ChapterModel
 import com.meow.tsukinari.model.FictionCommentModel
 import com.meow.tsukinari.model.UserModel
 import com.meow.tsukinari.repository.DatabaseRepository
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -33,16 +37,49 @@ class DetailViewModel(
         return sdf.format(Date(uploadedAt))
     }
 
-    //get comment of this fiction
+
+    private suspend fun getCommentUserInfo(): List<UserModel> {
+        val userIdList = detailUiState.commentList.map { it.userId }.distinct()
+        val userList = mutableListOf<UserModel>()
+
+        val deferreds = userIdList.map { userId ->
+            GlobalScope.async {
+                repository.getUserInfo(userId, onError = {}, onSuccess = {
+                    userList.add(it!!)
+                })
+            }
+        }
+
+        deferreds.awaitAll()
+
+        return userList
+    }
+
+
     fun getCommentList(fictionId: String) {
         detailUiState = detailUiState.copy(isCommentLoading = true)
-        repository.getFictionComments(fictionId, onError = {
-            detailUiState = detailUiState.copy(isCommentLoading = false)
-        }, onSuccess = {
-            detailUiState = detailUiState.copy(commentList = it!!)
-            detailUiState = detailUiState.copy(isCommentLoading = false)
+        repository.getFictionComments(fictionId, onError = {}, onSuccess = { comments ->
+            //reverse the list to get the latest comment first
+            detailUiState = detailUiState.copy(commentList = comments!!.reversed())
+
+            GlobalScope.launch {
+                val fetchedUserList = getCommentUserInfo()
+
+                detailUiState = detailUiState.copy(fetchedUserList = fetchedUserList)
+
+                val userList = mutableListOf<UserModel>()
+                detailUiState.commentList.forEach { comment ->
+                    val user = fetchedUserList.find { it.userId == comment.userId }
+                    user?.let { userList.add(it) }
+                }
+                detailUiState =
+                    detailUiState.copy(commentUserList = userList, isCommentLoading = false)
+            }
         })
     }
+
+    //fetch the user info of the users who commented
+
 
     //add comment to this fiction
     fun addComment(fictionId: String, userId: String) {
@@ -55,15 +92,7 @@ class DetailViewModel(
         }
     }
 
-    //get user info of this comment that return the UserModel list
-    fun getCommentUserInfoList() {
-        detailUiState.commentList.forEach { comment ->
-            repository.getUserInfo(comment.userId, onError = {}, onSuccess = {
-                detailUiState =
-                    detailUiState.copy(commentUserList = detailUiState.commentUserList + it!!)
-            })
-        }
-    }
+    //reset the user list once the comment list is fetched
 
 
     fun getFiction(fictionId: String) =
@@ -105,7 +134,8 @@ data class DetailUiState(
     val comment: String = "",
     val commentList: List<FictionCommentModel> = emptyList(),
     val isCommentLoading: Boolean = false,
-    val commentUserList: List<UserModel> = emptyList()
+    val commentUserList: List<UserModel> = emptyList(),
+    val fetchedUserList: List<UserModel> = emptyList()
 
 )
 

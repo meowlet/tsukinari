@@ -273,14 +273,19 @@ fun DetailScreen(
                         )
                     }
                 }
-
-
             }
-            detailUiState.commentList.forEach {
 
-                detailViewModel?.getCommentUserInfoList()
-
-                //for user info
+            detailUiState.commentList.forEachIndexed { index, comment ->
+                if (detailUiState.commentUserList.isNotEmpty()) {
+                    item {
+                        CommentItem(
+                            detailUiState.commentUserList[index].userName,
+                            detailUiState.commentUserList[index].userName,
+                            comment.comment,
+                            detailViewModel!!.getTime(comment.commentTime)
+                        )
+                    }
+                }
 
             }
         }

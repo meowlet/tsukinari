@@ -1,6 +1,7 @@
 package com.meow.tsukinari.model
 
 data class UserModel(
+    val userId: String = "",
     val email: String = "",
     val userName: String = "",
     val displayName: String = "Display Name",

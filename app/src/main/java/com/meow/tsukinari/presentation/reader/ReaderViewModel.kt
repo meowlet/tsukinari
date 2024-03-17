@@ -19,6 +19,9 @@ class ReaderViewModel(
     val hasUser: Boolean
         get() = repository.hasUser()
 
+    val userId: String
+        get() = repository.getUserId()
+
     fun onToolbarVisibilityChanged() {
         readerUiState = readerUiState.copy(isToolbarVisible = !readerUiState.isToolbarVisible)
     }

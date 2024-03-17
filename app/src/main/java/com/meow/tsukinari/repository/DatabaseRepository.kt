@@ -430,6 +430,7 @@ class DatabaseRepository {
     ) {
         val commentId = statsRef.child(fictionId).child("comments").push().key.orEmpty()
         val commentModel = FictionCommentModel(
+            fictionId = fictionId,
             commentId = commentId,
             userId = getUserId(),
             comment = comment,
@@ -442,13 +443,14 @@ class DatabaseRepository {
             }
     }
 
-    //get all comment of a fiction
+    //get all comment of a fiction order by time (greatest comment time first)
     fun getFictionComments(
         fictionId: String,
         onError: (Throwable?) -> Unit,
         onSuccess: (List<FictionCommentModel>?) -> Unit
     ) {
         statsRef.child(fictionId).child("comments")
+            .orderByChild("commentTime")
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val comments =
@@ -461,6 +463,7 @@ class DatabaseRepository {
                 }
             })
     }
+
 
     //comment on a chapter
     fun commentOnChapter(

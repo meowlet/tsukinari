@@ -65,6 +65,7 @@ class AuthRepository {
         isCompleted: (Boolean) -> Unit
     ) {
         val user = UserModel(
+            userId = getUserId(),
             userName = userName,
             email = email,
             createdAt = createdAt
