@@ -23,28 +23,85 @@ class ProfileViewModel(
     var profileUiState by mutableStateOf(ProfileUiState())
         private set
 
-
-    //update profile
-    fun updateProfile() {
+    //validate displayName field
+    fun validateDisplayName(): Boolean {
         val newDisplayName = profileUiState.newDisplayName
-        val newProfilePicUri = profileUiState.newProfilePicUri
+        return newDisplayName!!.isNotBlank() && newDisplayName.length <= 20
+    }
+
+    //validate aboutMe field
+    fun validateAboutMe(): Boolean {
         val newAboutMe = profileUiState.newAboutMe
+        return newAboutMe!!.isNotBlank()
+    }
 
-        repository.updateProfile(
-            newDisplayName!!,
-            newAboutMe!!,
-            userId,
-            newProfilePicUri!!
-        )
-        {
-            getUserProfile()
+
+    //update display name
+    fun updateDisplayName() {
+        try {
+            if (!validateDisplayName()) {
+                throw IllegalArgumentException("Invalid display name")
+            }
+            profileUiState = profileUiState.copy(isLoading = true)
+            repository.updateDisplayName(profileUiState.newDisplayName!!) {
+                profileUiState = profileUiState.copy(
+                    isLoading = false,
+                    isDisplayNameUpdated = true
+                )
+                //reset state
+                profileUiState = profileUiState.copy(
+                    isDisplayNameEditing = false
+                )
+                getUserProfile()
+            }
+        } catch (e: Exception) {
+            profileUiState = profileUiState.copy(fieldError = e.message)
         }
-
     }
 
-    fun onNewProfilePicSelected(uri: Uri) {
-        profileUiState = profileUiState.copy(newProfilePicUri = uri)
+    //update about me
+    fun updateAboutMe() {
+        try {
+            if (!validateAboutMe()) {
+                throw IllegalArgumentException("Invalid about me")
+            }
+            profileUiState = profileUiState.copy(isLoading = true)
+            repository.updateAboutMe(profileUiState.newAboutMe!!) {
+                //reset state
+
+                profileUiState = profileUiState.copy(
+                    isLoading = false,
+                    isAboutMeUpdated = true
+                )
+
+                profileUiState = profileUiState.copy(
+                    isAboutMeEditing = false
+                )
+                getUserProfile()
+            }
+        } catch (e: Exception) {
+            profileUiState = profileUiState.copy(fieldError = e.message)
+        }
     }
+
+    //update profile pic
+    fun updateProfilePic() {
+        try {
+            profileUiState = profileUiState.copy(isImageUploadLoading = true)
+            repository.updateProfilePic(profileUiState.newProfilePicUri!!) {
+                //reset state
+                profileUiState = profileUiState.copy(
+                    newProfilePicUri = Uri.EMPTY,
+                    isProfilePicUpdated = true
+                )
+                profileUiState = profileUiState.copy(isImageUploadLoading = false)
+                getUserProfile()
+            }
+        } catch (e: Exception) {
+            profileUiState = profileUiState.copy(fieldError = e.message)
+        }
+    }
+
 
     fun onNewAboutMeChanged(aboutMe: String) {
         profileUiState = profileUiState.copy(newAboutMe = aboutMe)
@@ -55,12 +112,18 @@ class ProfileViewModel(
     }
 
     fun changeDisplayNameEditingState() {
+        profileUiState = profileUiState.copy(isAboutMeEditing = false)
+        //reset error
+        profileUiState = profileUiState.copy(fieldError = "")
         profileUiState = profileUiState.copy(newDisplayName = profileUiState.displayName)
         profileUiState =
             profileUiState.copy(isDisplayNameEditing = !profileUiState.isDisplayNameEditing)
     }
 
     fun changeAboutMeEditingState() {
+        profileUiState = profileUiState.copy(isDisplayNameEditing = false)
+
+        profileUiState = profileUiState.copy(fieldError = "")
         profileUiState = profileUiState.copy(newAboutMe = profileUiState.aboutMe)
         profileUiState = profileUiState.copy(isAboutMeEditing = !profileUiState.isAboutMeEditing)
     }
@@ -89,6 +152,18 @@ class ProfileViewModel(
             )
         }
     }
+
+    fun onProfilePicChanged(uri: Uri?) {
+        profileUiState = profileUiState.copy(newProfilePicUri = uri)
+    }
+
+    fun resetUpdatedState() {
+        profileUiState = profileUiState.copy(
+            isProfilePicUpdated = false,
+            isDisplayNameUpdated = false,
+            isAboutMeUpdated = false,
+        )
+    }
 }
 
 data class ProfileUiState(
@@ -114,6 +189,19 @@ data class ProfileUiState(
     val newProfilePicUri: Uri? = Uri.EMPTY,
     val newDisplayName: String? = "",
     val newAboutMe: String? = "",
+
+
+    val fieldError: String? = null,
+
+    //loading
+    val isLoading: Boolean = false,
+    val isImageUploadLoading: Boolean = false,
+
+
+    //snackbar trigger
+    val isProfilePicUpdated: Boolean = false,
+    val isDisplayNameUpdated: Boolean = false,
+    val isAboutMeUpdated: Boolean = false,
 )
 
 @Preview

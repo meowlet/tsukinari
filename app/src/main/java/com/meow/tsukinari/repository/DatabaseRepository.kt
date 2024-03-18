@@ -339,46 +339,49 @@ class DatabaseRepository {
     }
 
 
-    //update user profile (display name and profile picture)
-    fun updateProfile(
-        displayName: String,
-        aboutMe: String,
-        userId: String,
-        imageUri: Uri,
-        onResult: (Boolean) -> Unit
-    ) {
-        when (imageUri) {
-            Uri.EMPTY -> {
-                // update data without image
-                val updateData = hashMapOf<String, Any>(
-                    "aboutMe" to aboutMe,
-                    "displayName" to displayName,
-                )
-                usersRef.child(userId)
-                    .updateChildren(updateData)
-                    .addOnCompleteListener { result ->
-                        onResult(result.isSuccessful)
-                    }
+    //update user's displayName
+    fun updateDisplayName(displayName: String, onComplete: (Boolean) -> Unit) {
+        val updateData = hashMapOf<String, Any>(
+            "displayName" to displayName
+        )
+        usersRef.child(getUserId())
+            .updateChildren(updateData)
+            .addOnCompleteListener { result ->
+                onComplete(result.isSuccessful)
             }
+    }
 
-            else -> {
-                // upload image and update data with image
-                uploadCover(imageUri, userId) { imageUrl ->
-                    imageUrl?.let {
-                        val updateData = hashMapOf<String, Any>(
-                            "aboutMe" to aboutMe,
-                            "diplayName" to displayName,
-                            "profileImageUrl" to it
-                        )
-                        fictionsRef.child(userId)
-                            .updateChildren(updateData)
-                            .addOnCompleteListener { result ->
-                                onResult(result.isSuccessful)
-                            }
-                    }
+    //update user's aboutMe
+    fun updateAboutMe(aboutMe: String, onComplete: (Boolean) -> Unit) {
+        val updateData = hashMapOf<String, Any>(
+            "aboutMe" to aboutMe
+        )
+        usersRef.child(getUserId())
+            .updateChildren(updateData)
+            .addOnCompleteListener { result ->
+                onComplete(result.isSuccessful)
+            }
+    }
+
+    //update user's profile pic
+    fun updateProfilePic(imageUri: Uri, onComplete: (Boolean) -> Unit) {
+        val filePath = fictionImagesRef.child(getUserId()).child("profilePic")
+        filePath.putFile(imageUri)
+            .addOnSuccessListener {
+                filePath.downloadUrl.addOnSuccessListener { imageUrl ->
+                    val updateData = hashMapOf<String, Any>(
+                        "profileImageUrl" to imageUrl.toString()
+                    )
+                    usersRef.child(getUserId())
+                        .updateChildren(updateData)
+                        .addOnCompleteListener { result ->
+                            onComplete(result.isSuccessful)
+                        }
                 }
             }
-        }
+            .addOnFailureListener {
+                onComplete(false)
+            }
     }
 
 
