@@ -11,8 +11,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -36,7 +44,7 @@ fun ProfileScreen(
     val context = LocalContext.current
     val profileUiState = profileViewModel?.profileUiState
 
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(key1 = profileViewModel?.hasUser) {
         if (profileViewModel?.hasUser == true) {
             profileViewModel.getUserProfile()
         }
@@ -60,8 +68,11 @@ fun ProfileScreen(
                 Text(text = "Sign in now")
             }
         } else {
+
             Column(
-                modifier = Modifier.weight(0.5f),
+                modifier = Modifier
+                    .weight(0.5f)
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -82,10 +93,42 @@ fun ProfileScreen(
                 }
 
                 Spacer(modifier = Modifier.size(12.dp))
-                Text(
-                    text = "${profileUiState?.displayName}",
-                    style = MaterialTheme.typography.titleLarge
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    if (profileUiState?.isDisplayNameEditing == true) {
+                        OutlinedTextField(
+                            value = profileUiState.newDisplayName ?: "",
+                            onValueChange = { profileViewModel.onNewDisplayNameChanged(it) },
+                            label = { Text(text = "Display name") },
+                            modifier = Modifier.weight(0.8f)
+                        )
+                        IconButton(
+                            onClick = { profileViewModel.changeDisplayNameEditingState() },
+                            modifier = Modifier.weight(0.1f)
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = null)
+                        }
+                        IconButton(
+                            onClick = { profileViewModel.updateProfile() },
+                            modifier = Modifier.weight(0.1f)
+                        ) {
+                            Icon(Icons.Default.Done, contentDescription = null)
+                        }
+                    } else {
+                        Text(
+                            text = "${profileUiState?.displayName}",
+                            style = MaterialTheme.typography.titleLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(0.5f),
+                            textAlign = TextAlign.Center
+                        )
+                        IconButton(onClick = { profileViewModel.changeDisplayNameEditingState() }) {
+                            Icon(Icons.Default.Edit, contentDescription = null)
+                        }
+                    }
+                }
                 Text(
                     text = "${profileUiState?.username}",
                     style = MaterialTheme.typography.titleMedium
@@ -94,6 +137,41 @@ fun ProfileScreen(
                     text = "${profileUiState?.email}",
                     style = MaterialTheme.typography.titleSmall
                 )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    if (profileUiState?.isAboutMeEditing == true) {
+                        OutlinedTextField(
+                            value = profileUiState.newAboutMe ?: "",
+                            onValueChange = { profileViewModel.onNewAboutMeChanged(it) },
+                            label = { Text(text = "About me") },
+                            modifier = Modifier.weight(0.8f)
+                        )
+                        IconButton(
+                            onClick = { profileViewModel.changeAboutMeEditingState() },
+                            modifier = Modifier.weight(0.1f)
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = null)
+                        }
+                        IconButton(
+                            onClick = { profileViewModel.updateProfile() },
+                            modifier = Modifier.weight(0.1f)
+                        ) {
+                            Icon(Icons.Default.Done, contentDescription = null)
+                        }
+                    } else {
+                        Text(
+                            text = if (profileUiState?.aboutMe?.isNotEmpty() == true) profileUiState.aboutMe else "Your bio goes here",
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(0.5f)
+                        )
+                        IconButton(onClick = { profileViewModel.changeAboutMeEditingState() }) {
+                            Icon(Icons.Default.Edit, contentDescription = null)
+                        }
+                    }
+                }
             }
             Column(Modifier.weight(0.5f)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {

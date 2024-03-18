@@ -338,6 +338,50 @@ class DatabaseRepository {
         }
     }
 
+
+    //update user profile (display name and profile picture)
+    fun updateProfile(
+        displayName: String,
+        aboutMe: String,
+        userId: String,
+        imageUri: Uri,
+        onResult: (Boolean) -> Unit
+    ) {
+        when (imageUri) {
+            Uri.EMPTY -> {
+                // update data without image
+                val updateData = hashMapOf<String, Any>(
+                    "aboutMe" to aboutMe,
+                    "displayName" to displayName,
+                )
+                usersRef.child(userId)
+                    .updateChildren(updateData)
+                    .addOnCompleteListener { result ->
+                        onResult(result.isSuccessful)
+                    }
+            }
+
+            else -> {
+                // upload image and update data with image
+                uploadCover(imageUri, userId) { imageUrl ->
+                    imageUrl?.let {
+                        val updateData = hashMapOf<String, Any>(
+                            "aboutMe" to aboutMe,
+                            "diplayName" to displayName,
+                            "profileImageUrl" to it
+                        )
+                        fictionsRef.child(userId)
+                            .updateChildren(updateData)
+                            .addOnCompleteListener { result ->
+                                onResult(result.isSuccessful)
+                            }
+                    }
+                }
+            }
+        }
+    }
+
+
     //upload several images for a chapter, store the image url in the database, and return the image url the pass the image url to the chapter model, write the chapter model to the database
     fun addChapter(
         context: Context,

@@ -24,24 +24,61 @@ class ProfileViewModel(
         private set
 
 
-    fun onUsernameChange(username: String) {
-        profileUiState = profileUiState.copy(usernameSetup = username)
+    //update profile
+    fun updateProfile() {
+        val newDisplayName = profileUiState.newDisplayName
+        val newProfilePicUri = profileUiState.newProfilePicUri
+        val newAboutMe = profileUiState.newAboutMe
+
+        repository.updateProfile(
+            newDisplayName!!,
+            newAboutMe!!,
+            userId,
+            newProfilePicUri!!
+        )
+        {
+            getUserProfile()
+        }
+
     }
 
-    fun onDiplayNameChange(name: String) {
-        profileUiState = profileUiState.copy(displayNameSetup = name)
+    fun onNewProfilePicSelected(uri: Uri) {
+        profileUiState = profileUiState.copy(newProfilePicUri = uri)
     }
+
+    fun onNewAboutMeChanged(aboutMe: String) {
+        profileUiState = profileUiState.copy(newAboutMe = aboutMe)
+    }
+
+    fun onNewDisplayNameChanged(displayName: String) {
+        profileUiState = profileUiState.copy(newDisplayName = displayName)
+    }
+
+    fun changeDisplayNameEditingState() {
+        profileUiState = profileUiState.copy(newDisplayName = profileUiState.displayName)
+        profileUiState =
+            profileUiState.copy(isDisplayNameEditing = !profileUiState.isDisplayNameEditing)
+    }
+
+    fun changeAboutMeEditingState() {
+        profileUiState = profileUiState.copy(newAboutMe = profileUiState.aboutMe)
+        profileUiState = profileUiState.copy(isAboutMeEditing = !profileUiState.isAboutMeEditing)
+    }
+
 
     fun getUserProfile() {
         if (hasUser) {
             repository.getUserInfo(userId, {
             }) {
                 profileUiState = profileUiState.copy(
+                    isDisplayNameEditing = false,
+                    isAboutMeEditing = false,
                     username = it?.userName,
                     displayName = it?.displayName,
                     createdAt = it?.createdAt,
                     profilePicUrl = it?.profileImageUrl,
                     email = it?.email,
+                    aboutMe = it?.aboutMe,
                 )
             }
         } else {
@@ -56,9 +93,6 @@ class ProfileViewModel(
 
 data class ProfileUiState(
     // setting up
-    val usernameSetup: String = "",
-    val displayNameSetup: String = "",
-    val profilePicUriSetup: Uri = Uri.EMPTY,
 
     //display
     val email: String? = "",
@@ -68,9 +102,18 @@ data class ProfileUiState(
     val displayName: String? = "Display Name",
     val profilePicUri: Uri? = Uri.EMPTY,
     val profilePicUrl: String? = "",
+    val aboutMe: String? = "",
     val follower: Int? = 0,
     val following: Int? = 0,
-    val createdAt: Long? = 0
+    val createdAt: Long? = 0,
+
+    val isDisplayNameEditing: Boolean = false,
+    val isAboutMeEditing: Boolean = false,
+    val isProfilePicEditing: Boolean = false,
+
+    val newProfilePicUri: Uri? = Uri.EMPTY,
+    val newDisplayName: String? = "",
+    val newAboutMe: String? = "",
 )
 
 @Preview
