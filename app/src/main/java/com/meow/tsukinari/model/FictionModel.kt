@@ -7,5 +7,9 @@ data class FictionModel(
     val title: String = "",
     val description: String = "",
     val uploadedAt: Long = System.currentTimeMillis(),
-    val coverLink: String = ""
+    val coverLink: String = "",
+
+    //status of the fiction
+    val isFinished: Boolean = false,
+    val isPublished: Boolean = false,
 )

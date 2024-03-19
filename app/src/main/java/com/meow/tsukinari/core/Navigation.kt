@@ -300,7 +300,11 @@ fun NavGraphBuilder.homeGraph(
             UserProfileScreen(
                 userProfileViewModel = userProfileViewModel,
                 userId = entry.arguments?.getString("userId") as String,
-                onNavToDetail = {})
+                onNavToDetail = {
+                    navController.navigate(ExclusiveNav.Detail.route + "?id=$it") {
+                        launchSingleTop = true
+                    }
+                })
         }
     }
 }

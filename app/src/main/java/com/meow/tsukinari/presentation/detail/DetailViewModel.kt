@@ -75,7 +75,18 @@ class DetailViewModel(
         return comment.length <= 100
     }
 
-    //fetch the user info of the users who commented
+    //like this fiction
+    fun likeFiction(fictionId: String) {
+        repository.likeFiction(fictionId, onComplete = { isSuccessful, likeCount ->
+            if (isSuccessful) {
+                detailUiState = detailUiState.copy(likeCount = likeCount)
+                getFictionStats(fictionId)
+            }
+        })
+    }
+
+
+    //load fiction stats
 
 
     //add comment to this fiction
@@ -103,9 +114,10 @@ class DetailViewModel(
         } finally {
             detailUiState = detailUiState.copy(isCommentLoading = false)
         }
-
-
     }
+
+    //like count
+
 
     //reset the user list once the comment list is fetched
     fun getCommentUserInfo() {
@@ -117,19 +129,54 @@ class DetailViewModel(
     }
 
 
-    fun getFiction(fictionId: String) =
-        repository.getFiction(fictionId, onError = {}, onSuccess = { fiction ->
-            detailUiState = detailUiState.copy(title = fiction!!.title)
-            detailUiState = detailUiState.copy(description = fiction.description)
-            detailUiState = detailUiState.copy(imageUrl = fiction.coverLink)
-            detailUiState = detailUiState.copy(uploadedAt = fiction.uploadedAt)
-            detailUiState = detailUiState.copy(uploadedAt = fiction.uploadedAt)
-            repository.getUploaderInfo(fiction.uploaderId, onError = {
-                detailUiState = detailUiState.copy(uploader = "Unknown")
-            }, onSuccess = {
-                detailUiState = detailUiState.copy(uploader = it!!.userName)
-            })
+    fun getFiction(fictionId: String) {
+        repository.getFiction(
+            fictionId, onError = {},
+            onSuccess = { fiction ->
+                detailUiState = detailUiState.copy(title = fiction!!.title)
+                detailUiState = detailUiState.copy(description = fiction.description)
+                detailUiState = detailUiState.copy(imageUrl = fiction.coverLink)
+                detailUiState = detailUiState.copy(uploadedAt = fiction.uploadedAt)
+                detailUiState = detailUiState.copy(uploadedAt = fiction.uploadedAt)
+                detailUiState = detailUiState.copy(uploaderId = fiction.uploaderId)
+                repository.getUploaderInfo(fiction.uploaderId, onError = {
+                    detailUiState = detailUiState.copy(uploader = "Unknown")
+                }, onSuccess = {
+                    detailUiState = detailUiState.copy(uploader = it!!.userName)
+                })
+            },
+        )
+    }
+
+    //get fiction stats
+    fun getFictionStats(fictionId: String) {
+        repository.getFictionStats(fictionId, onError = {}, onSuccess = { stats ->
+            if (stats != null) {
+
+                detailUiState = detailUiState.copy(
+                    likeCount = stats.likedBy.size,
+                    dislikeCount = stats.dislikedBy.size
+                )
+                if (stats.likedBy.contains(userId)) {
+                    detailUiState = detailUiState.copy(doesUserLike = true)
+                } else {
+                    detailUiState = detailUiState.copy(doesUserLike = false)
+                }
+                if (stats.dislikedBy.contains(userId)) {
+                    detailUiState = detailUiState.copy(doesUserDislike = true)
+                } else {
+                    detailUiState = detailUiState.copy(doesUserDislike = false)
+                }
+            } else {
+                detailUiState = detailUiState.copy(
+                    likeCount = 0,
+                    dislikeCount = 0,
+                    doesUserDislike = false,
+                    doesUserLike = false
+                )
+            }
         })
+    }
 
     fun getChapterList(fictionId: String) =
         repository.getChapters(fictionId, onError = {}, onSuccess = { chapters ->
@@ -140,17 +187,32 @@ class DetailViewModel(
         detailUiState = detailUiState.copy(comment = comment)
         detailUiState = detailUiState.copy(commentFieldError = "")
     }
+
+    fun dislikeFiction(fictionId: String) {
+        repository.dislikeFiction(fictionId, onComplete = { isSuccessful, dislikeCount ->
+            if (isSuccessful) {
+                detailUiState = detailUiState.copy(dislikeCount = dislikeCount)
+                getFictionStats(fictionId)
+            }
+        })
+    }
 }
 
 
 data class DetailUiState(
     val title: String = "",
     val description: String = "",
+    val uploaderId: String = "",
     val imageUrl: String = "",
     val uploadedAt: Long = 0,
     val uploader: String = "",
     val chapters: List<ChapterModel> = emptyList(),
     val isLoading: Boolean = false,
+    val likeCount: Int? = 0,
+    val dislikeCount: Int? = 0,
+
+    val doesUserLike: Boolean = false,
+    val doesUserDislike: Boolean = false,
 
 
     // comment

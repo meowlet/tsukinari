@@ -18,6 +18,7 @@ import com.google.firebase.storage.storage
 import com.meow.tsukinari.model.ChapterModel
 import com.meow.tsukinari.model.FictionCommentModel
 import com.meow.tsukinari.model.FictionModel
+import com.meow.tsukinari.model.FictionStatsModel
 import com.meow.tsukinari.model.UserModel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -31,7 +32,8 @@ import java.io.FileOutputStream
 const val FICTIONS_COLLECTION_REF = "fictions"
 const val FOLLOWS_COLLECTION_REF = "follows"
 const val CHAPTERS_COLLECTION_REF = "chapters"
-const val STATS_COLLECTION_REF = "comments"
+const val COMMENTS_COLLECTION_REF = "comments"
+const val STATS_COLLECTION_REF = "stats"
 
 //Large data
 const val IMAGES_COLLECTION_REF = "images"
@@ -47,8 +49,9 @@ class DatabaseRepository {
     private val chaptersRef = Firebase.database.getReference(CHAPTERS_COLLECTION_REF)
     private val followsRef = Firebase.database.getReference(FOLLOWS_COLLECTION_REF)
     private val fictionImagesRef = Firebase.storage.reference.child(IMAGES_COLLECTION_REF)
-    private val statsRef = Firebase.database.getReference(STATS_COLLECTION_REF)
+    private val commentsRef = Firebase.database.getReference(COMMENTS_COLLECTION_REF)
     private val usersRef = Firebase.database.getReference(USERS_COLLECTION_REF)
+    private val statsRef = Firebase.database.getReference(STATS_COLLECTION_REF)
 
     fun hasUser(): Boolean {
         return Firebase.auth.currentUser != null
@@ -244,12 +247,22 @@ class DatabaseRepository {
     fun getFiction(
         fictionId: String,
         onError: (Throwable?) -> Unit,
-        onSuccess: (FictionModel?) -> Unit
+        onSuccess: (FictionModel?) -> Unit,
     ) {
         fictionsRef.child(fictionId)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     onSuccess(snapshot.getValue(FictionModel::class.java))
+
+                    //get the like and dislike count
+                    statsRef.child(fictionId)
+                        .addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+                            }
+                        })
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -486,7 +499,7 @@ class DatabaseRepository {
         comment: String,
         onComplete: (Boolean) -> Unit
     ) {
-        val commentId = statsRef.child(fictionId).push().key.orEmpty()
+        val commentId = commentsRef.child(fictionId).push().key.orEmpty()
         val commentModel = FictionCommentModel(
             fictionId = fictionId,
             commentId = commentId,
@@ -494,7 +507,7 @@ class DatabaseRepository {
             comment = comment,
             commentTime = System.currentTimeMillis()
         )
-        statsRef.child(fictionId).child(commentId)
+        commentsRef.child(fictionId).child(commentId)
             .setValue(commentModel)
             .addOnCompleteListener { result ->
                 onComplete(result.isSuccessful)
@@ -507,7 +520,7 @@ class DatabaseRepository {
         onError: (Throwable?) -> Unit,
         onSuccess: (List<FictionCommentModel>?) -> Unit
     ) {
-        statsRef.child(fictionId)
+        commentsRef.child(fictionId)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val comments =
@@ -528,14 +541,14 @@ class DatabaseRepository {
         comment: String,
         onComplete: (Boolean) -> Unit
     ) {
-        val commentId = statsRef.child(chapterId).child("comments").push().key.orEmpty()
+        val commentId = commentsRef.child(chapterId).child("comments").push().key.orEmpty()
         val commentModel = FictionCommentModel(
             commentId = commentId,
             userId = getUserId(),
             comment = comment,
             commentTime = System.currentTimeMillis()
         )
-        statsRef.child(chapterId).child("comments").child(commentId)
+        commentsRef.child(chapterId).child("comments").child(commentId)
             .setValue(commentModel)
             .addOnCompleteListener { result ->
                 onComplete(result.isSuccessful)
@@ -548,7 +561,7 @@ class DatabaseRepository {
         onError: (Throwable?) -> Unit,
         onSuccess: (List<FictionCommentModel>?) -> Unit
     ) {
-        statsRef.child(chapterId).child("comments")
+        commentsRef.child(chapterId).child("comments")
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val comments =
@@ -578,6 +591,85 @@ class DatabaseRepository {
                 onError(error.toException())
             }
         })
+    }
+
+
+    //get info on a user with no callback
+
+
+    //like a fiction
+    fun likeFiction(fictionId: String, onComplete: (Boolean, Int) -> Unit) {
+        val likeRef = statsRef.child(fictionId)
+        //update only the likedBy list, load the current likedBy list, add the user id to the list, and update the list
+
+        val likedBy = mutableListOf<String>()
+        //load the current likedBy list
+        likeRef.child("likedBy").addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                //get the user id who liked list
+                val likedByList = snapshot.children.mapNotNull { it.value.toString() }
+                likedBy.addAll(likedByList)
+                //if the user id is not in the list, add it to the list
+                if (!likedBy.contains(getUserId())) {
+                    likedBy.add(getUserId())
+                } else return
+                likeRef.child("likedBy").setValue(likedBy)
+                    .addOnCompleteListener { result ->
+                        onComplete(result.isSuccessful, likedBy.size)
+
+                    }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+            }
+        })
+    }
+
+    //dislike a fiction
+    fun dislikeFiction(fictionId: String, onComplete: (Boolean, Int) -> Unit) {
+        val dislikeRef = statsRef.child(fictionId)
+        //update only the dislikedBy list, load the current dislikedBy list, add the user id to the list, and update the list
+
+        val dislikedBy = mutableListOf<String>()
+        //load the current dislikedBy list
+        dislikeRef.child("dislikedBy").addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                //get the user id who disliked list
+                val dislikedByList = snapshot.children.mapNotNull { it.value.toString() }
+                dislikedBy.addAll(dislikedByList)
+                //if the user id is not in the list, add it to the list
+                if (!dislikedBy.contains(getUserId())) {
+                    dislikedBy.add(getUserId())
+                } else return
+                dislikeRef.child("dislikedBy").setValue(dislikedBy)
+                    .addOnCompleteListener { result ->
+                        onComplete(result.isSuccessful, dislikedBy.size)
+                    }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+            }
+        })
+    }
+
+
+    //get stats of a fiction
+    fun getFictionStats(
+        fictionId: String,
+        onError: (Throwable?) -> Unit,
+        onSuccess: (FictionStatsModel?) -> Unit
+    ) {
+        statsRef.child(fictionId)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val stats = snapshot.getValue(FictionStatsModel::class.java)
+                    onSuccess(stats)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    onError(error.toException())
+                }
+            })
     }
 }
 

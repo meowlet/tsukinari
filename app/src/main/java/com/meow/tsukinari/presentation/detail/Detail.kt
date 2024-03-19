@@ -19,8 +19,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -37,13 +37,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -61,6 +59,7 @@ fun DetailScreen(
     val detailUiState = detailViewModel?.detailUiState ?: DetailUiState()
     LaunchedEffect(key1 = Unit) {
         detailViewModel?.getUserList()
+        detailViewModel?.getFictionStats(fictionId)
         detailViewModel?.getFiction(fictionId)
         detailViewModel?.getCommentList(fictionId)
         detailViewModel?.getChapterList(fictionId)
@@ -167,20 +166,19 @@ fun DetailScreen(
                                 style = MaterialTheme.typography.titleLarge
                             )
                             Spacer(modifier = Modifier.size(8.dp))
-                            Text(
-                                text = buildAnnotatedString {
-                                    append("Author: ")
-                                    withStyle(
-                                        SpanStyle(
-                                            color = MaterialTheme.colorScheme.primary,
-                                            textDecoration = TextDecoration.Underline
-                                        )
-                                    ) {
-                                        append(detailUiState.uploader)
-                                    }
-                                }
+                            Row {
+                                Text(text = "Author: ")
+                                Text(
+                                    text = detailUiState.uploader,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    textDecoration = TextDecoration.Underline,
 
-                            )
+                                    modifier = Modifier.clickable {
+                                        onNavToProfile.invoke(detailUiState.uploaderId)
+                                    }
+
+                                )
+                            }
                             Spacer(modifier = Modifier.size(8.dp))
                             Text(
                                 text = "Status: Ongoing",
@@ -198,18 +196,36 @@ fun DetailScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            imageVector = Icons.Outlined.Favorite, contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            imageVector = if (detailUiState.doesUserLike) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(28.dp)
+                                .padding(2.dp)
+                                .clickable {
+                                    detailViewModel!!.likeFiction(fictionId)
+                                }
                         )
-                        Text(text = "Love", style = MaterialTheme.typography.labelMedium)
+                        Text(
+                            text = detailUiState.likeCount.toString(),
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            imageVector = Icons.Filled.Notifications,
+                            imageVector = if (detailUiState.doesUserDislike) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier
+                                .size(28.dp)
+                                .scale(scaleX = -1f, scaleY = -1f)
+                                .padding(2.dp)
+                                .clickable {
+                                    detailViewModel!!.dislikeFiction(fictionId)
+                                }
                         )
-                        Text(text = "Subscribe", style = MaterialTheme.typography.labelMedium)
+                        Text(
+                            text = detailUiState.dislikeCount.toString(),
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
             }
@@ -345,7 +361,7 @@ fun CommentItem(
                 .clip(RoundedCornerShape(20.dp))
                 .clickable {
                     //navigate to user profile
-                    onNavToProfile.invoke(userName)
+                    onNavToProfile.invoke("")
                 }
         )
         Column(

@@ -122,7 +122,6 @@ fun ProfileScreen(
 
                 Column(
                     modifier = Modifier
-                        .weight(0.5f)
                         .fillMaxWidth(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -302,7 +301,6 @@ fun ProfileScreen(
                     )
                 }
                 Column(
-                    modifier = Modifier.weight(0.5f),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Row(
