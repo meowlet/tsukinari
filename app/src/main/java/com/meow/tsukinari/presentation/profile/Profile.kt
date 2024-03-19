@@ -146,12 +146,15 @@ fun ProfileScreen(
                                     model = profileUiState?.profilePicUrl,
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop,
-                                    modifier = Modifier.combinedClickable(
-                                        onClick = {
-                                        },
-                                        onLongClick = { imagePicker.launch("image/*") }
+                                    modifier = Modifier
+                                        .size(128.dp)
+                                        .clip(CircleShape)
+                                        .combinedClickable(
+                                            onClick = {
+                                            },
+                                            onLongClick = { imagePicker.launch("image/*") }
 
-                                    )
+                                        )
                                 )
                             } else {
                                 AsyncImage(
@@ -196,7 +199,7 @@ fun ProfileScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.size(12.dp))
+                    Spacer(modifier = Modifier.size(6.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
@@ -237,6 +240,15 @@ fun ProfileScreen(
                             )
                         }
                     }
+                    //small username
+                    Text(
+                        text = "Username: ${profileUiState?.username}",
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                    Text(
+                        text = "Email: ${profileUiState?.email}",
+                        style = MaterialTheme.typography.labelMedium
+                    )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -267,28 +279,21 @@ fun ProfileScreen(
                         } else {
                             Text(
                                 text = if (profileUiState?.aboutMe?.isNotEmpty() == true) profileUiState.aboutMe else "Your bio goes here",
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleSmall,
                                 maxLines = 8,
                                 textAlign = TextAlign.Center,
                                 overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.combinedClickable(
-                                    onClick = { },
-                                    onLongClick = { profileViewModel.changeAboutMeEditingState() }
-                                )
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .combinedClickable(
+                                        onClick = { },
+                                        onLongClick = { profileViewModel.changeAboutMeEditingState() }
+                                    )
                             )
                         }
 
                     }
 
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(
-                        text = "${profileUiState?.username}",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = "${profileUiState?.email}",
-                        style = MaterialTheme.typography.titleSmall
-                    )
                     //error here
                     Text(
                         text = profileUiState?.fieldError ?: "",
@@ -296,8 +301,15 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
-                Column(Modifier.weight(0.5f)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
+                Column(
+                    modifier = Modifier.weight(0.5f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(0.1f), horizontalArrangement = Arrangement.SpaceAround
+                    ) {
                         Text(
                             text = "Follower: ${profileUiState?.follower}",
                             style = MaterialTheme.typography.titleMedium
@@ -307,8 +319,13 @@ fun ProfileScreen(
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
-                    Button(onClick = { onNavToMyFictions.invoke() }) {
-                        Text(text = "Edit")
+                    Box(
+                        modifier = Modifier.weight(0.9f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Button(onClick = { onNavToMyFictions.invoke() }) {
+                            Text(text = "My fictions")
+                        }
                     }
                 }
             }

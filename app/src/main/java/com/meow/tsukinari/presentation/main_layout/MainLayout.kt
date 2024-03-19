@@ -31,6 +31,7 @@ import com.meow.tsukinari.presentation.editor.add_chapter.AddChapterViewModel
 import com.meow.tsukinari.presentation.my_fictions.MyFictionsViewModel
 import com.meow.tsukinari.presentation.profile.ProfileViewModel
 import com.meow.tsukinari.presentation.reader.ReaderViewModel
+import com.meow.tsukinari.presentation.user_profile.UserProfileViewModel
 import com.meow.tsukinari.ui.theme.TsukinariTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,6 +45,7 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
     val profileViewModel = viewModel(modelClass = ProfileViewModel::class.java)
     val addChapterViewModel = viewModel(modelClass = AddChapterViewModel::class.java)
     val readerViewModel = viewModel(modelClass = ReaderViewModel::class.java)
+    val userProfileViewModel = viewModel(modelClass = UserProfileViewModel::class.java)
     val focusManager = LocalFocusManager.current
 
     val navController = rememberNavController()
@@ -106,7 +108,8 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
                         detailViewModel = detailViewModel,
                         profileViewModel = profileViewModel,
                         addChapterViewModel = addChapterViewModel,
-                        readerViewModel = readerViewModel
+                        readerViewModel = readerViewModel,
+                        userProfileViewModel = userProfileViewModel,
                     )
                 }
             }

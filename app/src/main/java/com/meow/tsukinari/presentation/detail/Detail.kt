@@ -56,6 +56,7 @@ fun DetailScreen(
     fictionId: String,
     onNavigate: () -> Unit,
     onNavToReader: (fictionId: String) -> Unit,
+    onNavToProfile: (userId: String) -> Unit
 ) {
     val detailUiState = detailViewModel?.detailUiState ?: DetailUiState()
     LaunchedEffect(key1 = Unit) {
@@ -308,7 +309,9 @@ fun DetailScreen(
                                 detailUiState.commentUserList[index].profileImageUrl,
                                 comment.comment,
                                 detailViewModel!!.getTime(comment.commentTime)
-                            )
+                            ) {
+                                onNavToProfile.invoke(detailUiState.commentUserList[index].userId)
+                            }
                         }
                     }
 
@@ -325,7 +328,8 @@ fun CommentItem(
     userName: String,
     avatarUrl: String,
     comment: String,
-    time: String
+    time: String,
+    onNavToProfile: (userId: String) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -339,6 +343,10 @@ fun CommentItem(
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(20.dp))
+                .clickable {
+                    //navigate to user profile
+                    onNavToProfile.invoke(userName)
+                }
         )
         Column(
             modifier = Modifier

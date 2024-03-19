@@ -25,6 +25,7 @@ sealed class HomeNav(
         icon = Icons.Filled.Person,
         hasNews = true
     )
+
 }
 
 sealed class ExclusiveNav(
@@ -34,6 +35,12 @@ sealed class ExclusiveNav(
     data object MyFictions : ExclusiveNav(
         route = "my-fictions",
         title = "My Fictions",
+    )
+
+    //user profile
+    object UserProfile : ExclusiveNav(
+        route = "user-profile",
+        title = "Profile",
     )
 
     data object Setup : ExclusiveNav(

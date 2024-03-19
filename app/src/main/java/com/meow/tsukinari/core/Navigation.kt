@@ -31,6 +31,8 @@ import com.meow.tsukinari.presentation.profile.ProfileScreen
 import com.meow.tsukinari.presentation.profile.ProfileViewModel
 import com.meow.tsukinari.presentation.reader.ReaderScreen
 import com.meow.tsukinari.presentation.reader.ReaderViewModel
+import com.meow.tsukinari.presentation.user_profile.UserProfileScreen
+import com.meow.tsukinari.presentation.user_profile.UserProfileViewModel
 
 
 enum class AuthRoutes {
@@ -53,7 +55,8 @@ fun Navigation(
     detailViewModel: DetailViewModel,
     profileViewModel: ProfileViewModel,
     addChapterViewModel: AddChapterViewModel,
-    readerViewModel: ReaderViewModel
+    readerViewModel: ReaderViewModel,
+    userProfileViewModel: UserProfileViewModel
 ) {
     NavHost(
         navController = navController, startDestination = NestedNav.Main.route
@@ -67,7 +70,8 @@ fun Navigation(
             detailViewModel,
             profileViewModel,
             addChapterViewModel,
-            readerViewModel
+            readerViewModel,
+            userProfileViewModel
         )
     }
 
@@ -147,7 +151,8 @@ fun NavGraphBuilder.homeGraph(
     detailViewModel: DetailViewModel,
     profileViewModel: ProfileViewModel,
     addChapterViewModel: AddChapterViewModel,
-    readerViewModel: ReaderViewModel
+    readerViewModel: ReaderViewModel,
+    userProfileViewModel: UserProfileViewModel
 ) {
     navigation(
         startDestination = HomeNav.Browse.route,
@@ -248,6 +253,11 @@ fun NavGraphBuilder.homeGraph(
                         launchSingleTop = true
 
                     }
+                },
+                onNavToProfile = { id ->
+                    navController.navigate(ExclusiveNav.UserProfile.route + "?userId=$id") {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -277,6 +287,20 @@ fun NavGraphBuilder.homeGraph(
                 },
                 fictionId = entry.arguments?.getString("id") as String
             )
+        }
+
+        //user profile page with user id
+        composable(
+            route = ExclusiveNav.UserProfile.route + "?userId={userId}",
+            arguments = listOf(navArgument("userId") {
+                type = NavType.StringType
+                defaultValue = ""
+            })
+        ) { entry ->
+            UserProfileScreen(
+                userProfileViewModel = userProfileViewModel,
+                userId = entry.arguments?.getString("userId") as String,
+                onNavToDetail = {})
         }
     }
 }
