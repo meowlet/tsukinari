@@ -190,7 +190,7 @@ fun ProfileScreen(
                                     Icon(Icons.Default.Close, contentDescription = null)
                                 }
                                 IconButton(
-                                    onClick = { profileViewModel.updateProfilePic() },
+                                    onClick = { profileViewModel.updateProfilePic(context) },
                                 ) {
                                     Icon(Icons.Default.Done, contentDescription = null)
                                 }

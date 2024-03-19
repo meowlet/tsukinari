@@ -41,6 +41,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -70,6 +71,12 @@ fun DetailScreen(
         if (detailUiState.commentList.isNotEmpty()) {
         }
     }
+
+    val context = LocalContext.current
+
+//    LaunchedEffect(key1 = detailUiState.doesUserDislike, key2 = detailUiState.doesUserLike) {
+//        detailViewModel?.getFictionStats(fictionId)
+//    }
 
 
     val gradient = Brush.verticalGradient(
@@ -202,7 +209,7 @@ fun DetailScreen(
                                 .size(28.dp)
                                 .padding(2.dp)
                                 .clickable {
-                                    detailViewModel!!.likeFiction(fictionId)
+                                    detailViewModel!!.votingAction(context, fictionId, true)
                                 }
                         )
                         Text(
@@ -219,7 +226,7 @@ fun DetailScreen(
                                 .scale(scaleX = -1f, scaleY = -1f)
                                 .padding(2.dp)
                                 .clickable {
-                                    detailViewModel!!.dislikeFiction(fictionId)
+                                    detailViewModel!!.votingAction(context, fictionId, false)
                                 }
                         )
                         Text(

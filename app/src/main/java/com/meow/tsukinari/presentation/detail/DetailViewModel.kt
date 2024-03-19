@@ -1,5 +1,7 @@
 package com.meow.tsukinari.presentation.detail
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -66,6 +68,7 @@ class DetailViewModel(
         })
     }
 
+
     //try catch validate the comment field
     fun validateCommentField(): Boolean {
         return detailUiState.comment.isNotEmpty()
@@ -79,7 +82,24 @@ class DetailViewModel(
     fun likeFiction(fictionId: String) {
         repository.likeFiction(fictionId, onComplete = { isSuccessful, likeCount ->
             if (isSuccessful) {
-                detailUiState = detailUiState.copy(likeCount = likeCount)
+            }
+            getFictionStats(fictionId)
+        })
+    }
+
+    //unlike this fiction
+    fun unlikeFiction(fictionId: String) {
+        repository.unlikeFiction(fictionId, onComplete = { isSuccessful, likeCount ->
+            if (isSuccessful) {
+                getFictionStats(fictionId)
+            }
+        })
+    }
+
+    //undislike this fiction
+    fun undislikeFiction(fictionId: String) {
+        repository.undislikeFiction(fictionId, onComplete = { isSuccessful, dislikeCount ->
+            if (isSuccessful) {
                 getFictionStats(fictionId)
             }
         })
@@ -150,22 +170,29 @@ class DetailViewModel(
 
     //get fiction stats
     fun getFictionStats(fictionId: String) {
-        repository.getFictionStats(fictionId, onError = {}, onSuccess = { stats ->
+        repository.getFictionStats(fictionId, onError = {
+            detailUiState = detailUiState.copy(
+                likeCount = 0,
+                dislikeCount = 0,
+                doesUserDislike = false,
+                doesUserLike = false
+            )
+        }, onSuccess = { stats ->
             if (stats != null) {
 
                 detailUiState = detailUiState.copy(
                     likeCount = stats.likedBy.size,
                     dislikeCount = stats.dislikedBy.size
                 )
-                if (stats.likedBy.contains(userId)) {
-                    detailUiState = detailUiState.copy(doesUserLike = true)
+                detailUiState = if (stats.likedBy.contains(userId)) {
+                    detailUiState.copy(doesUserLike = true)
                 } else {
-                    detailUiState = detailUiState.copy(doesUserLike = false)
+                    detailUiState.copy(doesUserLike = false)
                 }
-                if (stats.dislikedBy.contains(userId)) {
-                    detailUiState = detailUiState.copy(doesUserDislike = true)
+                detailUiState = if (stats.dislikedBy.contains(userId)) {
+                    detailUiState.copy(doesUserDislike = true)
                 } else {
-                    detailUiState = detailUiState.copy(doesUserDislike = false)
+                    detailUiState.copy(doesUserDislike = false)
                 }
             } else {
                 detailUiState = detailUiState.copy(
@@ -176,6 +203,34 @@ class DetailViewModel(
                 )
             }
         })
+    }
+
+    fun votingAction(context: Context, fictionId: String, isLike: Boolean) {
+
+        if (!hasUser) {
+            //toast message and return
+            Toast.makeText(
+                context,
+                "This function is for registered users only",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+
+        if (isLike) {
+            if (detailUiState.doesUserLike) {
+                unlikeFiction(fictionId)
+            } else {
+                likeFiction(fictionId)
+            }
+        } else {
+            if (detailUiState.doesUserDislike) {
+                undislikeFiction(fictionId)
+            } else {
+                dislikeFiction(fictionId)
+            }
+        }
     }
 
     fun getChapterList(fictionId: String) =
@@ -191,7 +246,6 @@ class DetailViewModel(
     fun dislikeFiction(fictionId: String) {
         repository.dislikeFiction(fictionId, onComplete = { isSuccessful, dislikeCount ->
             if (isSuccessful) {
-                detailUiState = detailUiState.copy(dislikeCount = dislikeCount)
                 getFictionStats(fictionId)
             }
         })

@@ -377,9 +377,11 @@ class DatabaseRepository {
     }
 
     //update user's profile pic
-    fun updateProfilePic(imageUri: Uri, onComplete: (Boolean) -> Unit) {
+    fun updateProfilePic(context: Context, imageUri: Uri, onComplete: (Boolean) -> Unit) {
+        //compress the image
+        val compressedImage = compressImage(listOf(imageUri), context)[0]
         val filePath = fictionImagesRef.child(getUserId()).child("profilePic")
-        filePath.putFile(imageUri)
+        filePath.putFile(compressedImage)
             .addOnSuccessListener {
                 filePath.downloadUrl.addOnSuccessListener { imageUrl ->
                     val updateData = hashMapOf<String, Any>(
@@ -615,8 +617,9 @@ class DatabaseRepository {
                 } else return
                 likeRef.child("likedBy").setValue(likedBy)
                     .addOnCompleteListener { result ->
+                        undislikeFiction(fictionId) { _, _ -> }
                         onComplete(result.isSuccessful, likedBy.size)
-
+                        //undislke the fiction if the user has disliked the fiction
                     }
             }
 
@@ -624,6 +627,34 @@ class DatabaseRepository {
             }
         })
     }
+
+    //unlike a fiction
+    fun unlikeFiction(fictionId: String, onComplete: (Boolean, Int) -> Unit) {
+        val unlikeRef = statsRef.child(fictionId)
+        //update only the likedBy list, load the current likedBy list, remove the user id from the list, and update the list
+
+        val likedBy = mutableListOf<String>()
+        //load the current likedBy list
+        unlikeRef.child("likedBy").addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                //get the user id who liked list
+                val likedByList = snapshot.children.mapNotNull { it.value.toString() }
+                likedBy.addAll(likedByList)
+                //if the user id is in the list, remove it from the list
+                if (likedBy.contains(getUserId())) {
+                    likedBy.remove(getUserId())
+                } else return
+                unlikeRef.child("likedBy").setValue(likedBy)
+                    .addOnCompleteListener { result ->
+                        onComplete(result.isSuccessful, likedBy.size)
+                    }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+            }
+        })
+    }
+
 
     //dislike a fiction
     fun dislikeFiction(fictionId: String, onComplete: (Boolean, Int) -> Unit) {
@@ -643,13 +674,43 @@ class DatabaseRepository {
                 } else return
                 dislikeRef.child("dislikedBy").setValue(dislikedBy)
                     .addOnCompleteListener { result ->
+                        unlikeFiction(fictionId) { _, _ -> }
                         onComplete(result.isSuccessful, dislikedBy.size)
+                        //unlike the fiction if the user has liked the fiction
                     }
             }
 
             override fun onCancelled(error: DatabaseError) {
             }
         })
+    }
+
+    //undislike a fiction
+    fun undislikeFiction(fictionId: String, onComplete: (Boolean, Int) -> Unit) {
+        val undislikeRef = statsRef.child(fictionId)
+        //update only the dislikedBy list, load the current dislikedBy list, remove the user id from the list, and update the list
+
+        val dislikedBy = mutableListOf<String>()
+        //load the current dislikedBy list
+        undislikeRef.child("dislikedBy")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    //get the user id who disliked list
+                    val dislikedByList = snapshot.children.mapNotNull { it.value.toString() }
+                    dislikedBy.addAll(dislikedByList)
+                    //if the user id is in the list, remove it from the list
+                    if (dislikedBy.contains(getUserId())) {
+                        dislikedBy.remove(getUserId())
+                    } else return
+                    undislikeRef.child("dislikedBy").setValue(dislikedBy)
+                        .addOnCompleteListener { result ->
+                            onComplete(result.isSuccessful, dislikedBy.size)
+                        }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                }
+            })
     }
 
 

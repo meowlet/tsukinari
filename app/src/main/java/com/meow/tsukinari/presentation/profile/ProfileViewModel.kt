@@ -1,5 +1,6 @@
 package com.meow.tsukinari.presentation.profile
 
+import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -85,10 +86,10 @@ class ProfileViewModel(
     }
 
     //update profile pic
-    fun updateProfilePic() {
+    fun updateProfilePic(context: Context) {
         try {
             profileUiState = profileUiState.copy(isImageUploadLoading = true)
-            repository.updateProfilePic(profileUiState.newProfilePicUri!!) {
+            repository.updateProfilePic(context, profileUiState.newProfilePicUri!!) {
                 //reset state
                 profileUiState = profileUiState.copy(
                     newProfilePicUri = Uri.EMPTY,
