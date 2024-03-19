@@ -122,6 +122,10 @@ class DetailViewModel(
             detailUiState = detailUiState.copy(isCommentLoading = true)
 
             detailUiState = detailUiState.copy(commentFieldError = "")
+
+            //remove redundant new line characters
+            detailUiState = detailUiState.copy(comment = detailUiState.comment.trim())
+
             repository.commentOnFiction(fictionId, detailUiState.comment) {
                 if (it) {
                     detailUiState = detailUiState.copy(comment = "")

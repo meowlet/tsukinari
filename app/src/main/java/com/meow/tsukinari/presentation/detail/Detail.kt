@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -25,10 +26,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -39,14 +42,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.meow.tsukinari.model.ChapterModel
+import com.meow.tsukinari.model.FictionCommentModel
+import com.meow.tsukinari.model.UserModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -258,6 +266,17 @@ fun DetailScreen(
                     )
                 )
             }
+
+            if (detailUiState.chapters.isEmpty()) {
+                item {
+                    Text(
+                        text = "This fiction has no chapters yet.",
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(20.dp)
+                    )
+                }
+            }
+
             detailUiState.chapters.forEachIndexed { index, chapter ->
                 item {
                     ChapterItem(
@@ -280,43 +299,81 @@ fun DetailScreen(
                             bottom = 4.dp
                         )
                 ) {
-                    Text(
-                        text = "Comments:",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.secondary,
-                        textDecoration = TextDecoration.Underline,
 
-                        )
                     if (detailViewModel!!.hasUser) {
                         //comment input
-                        TextField(value = detailUiState.comment, onValueChange = {
-                            detailViewModel.onCommentChanged(it)
-                        }, label = { Text("Write a comment") }, modifier = Modifier.fillMaxWidth())
-                        //error message
-                        if (detailUiState.commentFieldError.isNotEmpty()) {
-                            Text(
-                                text = detailUiState.commentFieldError,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.error
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(value = detailUiState.comment, onValueChange = {
+                                detailViewModel.onCommentChanged(it)
+                            }, label = { Text("Write a comment") }, modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(0.85f)
                             )
-                        }
-                        //submit button
-                        IconButton(onClick = {
-                            detailViewModel.addComment(fictionId, detailViewModel.userId)
-                        }) {
-                            if (detailUiState.isCommentLoading) {
-                                CircularProgressIndicator()
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.Done,
-                                    contentDescription = ""
+                            //error message
+                            if (detailUiState.commentFieldError.isNotEmpty()) {
+                                Text(
+                                    text = detailUiState.commentFieldError,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.error
                                 )
                             }
+                            //submit button
+                            IconButton(
+                                onClick = {
+                                    detailViewModel.addComment(fictionId, detailViewModel.userId)
+                                }, modifier = Modifier
+                                    .weight(0.15f)
+                                    .clip(CircleShape)
+                                    .padding(4.dp),
+                                colors = IconButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.secondary,
+                                    disabledContentColor = MaterialTheme.colorScheme.secondary.copy(
+                                        alpha = 0.5f
+                                    ),
+                                    containerColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent
+                                )
+                            ) {
+                                if (detailUiState.isCommentLoading) {
+                                    CircularProgressIndicator()
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Done,
+                                        contentDescription = ""
+                                    )
+                                }
+                            }
                         }
+
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text(
+                            text = "Comments:",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.secondary,
+                            textDecoration = TextDecoration.Underline,
+
+                            )
                     } else {
                         Text(
                             text = "Please login to comment",
                             style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                }
+            }
+
+            if (detailUiState.commentList.isEmpty()) {
+                item {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "No comments yet.",
+                            style = MaterialTheme.typography.labelLarge,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
                         )
                     }
                 }
@@ -357,34 +414,112 @@ fun CommentItem(
     Row(
         modifier = Modifier
             .padding(horizontal = 20.dp, vertical = 12.dp)
-            .fillMaxWidth()
+            .fillMaxWidth(),
     ) {
         AsyncImage(
             model = avatarUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(20.dp))
+                .weight(0.15f)
+                .padding(4.dp)
+                .clip(CircleShape)
+                .aspectRatio(1f)
                 .clickable {
                     //navigate to user profile
                     onNavToProfile.invoke("")
                 }
         )
+        Spacer(modifier = Modifier.size(4.dp))
         Column(
             modifier = Modifier
-
+                .weight(0.85f)
+                .padding(top = 2.dp)
         ) {
-            Text(
-                text = "$displayName: (@$userName)",
-                style = MaterialTheme.typography.titleMedium
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 2.dp)
+            ) {
+                Text(
+                    text = "$displayName",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(modifier = Modifier.size(6.dp))
+                Text(
+                    text = time, style = MaterialTheme.typography.labelSmall,
+                    textDecoration = TextDecoration.Underline
+                )
+            }
+            //onsurface colored box
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                color = MaterialTheme.colorScheme.surfaceContainer
+            ) {
+                Text(
+                    text = comment,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(10.dp),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 10,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+        }
+    }
+}
+
+@Preview
+@Composable
+fun CommentSectionTest() {
+    //dummy data
+    val commentList = mutableListOf<FictionCommentModel>()
+
+    for (i in 1..10) {
+        commentList.add(
+            FictionCommentModel(
+                commentId = "commentId",
+                comment = "A very long comment" +
+                        "twalsdfjklaksjdf" +
+                        "asdfflkjalsdjf" +
+                        "asldfkjlaskjdf $i",
+                commentTime = System.currentTimeMillis(),
+                userId = "userId"
             )
-            Spacer(modifier = Modifier.size(6.dp))
-            Text(
-                text = "$comment",
-                style = MaterialTheme.typography.labelMedium
+        )
+    }
+
+    val userList = mutableListOf<UserModel>()
+
+    for (i in 1..10) {
+        userList.add(
+            UserModel(
+                userId = "userId",
+                userName = "userName",
+                displayName = "Display Name",
+                profileImageUrl = "profileImageUrl"
             )
-            Text(text = "Commented at: $time", style = MaterialTheme.typography.labelMedium)
+        )
+    }
+    Surface(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column {
+            commentList.forEachIndexed { index, comment ->
+                CommentItem(
+                    userList[index].displayName,
+                    userList[index].userName,
+                    userList[index].profileImageUrl,
+                    comment.comment,
+                    "time"
+                ) {
+                }
+            }
+
         }
     }
 }
@@ -409,12 +544,6 @@ fun ChapterList() {
             }
         }
     })
-}
-
-@Preview
-@Composable
-fun CTLP() {
-    ChapterList()
 }
 
 
