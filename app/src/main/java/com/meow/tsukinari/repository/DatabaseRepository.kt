@@ -123,10 +123,12 @@ class DatabaseRepository {
         imageUri: Uri,
         pageNumber: Int,
         fictionId: String,
+        chapterId: String,
         onComplete: (String?) -> Unit
     ) {
         val filePath =
-            fictionImagesRef.child(getUserId()).child(fictionId).child(pageNumber.toString())
+            fictionImagesRef.child(getUserId()).child(fictionId).child(chapterId)
+                .child(pageNumber.toString())
         filePath.putFile(imageUri)
             .addOnSuccessListener {
                 filePath.downloadUrl.addOnSuccessListener { imageUrl ->
@@ -412,10 +414,9 @@ class DatabaseRepository {
         val chapterId = chaptersRef.push().key.orEmpty()
         val chapterPages = mutableListOf<String>()
 
-        val compressedImages = compressImage(imageUris, context)
 
-        compressedImages.forEachIndexed { index, uri ->
-            uploadPage(uri, index, fictionId) { imageUrl ->
+        imageUris.forEachIndexed { index, uri ->
+            uploadPage(uri, index, fictionId, chapterId) { imageUrl ->
                 imageUrl?.let {
                     chapterPages.add(it)
                     if (index == imageUris.size - 1) {
@@ -732,6 +733,88 @@ class DatabaseRepository {
                 }
             })
     }
+
+    //add view to a chapter
+    fun addViewToChapter(fictionId: String, chapterId: String, onComplete: (Boolean) -> Unit) {
+        val viewRef = statsRef.child(fictionId).child("chapters").child(chapterId).child("viewedBy")
+        val viewedBy = mutableListOf<String>()
+        viewRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val viewedByList = snapshot.children.mapNotNull { it.value.toString() }
+                viewedBy.addAll(viewedByList)
+                if (getUserId().isNotBlank()) {
+                    viewedBy.add(getUserId())
+                } else {
+                    viewedBy.add("anonymous")
+                }
+                viewRef.setValue(viewedBy)
+                    .addOnCompleteListener { result ->
+                        onComplete(result.isSuccessful)
+                    }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+            }
+        })
+    }
+
+    //count the total views of a chapter
+    fun countTotalViews(
+        fictionId: String,
+        chapterId: String,
+        onError: (Throwable?) -> Unit,
+        onSuccess: (Int) -> Unit
+    ) {
+        statsRef.child(fictionId).child("chapters").child(chapterId).child("viewedBy")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val totalViews = snapshot.childrenCount.toInt()
+                    onSuccess(totalViews)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    onError(error.toException())
+                }
+            })
+    }
+
+    //get the total views of a fiction (sum all the views of all the chapters of the fiction)
+    fun getTotalViews(
+        fictionId: String,
+        onError: (Throwable?) -> Unit,
+        onSuccess: (Int) -> Unit
+    ) {
+        statsRef.child(fictionId).child("chapters")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    var totalViews = 0
+                    snapshot.children.forEach { chapter ->
+                        totalViews += chapter.child("viewedBy").childrenCount.toInt()
+                    }
+                    onSuccess(totalViews)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    onError(error.toException())
+                }
+            })
+    }
+
+    suspend fun getTotalViews(fictionId: String): Int {
+        return try {
+            val snapshot = statsRef.child(fictionId).child("chapters").get().await()
+            var totalViews = 0
+            snapshot.children.forEach { chapter ->
+                totalViews += chapter.child("viewedBy").childrenCount.toInt()
+            }
+            totalViews
+        } catch (e: Exception) {
+            0
+        }
+    }
+
+    //for each fiction, get total views, likedBy and return the
+
 }
 
 

@@ -199,6 +199,11 @@ fun DetailScreen(
                                 text = "Status: Ongoing",
                                 style = MaterialTheme.typography.labelMedium
                             )
+                            Spacer(modifier = Modifier.size(8.dp))
+                            Text(
+                                text = "View: ${detailUiState.viewCount}",
+                                style = MaterialTheme.typography.labelSmall,
+                            )
                         }
                     }
                 }
@@ -277,6 +282,7 @@ fun DetailScreen(
                 }
             }
 
+
             detailUiState.chapters.forEachIndexed { index, chapter ->
                 item {
                     ChapterItem(
@@ -313,13 +319,7 @@ fun DetailScreen(
                                 .weight(0.85f)
                             )
                             //error message
-                            if (detailUiState.commentFieldError.isNotEmpty()) {
-                                Text(
-                                    text = detailUiState.commentFieldError,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            }
+
                             //submit button
                             IconButton(
                                 onClick = {
@@ -358,6 +358,13 @@ fun DetailScreen(
                                 .fillMaxWidth()
                                 .padding(top = 8.dp),
                             textAlign = TextAlign.Center
+                        )
+                    }
+                    if (detailUiState.commentFieldError.isNotEmpty()) {
+                        Text(
+                            text = detailUiState.commentFieldError,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
                     Spacer(modifier = Modifier.size(12.dp))

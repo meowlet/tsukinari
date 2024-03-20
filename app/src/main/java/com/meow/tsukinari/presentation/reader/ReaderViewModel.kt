@@ -26,8 +26,19 @@ class ReaderViewModel(
         readerUiState = readerUiState.copy(isToolbarVisible = !readerUiState.isToolbarVisible)
     }
 
+    //add current user to the chapter's view list
+    fun addView(fictionId: String, chapterId: String) {
+        repository.addViewToChapter(fictionId, chapterId) {
+            //do nothing
+        }
+    }
+
     //fun to fetch the chapter
     fun fetchChapter(chapterId: String) {
+        //clear current chapter data
+        readerUiState = readerUiState.copy(
+            chapterImages = emptyList(),
+        )
         repository.getChapterData(chapterId) {
             onChapterChanged(
                 it.chapterId,
@@ -45,10 +56,14 @@ class ReaderViewModel(
             fictionId,
             onError = {},
         ) { it ->
-            //get the next (the most close ChapterModel.index above the current index) and previous chapter of the current chapter
-            val nextChapter = it?.find { it.chapterNumber > chaperIndex }
+            //get the next (the only first most close ChapterModel.index above the current index) and previous chapter of the current chapter
+            val nextChapter =
+                it?.sortedBy { it.chapterNumber }?.find { it.chapterNumber > chaperIndex }
             readerUiState = readerUiState.copy(nextChapter = nextChapter)
-            val previousChapter = it?.find { it.chapterNumber < chaperIndex }
+
+            //find in reverse order to get the previous chapter, catch the first most close ChapterModel.index below the current index
+            val previousChapter =
+                it?.sortedBy { it.chapterNumber }?.findLast { it.chapterNumber < chaperIndex }
             readerUiState = readerUiState.copy(previousChapter = previousChapter)
         }
     }
@@ -56,6 +71,20 @@ class ReaderViewModel(
     //hide the toolbar
     fun hideToolbar() {
         readerUiState = readerUiState.copy(isToolbarVisible = false)
+    }
+
+    //next chapter
+    fun nextChapter() {
+        readerUiState.nextChapter?.let {
+            fetchChapter(it.chapterId)
+        }
+    }
+
+    //previous chapter
+    fun previousChapter() {
+        readerUiState.previousChapter?.let {
+            fetchChapter(it.chapterId)
+        }
     }
 
     fun onChapterChanged(
@@ -74,6 +103,7 @@ class ReaderViewModel(
             currentPage = 0,
             totalPages = chapterImages.size
         )
+        addView(fictionId, chapterId)
     }
 
 
@@ -104,10 +134,12 @@ data class ReaderUiState(
     val totalPages: Int = 0,
     val isToolbarVisible: Boolean = false,
     val verticalReader: Boolean = false,
+    val viewCount: Int = 0,
 
     val contextMenuVisible: Boolean = false,
 
 
+    val currentChapter: ChapterModel? = null,
     val nextChapter: ChapterModel? = null,
     val previousChapter: ChapterModel? = null,
 

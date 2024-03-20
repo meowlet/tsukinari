@@ -138,7 +138,9 @@ fun ReaderScreen(
                                     )
                                 },
                                 label = { Text(text = "Previous chapter") },
-                                onClick = { /*TODO*/ }
+                                onClick = {
+                                    viewModel.previousChapter()
+                                }
                             )
                         }
                         if (readerUiState?.nextChapter != null) {
@@ -151,7 +153,9 @@ fun ReaderScreen(
                                     )
                                 },
                                 label = { Text(text = "Next chapter") },
-                                onClick = { /*TODO*/ }
+                                onClick = {
+                                    viewModel.nextChapter()
+                                }
                             )
                         }
                     }
@@ -198,7 +202,7 @@ fun ReaderScreen(
                     verticalArrangement = Arrangement.Center,
                 ) {
                     //show images vertically
-                    readerUiState.chapterImages?.forEach { imageUrl ->
+                    readerUiState.chapterImages.forEach { imageUrl ->
                         AsyncImage(
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally),
@@ -213,7 +217,7 @@ fun ReaderScreen(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize(),
                 ) { page ->
-                    readerUiState.chapterImages?.get(page)?.let { imageUrl ->
+                    readerUiState.chapterImages.get(page)?.let { imageUrl ->
                         AsyncImage(
                             modifier = Modifier
                                 .align(Alignment.Center)

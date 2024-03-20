@@ -174,6 +174,9 @@ class DetailViewModel(
 
     //get fiction stats
     fun getFictionStats(fictionId: String) {
+        repository.getTotalViews(fictionId, onError = {}, onSuccess = {
+            detailUiState = detailUiState.copy(viewCount = it)
+        })
         repository.getFictionStats(fictionId, onError = {
             detailUiState = detailUiState.copy(
                 likeCount = 0,
@@ -239,7 +242,9 @@ class DetailViewModel(
 
     fun getChapterList(fictionId: String) =
         repository.getChapters(fictionId, onError = {}, onSuccess = { chapters ->
-            detailUiState = detailUiState.copy(chapters = chapters!!)
+            detailUiState = detailUiState.copy(
+                chapters = chapters!!.sortedBy { it.chapterNumber }
+            )
         })
 
     fun onCommentChanged(comment: String) {
@@ -268,6 +273,8 @@ data class DetailUiState(
     val isLoading: Boolean = false,
     val likeCount: Int? = 0,
     val dislikeCount: Int? = 0,
+
+    val viewCount: Int = 0,
 
     val doesUserLike: Boolean = false,
     val doesUserDislike: Boolean = false,
