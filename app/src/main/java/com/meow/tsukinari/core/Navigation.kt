@@ -217,7 +217,11 @@ fun NavGraphBuilder.homeGraph(
                     navController.navigate(ExclusiveNav.AddChapter.route + "?id=$id")
                 },
                 onNavigate = {
-                    navController.navigate(ExclusiveNav.MyFictions.route)
+                    //single top
+                    navController.navigate(ExclusiveNav.MyFictions.route) {
+                        popUpTo(route = HomeNav.Profile.route)
+                    }
+
                 }
             )
 
@@ -228,7 +232,11 @@ fun NavGraphBuilder.homeGraph(
             route = ExclusiveNav.Upload.route
         ) { entry ->
             UploadingScreen(
-                onNavigate = { navController.navigate(ExclusiveNav.MyFictions.route) },
+                onNavigate = {
+                    navController.navigate(ExclusiveNav.MyFictions.route) {
+                        popUpTo(route = HomeNav.Profile.route)
+                    }
+                },
                 editorViewModel = editorViewModel,
             )
         }

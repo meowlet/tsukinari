@@ -92,6 +92,7 @@ class EditorViewModel(
             editorUiState = editorUiState.copy(title = fiction!!.title)
             editorUiState = editorUiState.copy(description = fiction.description)
             editorUiState = editorUiState.copy(imageUrl = fiction.coverLink)
+            editorUiState = editorUiState.copy(isFinished = fiction.finished)
         })
 
 
@@ -107,7 +108,8 @@ class EditorViewModel(
             imageUri = if (editorUiState.imageUri == Uri.EMPTY) Uri.EMPTY else compressImage(
                 editorUiState.imageUri,
                 context
-            )
+            ),
+            isFinished = editorUiState.isFinished
         ) {
             editorUiState = editorUiState.copy(fictionUpdatedStatus = it)
             editorUiState = editorUiState.copy(isLoading = false)
@@ -116,6 +118,10 @@ class EditorViewModel(
 
     fun resetState() {
         editorUiState = EditorUiState()
+    }
+
+    fun onFinishedChange(isFinished: Boolean) {
+        editorUiState = editorUiState.copy(isFinished = isFinished)
     }
 
     fun resetImage() {
@@ -138,6 +144,7 @@ data class EditorUiState(
     val description: String = "",
     val imageUri: Uri = Uri.EMPTY,
     val imageUrl: String = "",
+    val isFinished: Boolean = false,
     val fictionAddedStatus: Boolean = false,
     val fictionUpdatedStatus: Boolean = false,
     val fictionDeletedStatus: Boolean = false,

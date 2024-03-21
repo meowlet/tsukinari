@@ -1,5 +1,6 @@
 package com.meow.tsukinari.presentation.browse
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,12 +23,16 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,7 +41,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -61,7 +65,10 @@ import coil.compose.rememberAsyncImagePainter
 import com.meow.tsukinari.model.FictionModel
 import com.meow.tsukinari.repository.Resources
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
+    ExperimentalMaterialApi::class
+)
 @Composable
 fun BrowseScreen(
     browseViewModel: BrowseViewModel? = null,
@@ -79,24 +86,46 @@ fun BrowseScreen(
     val pagerState = rememberPagerState(pageCount = {
         2
     })
+
+    //scrollState
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val browseUiState = browseViewModel?.browseUiState ?: BrowseUiState()
 
+    //pull refresh state
+    val pullToRefreshState = rememberPullRefreshState(
+        //resource loading
+        refreshing = browseUiState.isRefreshing,
+        onRefresh = {
+            browseViewModel?.loadFictions()
+        })
+
+
     // Load fictions on first launch
     LaunchedEffect(key1 = Unit) {
         browseViewModel?.getUserList()
-        if (browseUiState.fictionsList !is Resources.Success) {
+        //load fictions only in the first launch
+        //if the fictions are already loaded, do not load them again
+        if (browseUiState.fictionsList.data.isNullOrEmpty()) {
+            Toast.makeText(context, "Data fetched", Toast.LENGTH_SHORT).show()
             browseViewModel?.loadFictions()
+        }
+        pagerState.animateScrollToPage(browseUiState.selectedTab)
+    }
+
+    //fetch view and like list once the fictions are loaded
+    LaunchedEffect(key1 = browseUiState.fictionsList) {
+        browseViewModel?.getTotalViews()
+        browseViewModel?.getTotalLikes()
+        if (browseViewModel!!.viewList.isEmpty() && browseUiState.fictionsList is Resources.Success) {
+        }
+        if (browseViewModel.likeList.isEmpty() && browseUiState.fictionsList is Resources.Success) {
         }
     }
 
-    //lauched effect that fetch the total views of the fictions when the fictions list is loaded
-    LaunchedEffect(key1 = browseUiState.fictionsList) {
-        if (browseUiState.fictionsList !is Resources.Success) {
-            browseViewModel?.getTotalViews()
-        }
-    }
+
+
+
 
     LaunchedEffect(key1 = browseUiState.selectedTab) {
         pagerState.animateScrollToPage(browseUiState.selectedTab)
@@ -116,38 +145,38 @@ fun BrowseScreen(
                             textStyle = MaterialTheme.typography.bodyLarge,
                             singleLine = true,
                             placeholder = { Text(text = "Search here...") },
-                        value = browseUiState.searchValue,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent
-                        ),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = { browseViewModel?.changeSearchingState() }),
+                            value = browseUiState.searchValue,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
+                            ),
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = { browseViewModel?.changeSearchingState() }),
 
-                        onValueChange = {
-                            browseViewModel?.onSearchValueChange(it)
-                        },
-                        modifier = Modifier
-                            .padding(bottom = 3.dp)
-                    )
-                } else {
-                    Column {
-                        Text(
-                            text = "Meow",
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.bodyLarge
+                            onValueChange = {
+                                browseViewModel?.onSearchValueChange(it)
+                            },
+                            modifier = Modifier
+                                .padding(bottom = 3.dp)
                         )
-                        Text(
-                            text = "Welcome, Meow-sama!",
-                            style = MaterialTheme.typography.labelSmall
-                        )
+                    } else {
+                        Column {
+                            Text(
+                                text = "月落聲",
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = "Welcome, Tsukinarian-sama!",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
                     }
-                }
-            },
+                },
                 navigationIcon = {
                     if (browseUiState.isSearching) {
                         IconButton(onClick = {
@@ -181,19 +210,19 @@ fun BrowseScreen(
                         Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = "")
                     }
                     IconButton(onClick = {
-                        browseViewModel?.signOut()
+                        browseViewModel?.signOut(context)
                     }) {
                         Icon(
-                            imageVector = Icons.Default.AccountCircle,
+                            imageVector = Icons.Default.Lock,
                             contentDescription = ""
                         )
                     }
-                }
+                },
             )
 
-        }
+        },
 
-    ) {
+        ) {
 
 
         if (browseUiState.showBottomSheet) {
@@ -201,7 +230,7 @@ fun BrowseScreen(
                 onDismissRequest = {
                     browseViewModel?.hideBottomSheet()
                 },
-                sheetState = sheetState
+                sheetState = sheetState,
             ) {
                 //show all sort options using radio buttons
                 TabRow(
@@ -282,6 +311,20 @@ fun BrowseScreen(
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                 }
+                                Row(
+                                    modifier = Modifier.padding(top = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = browseUiState.sortBy == 4,
+                                        onCheckedChange = {
+                                            browseViewModel?.changeSortBy(4)
+                                        })
+                                    Text(
+                                        text = "Likes",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
                             }
 
                             1 -> {
@@ -292,7 +335,7 @@ fun BrowseScreen(
                                     Checkbox(
                                         checked = browseUiState.filterBy == 0,
                                         onCheckedChange = {
-                                            browseViewModel?.changeSortBy(2)
+                                            browseViewModel?.changeFilterBy(0)
                                         })
                                     Text(
                                         text = "Verified",
@@ -306,10 +349,10 @@ fun BrowseScreen(
                                     Checkbox(
                                         checked = browseUiState.filterBy == 1,
                                         onCheckedChange = {
-                                            browseViewModel?.changeSortBy(3)
+                                            browseViewModel?.changeFilterBy(1)
                                         })
                                     Text(
-                                        text = "Views",
+                                        text = "Unverified",
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                 }
@@ -320,10 +363,24 @@ fun BrowseScreen(
                                     Checkbox(
                                         checked = browseUiState.filterBy == 2,
                                         onCheckedChange = {
-                                            browseViewModel?.changeFilterBy(4)
+                                            browseViewModel?.changeFilterBy(2)
                                         })
                                     Text(
-                                        text = "Unverified",
+                                        text = "Finished",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                                Row(
+                                    modifier = Modifier.padding(top = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = browseUiState.filterBy == 3,
+                                        onCheckedChange = {
+                                            browseViewModel?.changeFilterBy(3)
+                                        })
+                                    Text(
+                                        text = "Ongoing",
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                 }
@@ -336,7 +393,10 @@ fun BrowseScreen(
 
 
 
-        Surface(Modifier.padding(it)) {
+        Box(
+            Modifier
+                .padding(it)
+        ) {
             when (browseUiState.fictionsList) {
                 is Resources.Loading -> {
                     CircularProgressIndicator(
@@ -349,34 +409,52 @@ fun BrowseScreen(
                 is Resources.Success -> {
 
 
-                    val fictions = when (browseUiState.sortBy) {
-                        0 -> browseUiState.fictionsList.data?.sortedBy { it.uploadedAt }
-                        1 -> browseUiState.fictionsList.data?.sortedBy { it.title }
+                    val filteredFictionList = when (browseUiState.filterBy) {
+                        0 -> browseUiState.fictionsList.data?.filter { it.verified }
+                        1 -> browseUiState.fictionsList.data?.filter { !it.verified }
+                        2 -> browseUiState.fictionsList.data?.filter { it.finished }
+                        3 -> browseUiState.fictionsList.data?.filter { !it.finished }
+                        else -> browseUiState.fictionsList.data
+                    } ?: emptyList()
+
+
+                    val finalFictionList = when (browseUiState.sortBy) {
+                        0 -> filteredFictionList.sortedBy { it.uploadedAt }
+                        1 -> filteredFictionList.sortedBy { it.title }
                         //sort by the uploader name in the user list by index
-                        2 -> browseUiState.fictionsList.data?.sortedBy { fiction ->
+                        2 -> filteredFictionList.sortedBy { fiction ->
                             browseViewModel?.userList?.find { user ->
                                 user.userId == fiction.uploaderId
                             }?.userName
                         }
 
-                        3 -> browseUiState.fictionsList.data?.sortedBy {
+                        3 -> filteredFictionList.sortedBy {
                             browseViewModel?.viewList?.find { view ->
                                 view.first == it.fictionId
                             }?.second
-                        }?.reversed()
+                        }.reversed()
 
-                        else -> browseUiState.fictionsList.data
-                    } ?: emptyList()
+                        4 -> filteredFictionList.sortedBy {
+                            browseViewModel?.likeList?.find { like ->
+                                like.first == it.fictionId
+                            }?.second
+                        }.reversed()
+
+                        else -> filteredFictionList
+                    }
 
 
                     LazyVerticalGrid(
-                        modifier = Modifier.padding(start = 18.dp, end = 18.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(start = 18.dp, end = 18.dp)
+                            .pullRefresh(pullToRefreshState),
                         columns = GridCells.Fixed(2),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(
-                            items = fictions,
+                            items = finalFictionList,
+                            key = { fiction -> fiction.fictionId }
                         ) { fiction ->
                             FictionItem(fiction = fiction, onClick = {
                                 onNavToDetailPage.invoke(fiction.fictionId)
@@ -385,6 +463,7 @@ fun BrowseScreen(
                     }
                 }
 
+
                 else -> {
                     Text(
                         text = browseUiState.fictionsList.throwable?.localizedMessage
@@ -392,7 +471,15 @@ fun BrowseScreen(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
+
             }
+            PullRefreshIndicator(
+                refreshing = browseUiState.fictionsList is Resources.Loading,
+                state = pullToRefreshState,
+                backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
     }
 
@@ -405,6 +492,7 @@ fun FictionItem(fiction: FictionModel, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .padding(vertical = 5.dp)
             .height(200.dp)
             .clip(RoundedCornerShape(8.dp))
             .clickable {
@@ -442,7 +530,7 @@ fun FictionItem(fiction: FictionModel, onClick: () -> Unit) {
                     .padding(bottom = 4.dp, top = 3.dp, start = 6.dp, end = 6.dp)
             ) {
                 Text(
-                    text = if (fiction.isFinished) "Finished" else "Ongoing", //Fiction status
+                    text = if (fiction.finished) "Finished" else "Ongoing", //Fiction status
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.labelSmall
                 )

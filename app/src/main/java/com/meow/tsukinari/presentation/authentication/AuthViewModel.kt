@@ -98,7 +98,6 @@ class AuthViewModel(
                 authUiState.passwordSignUp
             ) { isCompleted ->
                 if (isCompleted) {
-                    Toast.makeText(context, repository.getUserId(), Toast.LENGTH_SHORT).show()
                     repository.registerUser(
                         authUiState.usernameSignUp,
                         authUiState.emailSignUp,

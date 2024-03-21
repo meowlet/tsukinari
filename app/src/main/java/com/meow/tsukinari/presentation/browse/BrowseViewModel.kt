@@ -1,5 +1,7 @@
 package com.meow.tsukinari.presentation.browse
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -29,6 +31,7 @@ class BrowseViewModel(
 
     //get total views of the fiction
     var viewList = mutableListOf<Pair<String, Int>>()
+    var likeList = mutableListOf<Pair<String, Int>>()
 
     //suspend fun get total views of the list of fictions
     suspend fun getTotalViews() = viewModelScope.launch {
@@ -36,6 +39,15 @@ class BrowseViewModel(
         browseUiState.fictionsList.data?.forEach { fiction ->
             val totalViews = repository.getTotalViews(fiction.fictionId)
             viewList.add(Pair(fiction.fictionId, totalViews))
+        }
+    }
+
+    //suspend fun get total likes of the list of fictions
+    suspend fun getTotalLikes() = viewModelScope.launch {
+        likeList = mutableListOf()
+        browseUiState.fictionsList.data?.forEach { fiction ->
+            val totalLikes = repository.getTotalLikes(fiction.fictionId)
+            likeList.add(Pair(fiction.fictionId, totalLikes))
         }
     }
 
@@ -78,8 +90,9 @@ class BrowseViewModel(
         searchFictions("")
     }
 
-    fun signOut() = viewModelScope.launch {
+    fun signOut(context: Context) = viewModelScope.launch {
         repository.signOut()
+        Toast.makeText(context, "Successfully signed out", Toast.LENGTH_SHORT).show()
     }
 
 
@@ -88,7 +101,9 @@ class BrowseViewModel(
 
     //load fictions
     fun loadFictions() = viewModelScope.launch {
+        browseUiState = browseUiState.copy(isRefreshing = true)
         browseUiState = browseUiState.copy(fictionsList = repository.getFictions())
+        browseUiState = browseUiState.copy(isRefreshing = false)
     }
 
     fun hideBottomSheet() {
@@ -123,8 +138,9 @@ data class BrowseUiState(
     val searchValue: String = "",
     val showBottomSheet: Boolean = false,
     val selectedTab: Int = 0,
+    val isRefreshing: Boolean = false,
     //sort by 0 is by date, 1 is by name, 2 is by author, 3 is by views, 4 is by likes
     val sortBy: Int = 0,
-    val filterBy: Int = 0,
-    val userList: List<UserModel>? = emptyList()
+    val filterBy: Int = 1,
+    val userList: List<UserModel>? = emptyList(),
 )

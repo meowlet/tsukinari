@@ -9,6 +9,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -225,13 +227,21 @@ fun UpdatingScreen(
 
 
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            OutlinedButton(
-                onClick = { editorViewModel?.deleteFiction(fictionId) },
-                modifier = Modifier.fillMaxWidth()
+            // check box for finished
+            Row(
+                Modifier.align(Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Delete")
+                Row {
+                    Checkbox(checked = editorUiState.isFinished, onCheckedChange = {
+                        editorViewModel?.onFinishedChange(it)
+                    })
+                    Text(
+                        text = "Finished",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -240,6 +250,14 @@ fun UpdatingScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = "Add Chapter")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedButton(
+                onClick = { editorViewModel?.deleteFiction(fictionId) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Delete")
             }
         }
     }

@@ -43,7 +43,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.11"
     }
     packaging {
         resources {
@@ -107,5 +107,9 @@ dependencies {
 
     //Zoom
     implementation("net.engawapg.lib:zoomable:1.6.1")
+
+
+    implementation("androidx.compose.material:material:1.6.4")
+
 
 }

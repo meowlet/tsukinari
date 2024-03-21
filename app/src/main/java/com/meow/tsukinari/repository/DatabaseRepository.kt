@@ -317,6 +317,7 @@ class DatabaseRepository {
         description: String,
         fictionId: String,
         imageUri: Uri,
+        isFinished: Boolean,
         onResult: (Boolean) -> Unit
     ) {
         when (imageUri) {
@@ -325,6 +326,7 @@ class DatabaseRepository {
                 val updateData = hashMapOf<String, Any>(
                     "description" to description,
                     "title" to title,
+                    "finished" to isFinished
                 )
                 fictionsRef.child(fictionId)
                     .updateChildren(updateData)
@@ -340,7 +342,8 @@ class DatabaseRepository {
                         val updateData = hashMapOf<String, Any>(
                             "description" to description,
                             "title" to title,
-                            "coverLink" to it
+                            "coverLink" to it,
+                            "finished" to isFinished
                         )
                         fictionsRef.child(fictionId)
                             .updateChildren(updateData)
@@ -813,7 +816,15 @@ class DatabaseRepository {
         }
     }
 
-    //for each fiction, get total views, likedBy and return the
+    //suspend function to get total likes of a fiction
+    suspend fun getTotalLikes(fictionId: String): Int {
+        return try {
+            val snapshot = statsRef.child(fictionId).child("likedBy").get().await()
+            snapshot.childrenCount.toInt()
+        } catch (e: Exception) {
+            0
+        }
+    }
 
 }
 
