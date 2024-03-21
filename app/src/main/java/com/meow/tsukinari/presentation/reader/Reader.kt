@@ -68,8 +68,6 @@ fun ReaderScreen(
         topBar = {
             AnimatedVisibility(
                 visible = readerUiState?.isToolbarVisible ?: false,
-                enter = slideInVertically(initialOffsetY = { -it }),
-                exit = slideOutVertically(targetOffsetY = { -it }),
                 content = {
                     TopAppBar(
                         title = { Text(text = readerUiState?.chapterTitle ?: "Chapter 1") },
@@ -217,7 +215,7 @@ fun ReaderScreen(
                     state = pagerState,
                     modifier = Modifier.fillMaxSize(),
                 ) { page ->
-                    readerUiState.chapterImages.get(page)?.let { imageUrl ->
+                    readerUiState.chapterImages.get(page).let { imageUrl ->
                         AsyncImage(
                             modifier = Modifier
                                 .align(Alignment.Center)
