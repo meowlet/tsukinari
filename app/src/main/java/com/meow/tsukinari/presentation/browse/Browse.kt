@@ -1,6 +1,5 @@
 package com.meow.tsukinari.presentation.browse
 
-import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -97,6 +96,12 @@ fun BrowseScreen(
         //resource loading
         refreshing = browseUiState.isRefreshing,
         onRefresh = {
+            //chage the refreshing state
+            browseViewModel?.startRefreshing()
+            //reset the sort and filter if the current sort option is view or like
+            if (browseUiState.sortBy == 3 || browseUiState.sortBy == 4) {
+                browseViewModel?.resetSortAndFilter()
+            }
             browseViewModel?.loadFictions()
         })
 
@@ -107,7 +112,6 @@ fun BrowseScreen(
         //load fictions only in the first launch
         //if the fictions are already loaded, do not load them again
         if (browseUiState.fictionsList.data.isNullOrEmpty()) {
-            Toast.makeText(context, "Data fetched", Toast.LENGTH_SHORT).show()
             browseViewModel?.loadFictions()
         }
         pagerState.animateScrollToPage(browseUiState.selectedTab)
@@ -115,11 +119,11 @@ fun BrowseScreen(
 
     //fetch view and like list once the fictions are loaded
     LaunchedEffect(key1 = browseUiState.fictionsList) {
-        browseViewModel?.getTotalViews()
-        browseViewModel?.getTotalLikes()
-        if (browseViewModel!!.viewList.isEmpty() && browseUiState.fictionsList is Resources.Success) {
+        if (browseUiState.fictionsList is Resources.Success) {
+            browseViewModel?.getTotalViews()
         }
-        if (browseViewModel.likeList.isEmpty() && browseUiState.fictionsList is Resources.Success) {
+        if (browseUiState.fictionsList is Resources.Success) {
+            browseViewModel?.getTotalLikes()
         }
     }
 
@@ -454,7 +458,6 @@ fun BrowseScreen(
                     ) {
                         items(
                             items = finalFictionList,
-                            key = { fiction -> fiction.fictionId }
                         ) { fiction ->
                             FictionItem(fiction = fiction, onClick = {
                                 onNavToDetailPage.invoke(fiction.fictionId)
@@ -474,7 +477,7 @@ fun BrowseScreen(
 
             }
             PullRefreshIndicator(
-                refreshing = browseUiState.fictionsList is Resources.Loading,
+                refreshing = browseUiState.isRefreshing,
                 state = pullToRefreshState,
                 backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer,

@@ -60,7 +60,7 @@ import com.meow.tsukinari.model.UserModel
 @Composable
 fun DetailScreen(
     detailViewModel: DetailViewModel? = null,
-    fictionId: String,
+    fictionId: String = "",
     onNavigate: () -> Unit,
     onNavToReader: (fictionId: String) -> Unit,
     onNavToProfile: (userId: String) -> Unit

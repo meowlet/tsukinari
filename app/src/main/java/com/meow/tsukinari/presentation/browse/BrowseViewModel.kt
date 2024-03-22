@@ -101,9 +101,8 @@ class BrowseViewModel(
 
     //load fictions
     fun loadFictions() = viewModelScope.launch {
-        browseUiState = browseUiState.copy(isRefreshing = true)
         browseUiState = browseUiState.copy(fictionsList = repository.getFictions())
-        browseUiState = browseUiState.copy(isRefreshing = false)
+        stopRefreshing()
     }
 
     fun hideBottomSheet() {
@@ -126,6 +125,20 @@ class BrowseViewModel(
     fun changeFilterBy(option: Int) {
         browseUiState = browseUiState.copy(filterBy = option)
     }
+
+    //stop refreshing
+    fun stopRefreshing() {
+        browseUiState = browseUiState.copy(isRefreshing = false)
+    }
+
+    fun resetSortAndFilter() {
+        browseUiState = browseUiState.copy(sortBy = 0, filterBy = 1)
+    }
+
+    fun startRefreshing() {
+        browseUiState = browseUiState.copy(isRefreshing = true)
+    }
+
 
     //search fictions
 
