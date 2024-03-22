@@ -14,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.meow.tsukinari.core.Navigation
+import com.meow.tsukinari.presentation.admin.AdminViewModel
 import com.meow.tsukinari.presentation.authentication.AuthViewModel
 import com.meow.tsukinari.presentation.browse.BrowseViewModel
 import com.meow.tsukinari.presentation.detail.DetailViewModel
@@ -46,6 +48,7 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
     val addChapterViewModel = viewModel(modelClass = AddChapterViewModel::class.java)
     val readerViewModel = viewModel(modelClass = ReaderViewModel::class.java)
     val userProfileViewModel = viewModel(modelClass = UserProfileViewModel::class.java)
+    val adminViewModel = viewModel(modelClass = AdminViewModel::class.java)
     val focusManager = LocalFocusManager.current
 
     val navController = rememberNavController()
@@ -54,6 +57,10 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
     val mainLayoutUiState = mainLayoutViewModel.mainLayoutUiState
     val focusRequester = remember { FocusRequester() }
     mainLayoutViewModel.checkExclusive(currentDestination)
+
+    LaunchedEffect(Unit) {
+        mainLayoutViewModel.isAdmin()
+    }
 
 
 
@@ -71,28 +78,56 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
                         exit = slideOutVertically(targetOffsetY = { it }),
                         content = {
                             NavigationBar {
-                                mainLayoutViewModel.getHomeNavItems().forEachIndexed { _, item ->
-                                    NavigationBarItem(
-                                        selected = mainLayoutViewModel.isNavItemSelected(
-                                            currentDestination,
-                                            item
-                                        ),
-                                        label = {
-                                            Text(
-                                                text = item.title,
-                                                style = MaterialTheme.typography.labelMedium
-                                            )
-                                        },
-                                        onClick = {
-                                            navController.navigate(item.route)
-                                        },
-                                        icon = {
-                                            Icon(
-                                                imageVector = item.icon,
-                                                contentDescription = null
-                                            )
-                                        }
-                                    )
+                                if (!mainLayoutUiState.isAdmin) {
+                                    mainLayoutViewModel.getHomeNavItems().forEach { item ->
+                                        NavigationBarItem(
+                                            icon = {
+                                                Icon(
+                                                    imageVector = item.icon,
+                                                    contentDescription = item.route
+                                                )
+                                            },
+                                            label = { Text(text = item.title) },
+                                            selected = mainLayoutViewModel.isNavItemSelected(
+                                                currentDestination,
+                                                item
+                                            ),
+                                            onClick = {
+                                                navController.navigate(item.route) {
+                                                    popUpTo(navController.graph.startDestinationId) {
+                                                        saveState = true
+                                                    }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
+                                            }
+                                        )
+                                    }
+                                } else {
+                                    mainLayoutViewModel.getAdminNavItems().forEach { item ->
+                                        NavigationBarItem(
+                                            icon = {
+                                                Icon(
+                                                    imageVector = item.icon,
+                                                    contentDescription = item.route
+                                                )
+                                            },
+                                            label = { Text(text = item.title) },
+                                            selected = mainLayoutViewModel.isNavItemSelected(
+                                                currentDestination,
+                                                item
+                                            ),
+                                            onClick = {
+                                                navController.navigate(item.route) {
+                                                    popUpTo(navController.graph.startDestinationId) {
+                                                        saveState = true
+                                                    }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         })
@@ -110,6 +145,7 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
                         addChapterViewModel = addChapterViewModel,
                         readerViewModel = readerViewModel,
                         userProfileViewModel = userProfileViewModel,
+                        adminViewModel = adminViewModel,
                     )
                 }
             }

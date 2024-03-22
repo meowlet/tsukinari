@@ -3,6 +3,7 @@ package com.meow.tsukinari.model
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class HomeNav(
@@ -23,6 +24,13 @@ sealed class HomeNav(
         route = "profile",
         title = "Profile",
         icon = Icons.Filled.Person,
+        hasNews = true
+    )
+
+    data object Admin : HomeNav(
+        route = "admin",
+        title = "Admin",
+        icon = Icons.Filled.Settings,
         hasNews = true
     )
 

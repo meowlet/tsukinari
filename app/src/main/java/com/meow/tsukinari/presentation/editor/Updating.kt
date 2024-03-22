@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
@@ -229,19 +230,15 @@ fun UpdatingScreen(
             }
             // check box for finished
             Row(
-                Modifier.align(Alignment.CenterHorizontally),
+                modifier = Modifier.padding(top = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row {
-                    Checkbox(checked = editorUiState.isFinished, onCheckedChange = {
+                Checkbox(
+                    checked = editorUiState.isFinished,
+                    onCheckedChange = {
                         editorViewModel?.onFinishedChange(it)
                     })
-                    Text(
-                        text = "Finished",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
+                Text(text = "Finished", style = MaterialTheme.typography.bodyMedium)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -263,5 +260,25 @@ fun UpdatingScreen(
     }
 
 
+}
+
+@Preview
+@Composable
+fun UpdateScreenPrev() {
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Row(
+            modifier = Modifier.padding(top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = true,
+                onCheckedChange = {
+
+                })
+            Text(text = "Date", style = MaterialTheme.typography.bodyMedium)
+        }
+    }
 }
 

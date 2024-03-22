@@ -111,18 +111,15 @@ fun BrowseScreen(
         browseViewModel?.getUserList()
         //load fictions only in the first launch
         //if the fictions are already loaded, do not load them again
-        if (browseUiState.fictionsList.data.isNullOrEmpty()) {
             browseViewModel?.loadFictions()
-        }
-        pagerState.animateScrollToPage(browseUiState.selectedTab)
     }
 
     //fetch view and like list once the fictions are loaded
     LaunchedEffect(key1 = browseUiState.fictionsList) {
-        if (browseUiState.fictionsList is Resources.Success) {
+        if (browseUiState.fictionsList is Resources.Success && browseViewModel?.viewList.isNullOrEmpty()) {
             browseViewModel?.getTotalViews()
         }
-        if (browseUiState.fictionsList is Resources.Success) {
+        if (browseUiState.fictionsList is Resources.Success && browseViewModel?.likeList.isNullOrEmpty()) {
             browseViewModel?.getTotalLikes()
         }
     }

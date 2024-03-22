@@ -20,10 +20,33 @@ class MainLayoutViewModel(
     var mainLayoutUiState by mutableStateOf(MainLayoutUiState())
         private set
 
+    val hasUser: Boolean
+        get() = repository.hasUser()
+
+    //get userid
+    val userId: String
+        get() = repository.getUserId()
+
     fun getHomeNavItems() = listOf(
         HomeNav.Browse,
         HomeNav.Profile,
     )
+
+    //get home nav items that has the admin route
+    fun getAdminNavItems() = listOf(
+        HomeNav.Browse,
+        HomeNav.Profile,
+        HomeNav.Admin
+    )
+
+    //check admin (if userid is matched with the admin id)
+    fun isAdmin() {
+        mainLayoutUiState = if (userId == "QqJw3JL74ycUxz7HXBLg9aZp7IB2") {
+            mainLayoutUiState.copy(isAdmin = true)
+        } else {
+            mainLayoutUiState.copy(isAdmin = false)
+        }
+    }
 
     fun isNavItemSelected(currentDestination: NavDestination?, item: HomeNav) =
         currentDestination?.hierarchy?.any { it.route == item.route } == true
@@ -44,5 +67,6 @@ class MainLayoutViewModel(
 data class MainLayoutUiState(
     val searchValue: String = "",
     val isExclusive: Boolean = false,
-    val isSearching: Boolean = false
+    val isSearching: Boolean = false,
+    val isAdmin: Boolean = false
 )

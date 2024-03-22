@@ -12,6 +12,8 @@ import androidx.navigation.navigation
 import com.meow.tsukinari.model.ExclusiveNav
 import com.meow.tsukinari.model.HomeNav
 import com.meow.tsukinari.model.NestedNav
+import com.meow.tsukinari.presentation.admin.AdminScreen
+import com.meow.tsukinari.presentation.admin.AdminViewModel
 import com.meow.tsukinari.presentation.authentication.AuthViewModel
 import com.meow.tsukinari.presentation.authentication.ForgotPasswordScreen
 import com.meow.tsukinari.presentation.authentication.SignInScreen
@@ -56,7 +58,8 @@ fun Navigation(
     profileViewModel: ProfileViewModel,
     addChapterViewModel: AddChapterViewModel,
     readerViewModel: ReaderViewModel,
-    userProfileViewModel: UserProfileViewModel
+    userProfileViewModel: UserProfileViewModel,
+    adminViewModel: AdminViewModel
 ) {
     NavHost(
         navController = navController, startDestination = NestedNav.Main.route
@@ -71,7 +74,8 @@ fun Navigation(
             profileViewModel,
             addChapterViewModel,
             readerViewModel,
-            userProfileViewModel
+            userProfileViewModel,
+            adminViewModel
         )
     }
 
@@ -152,7 +156,8 @@ fun NavGraphBuilder.homeGraph(
     profileViewModel: ProfileViewModel,
     addChapterViewModel: AddChapterViewModel,
     readerViewModel: ReaderViewModel,
-    userProfileViewModel: UserProfileViewModel
+    userProfileViewModel: UserProfileViewModel,
+    adminViewModel: AdminViewModel
 ) {
     navigation(
         startDestination = HomeNav.Browse.route,
@@ -313,6 +318,13 @@ fun NavGraphBuilder.homeGraph(
                         launchSingleTop = true
                     }
                 })
+        }
+        composable(
+            route = HomeNav.Admin.route
+        ) {
+            AdminScreen(
+                adminViewModel = adminViewModel
+            )
         }
     }
 }
