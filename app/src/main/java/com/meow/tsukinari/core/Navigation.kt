@@ -323,7 +323,15 @@ fun NavGraphBuilder.homeGraph(
             route = HomeNav.Admin.route
         ) {
             AdminScreen(
-                adminViewModel = adminViewModel
+                adminViewModel = adminViewModel,
+                onNavToHomePage = {
+                    navController.navigate(HomeNav.Browse.route) {
+                        launchSingleTop = true
+                        popUpTo(NestedNav.Main.route) {
+                            inclusive = true
+                        }
+                    }
+                }
             )
         }
     }
