@@ -124,6 +124,10 @@ class UserPageViewModel(
         )
     }
 
+    fun hideDialog() {
+        userPageUiState = userPageUiState.copy(isAccountActive = true)
+    }
+
 }
 
 data class UserPageUiState(

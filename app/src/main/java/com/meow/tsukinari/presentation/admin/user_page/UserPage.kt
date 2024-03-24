@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -42,12 +43,14 @@ import coil.compose.AsyncImage
 fun UserPageScreen(userId: String, viewModel: UserPageViewModel? = null, onNavUp: () -> Unit) {
 
     val userPageUiState = viewModel?.userPageUiState
+    val context = LocalContext.current
 
     when (userPageUiState?.isAccountActive) {
         false -> {
             AlertDialog(
                 onDismissRequest = {
                     onNavUp.invoke()
+                    viewModel.hideDialog()
                 },
                 onConfirmation = { viewModel.enableUser(userId) },
                 dialogTitle = "Account Disabled",
@@ -58,14 +61,6 @@ fun UserPageScreen(userId: String, viewModel: UserPageViewModel? = null, onNavUp
         else -> {}
     }
 
-    if (userPageUiState?.isAccountActive == false) {
-        AlertDialog(
-            onDismissRequest = { },
-            onConfirmation = { viewModel.enableUser(userId) },
-            dialogTitle = "Account Disabled",
-            dialogText = "This account has been disabled. Do you want to re-enable it?"
-        )
-    }
 
     //single image picker
     val imagePicker = rememberLauncherForActivityResult(
@@ -309,7 +304,7 @@ fun AlertDialog(
             Text(text = dialogText)
         },
         onDismissRequest = {
-            onDismissRequest()
+            onDismissRequest
         },
         confirmButton = {
             TextButton(

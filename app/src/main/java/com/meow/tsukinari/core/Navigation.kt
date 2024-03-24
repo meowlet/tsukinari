@@ -359,7 +359,7 @@ fun NavGraphBuilder.homeGraph(
                 userId = entry.arguments?.getString("userId") as String,
                 viewModel = userPageViewModel,
                 onNavUp = {
-                    navController.navigate("admin")
+                    navController.navigateUp()
                 }
             )
         }
