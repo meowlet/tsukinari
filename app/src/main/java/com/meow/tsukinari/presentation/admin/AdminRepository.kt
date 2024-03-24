@@ -1,5 +1,6 @@
 package com.meow.tsukinari.presentation.admin
 
+import android.net.Uri
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.database.DataSnapshot
@@ -18,7 +19,9 @@ import com.meow.tsukinari.repository.IMAGES_COLLECTION_REF
 import com.meow.tsukinari.repository.Resources
 import com.meow.tsukinari.repository.STATS_COLLECTION_REF
 import com.meow.tsukinari.repository.USERS_COLLECTION_REF
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 //copy code from DatabaseRepository.kt if needed
 class AdminRepository {
@@ -105,21 +108,56 @@ class AdminRepository {
         })
     }
 
+    fun uploadCover(
+        userId: String,
+        imageUri: Uri,
+        onComplete: (String?) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        val filePath = fictionImagesRef.child(userId).child("profilePic")
+        filePath.putFile(imageUri)
+            .addOnSuccessListener {
+                filePath.downloadUrl.addOnSuccessListener { imageUrl ->
+                    onComplete(imageUrl.toString())
+                }
+            }
+            .addOnFailureListener {
+                onError(it)
+            }
+    }
+
     //update user info, dont use Resource, dont use suspend, use onSucess and onError
     fun updateUserInfo(
         userId: String,
+        imageUri: Uri,
         user: UserModel,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
-        usersRef.child(userId).setValue(user).addOnCompleteListener {
-            if (it.isSuccessful) {
-                onSuccess()
-            } else {
-                onError(it.exception?.message ?: "Unknown error")
+        if (imageUri != Uri.EMPTY) {
+            uploadCover(userId, imageUri, onComplete = {
+                val newUser = user.copy(profileImageUrl = it!!)
+                usersRef.child(userId).setValue(newUser).addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        onSuccess()
+                    } else {
+                        onError(it.exception?.message ?: "Unknown error")
+                    }
+                }
+            }, onError = {
+                onError(it.message ?: "Unknown error")
+            })
+        } else {
+            usersRef.child(userId).setValue(user).addOnCompleteListener {
+                if (it.isSuccessful) {
+                    onSuccess()
+                } else {
+                    onError(it.exception?.message ?: "Unknown error")
+                }
             }
         }
     }
+
 
     //delete user, dont use Resource, dont use suspend, use onSucess and onError, (change the user status to inactive)
     fun deleteUser(userId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
@@ -141,6 +179,30 @@ class AdminRepository {
             } else {
                 onError(it.exception?.message ?: "Unknown error")
             }
+        }
+    }
+
+    //get fiction info by id, dont use Resource, dont use suspend, use onSucess and onError
+    fun getFiction(
+        fictionId: String,
+        onSuccess: (FictionModel?) -> Unit,
+        onError: () -> Unit
+    ) {
+        fictionsRef.child(fictionId).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val fiction = snapshot.getValue(FictionModel::class.java)
+                onSuccess(fiction)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                onError()
+            }
+        })
+    }
+
+    suspend fun checkUsername(username: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            usersRef.orderByChild("username").equalTo(username).get().await().value != null
         }
     }
 

@@ -18,9 +18,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -73,7 +75,19 @@ fun UserPageScreen(userId: String, viewModel: UserPageViewModel? = null, onNavUp
     LaunchedEffect(Unit) {
         viewModel?.getUserInfo(userId)
     }
-    Scaffold {
+    Scaffold(
+        floatingActionButton = {
+
+            if (viewModel!!.validateFields()) {
+                FloatingActionButton(onClick = {
+                    viewModel.updateUserInfo(userId, userPageUiState!!.newAvatarUri)
+                }) {
+                    Icon(imageVector = Icons.Default.Check, contentDescription = null)
+                }
+            }
+
+        },
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -82,6 +96,15 @@ fun UserPageScreen(userId: String, viewModel: UserPageViewModel? = null, onNavUp
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+            if (userPageUiState?.errorMessage != null) {
+                Text(
+                    text = userPageUiState.errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    fontStyle = MaterialTheme.typography.bodySmall.fontStyle,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
             AsyncImage(
                 model = if (userPageUiState?.newAvatarUri != Uri.EMPTY) userPageUiState?.newAvatarUri else userPageUiState?.avatarUrl,
                 contentDescription = "User Avatar",

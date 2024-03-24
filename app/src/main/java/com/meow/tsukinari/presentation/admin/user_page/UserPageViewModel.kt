@@ -1,11 +1,23 @@
 package com.meow.tsukinari.presentation.admin.user_page
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
+import com.meow.tsukinari.model.UserModel
 import com.meow.tsukinari.presentation.admin.AdminRepository
+import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -123,6 +135,88 @@ class UserPageViewModel(
             }
         )
     }
+
+
+    fun compressImage(imageUri: Uri, context: Context): Uri {
+        val tempFile = File.createTempFile("temp", "jpg")
+        val requestOptions = RequestOptions()
+            .override(1080)
+        Glide.with(context)
+            .asBitmap()
+            .load(imageUri)
+            .apply(requestOptions)
+            .into(object : CustomTarget<Bitmap>() {
+                override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                    resource.compress(Bitmap.CompressFormat.JPEG, 80, FileOutputStream(tempFile))
+                }
+
+                override fun onLoadCleared(placeholder: Drawable?) {
+                }
+            })
+        return Uri.fromFile(tempFile)
+    }
+
+
+    //update user info
+    fun updateUserInfo(userId: String, imageUri: Uri) = viewModelScope.launch {
+        //if username is the same, dont check for availability
+        if (userPageUiState.newUserName == userPageUiState.userName) {
+            val newUser = UserModel(
+                userId = userId,
+                accountActive = userPageUiState.isAccountActive,
+                email = userPageUiState.newEmail,
+                userName = userPageUiState.newUserName,
+                displayName = userPageUiState.newDisplayName,
+                aboutMe = userPageUiState.newAboutMe,
+                createdAt = userPageUiState.createdAt,
+                profileImageUrl = userPageUiState.avatarUrl
+            )
+            repository.updateUserInfo(
+                userId,
+                imageUri,
+                newUser,
+                onSuccess = {
+                    getUserInfo(userId)
+                },
+                onError = {
+                    it.let {
+                        userPageUiState = userPageUiState.copy(errorMessage = it)
+                    }
+                }
+            )
+        } else {
+            if (repository.checkUsername(userPageUiState.newUserName)) {
+                val newUser = UserModel(
+                    userId = userId,
+                    accountActive = userPageUiState.isAccountActive,
+                    email = userPageUiState.newEmail,
+                    userName = userPageUiState.newUserName,
+                    displayName = userPageUiState.newDisplayName,
+                    aboutMe = userPageUiState.newAboutMe,
+                    createdAt = userPageUiState.createdAt,
+                    profileImageUrl = userPageUiState.avatarUrl
+                )
+                repository.updateUserInfo(
+                    userId,
+                    imageUri,
+                    newUser,
+                    onSuccess = {
+                        getUserInfo(userId)
+                    },
+                    onError = {
+                        it.let {
+                            userPageUiState = userPageUiState.copy(errorMessage = it)
+                        }
+                    }
+                )
+            } else {
+                userPageUiState = userPageUiState.copy(errorMessage = "Username is already taken")
+            }
+        }
+    }
+
+    //check username availability
+
 
     fun hideDialog() {
         userPageUiState = userPageUiState.copy(isAccountActive = true)
