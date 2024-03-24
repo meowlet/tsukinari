@@ -52,3 +52,5 @@ via Discord (meowsicologist).
 
 This Privacy Policy may be updated from time to time. You should check this page regularly for
 updates.
+
+This privacy policy is effective as of 2024-03-23
