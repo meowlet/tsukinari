@@ -36,6 +36,21 @@ sealed class HomeNav(
 
 }
 
+sealed class AdminNav(
+    val route: String,
+    val title: String,
+) {
+    data object UserPage : AdminNav(
+        route = "user-page",
+        title = "User page",
+    )
+
+    data object FictionPage : AdminNav(
+        route = "fiction-page",
+        title = "Fiction page",
+    )
+}
+
 sealed class ExclusiveNav(
     val route: String,
     val title: String,

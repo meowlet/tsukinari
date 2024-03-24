@@ -2,7 +2,7 @@ package com.meow.tsukinari.model
 
 data class UserModel(
     val userId: String = "",
-    val isAccountActive: Boolean = true,
+    val accountActive: Boolean = true,
     val email: String = "",
     val userName: String = "",
     val displayName: String = "Tsukinarian",

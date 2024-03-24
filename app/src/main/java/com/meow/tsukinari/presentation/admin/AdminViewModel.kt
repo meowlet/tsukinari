@@ -44,14 +44,7 @@ class AdminViewModel(
 
     //get all pending (unverified) fictions
     fun getPendingFictions() = viewModelScope.launch {
-        repository.getAllUnverifiedFictions(
-            onSuccess = {
-                adminUiState = adminUiState.copy(pendingFictions = it ?: emptyList())
-            },
-            onError = {
-                adminUiState = adminUiState.copy(pendingFictions = emptyList())
-            }
-        )
+        adminUiState = adminUiState.copy(pendingFictions = repository.getAllUnverifiedFictions())
     }
 
     fun changeTab(tabIndex: Int) {
@@ -60,7 +53,8 @@ class AdminViewModel(
 
     //count the number of pending fictions
     fun countPendingFictions() = viewModelScope.launch {
-        adminUiState = adminUiState.copy(pendingFictionsCount = adminUiState.pendingFictions.size)
+        adminUiState =
+            adminUiState.copy(pendingFictionsCount = adminUiState.pendingFictions.data?.size ?: 0)
     }
 }
 
@@ -68,7 +62,7 @@ data class AdminUiState(
     val isLocked: Boolean = true,
     val searchValue: String = "",
     val userList: Resources<List<UserModel>> = Resources.Loading(),
-    val pendingFictions: List<FictionModel> = emptyList(),
+    val pendingFictions: Resources<List<FictionModel>> = Resources.Loading(),
     val pendingFictionsCount: Int = 0,
     val currentTab: Int = 0 //0 for user list, 1 for pending fictions
 )

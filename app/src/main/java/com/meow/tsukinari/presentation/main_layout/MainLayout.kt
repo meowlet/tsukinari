@@ -25,6 +25,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.meow.tsukinari.core.Navigation
 import com.meow.tsukinari.presentation.admin.AdminViewModel
+import com.meow.tsukinari.presentation.admin.user_page.UserPageViewModel
 import com.meow.tsukinari.presentation.authentication.AuthViewModel
 import com.meow.tsukinari.presentation.browse.BrowseViewModel
 import com.meow.tsukinari.presentation.detail.DetailViewModel
@@ -49,6 +50,7 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
     val readerViewModel = viewModel(modelClass = ReaderViewModel::class.java)
     val userProfileViewModel = viewModel(modelClass = UserProfileViewModel::class.java)
     val adminViewModel = viewModel(modelClass = AdminViewModel::class.java)
+    val userPageViewModel = viewModel(modelClass = UserPageViewModel::class.java)
     val focusManager = LocalFocusManager.current
 
     val navController = rememberNavController()
@@ -146,6 +148,7 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
                         readerViewModel = readerViewModel,
                         userProfileViewModel = userProfileViewModel,
                         adminViewModel = adminViewModel,
+                        userPageViewModel = userPageViewModel,
                     )
                 }
             }

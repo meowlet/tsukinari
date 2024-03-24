@@ -9,11 +9,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.meow.tsukinari.model.AdminNav
 import com.meow.tsukinari.model.ExclusiveNav
 import com.meow.tsukinari.model.HomeNav
 import com.meow.tsukinari.model.NestedNav
 import com.meow.tsukinari.presentation.admin.AdminScreen
 import com.meow.tsukinari.presentation.admin.AdminViewModel
+import com.meow.tsukinari.presentation.admin.user_page.UserPageScreen
+import com.meow.tsukinari.presentation.admin.user_page.UserPageViewModel
 import com.meow.tsukinari.presentation.authentication.AuthViewModel
 import com.meow.tsukinari.presentation.authentication.ForgotPasswordScreen
 import com.meow.tsukinari.presentation.authentication.SignInScreen
@@ -59,7 +62,8 @@ fun Navigation(
     addChapterViewModel: AddChapterViewModel,
     readerViewModel: ReaderViewModel,
     userProfileViewModel: UserProfileViewModel,
-    adminViewModel: AdminViewModel
+    adminViewModel: AdminViewModel,
+    userPageViewModel: UserPageViewModel
 ) {
     NavHost(
         navController = navController, startDestination = NestedNav.Main.route
@@ -75,7 +79,8 @@ fun Navigation(
             addChapterViewModel,
             readerViewModel,
             userProfileViewModel,
-            adminViewModel
+            adminViewModel,
+            userPageViewModel
         )
     }
 
@@ -157,7 +162,8 @@ fun NavGraphBuilder.homeGraph(
     addChapterViewModel: AddChapterViewModel,
     readerViewModel: ReaderViewModel,
     userProfileViewModel: UserProfileViewModel,
-    adminViewModel: AdminViewModel
+    adminViewModel: AdminViewModel,
+    userPageViewModel: UserPageViewModel
 ) {
     navigation(
         startDestination = HomeNav.Browse.route,
@@ -331,6 +337,29 @@ fun NavGraphBuilder.homeGraph(
                             inclusive = true
                         }
                     }
+                },
+                onNavToUserPage = { userId ->
+                    navController.navigate(AdminNav.UserPage.route + "?userId=$userId") {
+                        launchSingleTop = true
+                    }
+                },
+                onNavToFictionPage = { fictionId ->
+                    navController.navigate(AdminNav.FictionPage.route + "?fictionId=$fictionId") {
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = AdminNav.UserPage.route + "?userId={userId}",
+        )
+        { entry ->
+            UserPageScreen(
+                userId = entry.arguments?.getString("userId") as String,
+                viewModel = userPageViewModel,
+                onNavUp = {
+                    navController.navigate("admin")
                 }
             )
         }

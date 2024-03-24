@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -28,6 +26,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -49,6 +48,8 @@ import java.util.Locale
 fun AdminScreen(
     adminViewModel: AdminViewModel = AdminViewModel(),
     onNavToHomePage: () -> Unit,
+    onNavToUserPage: (String) -> Unit,
+    onNavToFictionPage: (String) -> Unit
 ) {
     val adminUiState = adminViewModel.adminUiState
 
@@ -58,14 +59,43 @@ fun AdminScreen(
 
     LaunchedEffect(key1 = Unit) {
         if (adminViewModel.isAdmin) {
-            adminViewModel.getUserList()
-            adminViewModel.getPendingFictions()
-            if (adminUiState.pendingFictions.isNotEmpty()) {
-                adminViewModel.countPendingFictions()
-            }
+
+
         } else {
             onNavToHomePage.invoke()
             Toast.makeText(context, "Know you place!", Toast.LENGTH_SHORT).show()
+        }
+    }
+    LaunchedEffect(key1 = adminUiState.pendingFictions) {
+        adminViewModel.countPendingFictions()
+    }
+
+    LaunchedEffect(key1 = adminUiState.currentTab) {
+        pagerState.animateScrollToPage(adminUiState.currentTab)
+        when (adminUiState.currentTab) {
+            0 -> {
+                adminViewModel.getUserList()
+            }
+
+            1 -> {
+                adminViewModel.getPendingFictions()
+            }
+        }
+    }
+
+    LaunchedEffect(key1 = pagerState.currentPage) {
+        adminViewModel.changeTab(pagerState.currentPage)
+        when (pagerState.currentPage) {
+            0 -> {
+                adminViewModel.getUserList()
+                if (adminUiState.userList is Resources.Success) {
+                    adminViewModel.getPendingFictions()
+                }
+            }
+
+            1 -> {
+                adminViewModel.getPendingFictions()
+            }
         }
     }
 
@@ -75,53 +105,39 @@ fun AdminScreen(
                 .fillMaxSize()
                 .padding(it)
         ) {
-            TabRow(selectedTabIndex = adminUiState.currentTab, modifier = Modifier.fillMaxWidth()) {
+            TabRow(
+                selectedTabIndex = adminUiState.currentTab,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Tab(
                     selected = adminUiState.currentTab == 0,
-                    onClick = {
-                        adminViewModel.changeTab(0)
-                    }
-                ) {
-                    Text(
-                        text = "User List",
-                    )
+                    onClick = { adminViewModel.changeTab(0) }) {
+                    Text(text = "Users", modifier = Modifier.padding(8.dp))
                 }
                 Tab(
                     selected = adminUiState.currentTab == 1,
-                    onClick = { adminViewModel.changeTab(1) }
-                ) {
-                    BadgedBox(badge = {
-                        Badge {
-                            Text(
-                                text = adminUiState.pendingFictionsCount.toString(),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    }) {
-                    }
-                    Text(
-                        text = "Pending Fictions",
-                    )
+                    onClick = { adminViewModel.changeTab(1) }) {
+                    Text(text = "Pending fictions", modifier = Modifier.padding(8.dp))
                 }
+
             }
             HorizontalPager(state = pagerState) { page ->
                 Column(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     when (page) {
                         0 -> {
-                            Text(
-                                text = "User List",
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(8.dp)
-                            )
-                            Spacer(modifier = Modifier.size(8.dp))
                             when (val userList = adminUiState.userList) {
                                 is Resources.Success -> {
+//                                    adminViewModel.getPendingFictions()
                                     userList.data?.forEach { user ->
                                         UserItem(
                                             user = user,
-                                            onClick = {}
+                                            onClick = {
+                                                onNavToUserPage(user.userId)
+                                            }
                                         )
                                     }
                                 }
@@ -141,26 +157,34 @@ fun AdminScreen(
                         }
 
                         1 -> {
-                            Text(
-                                text = "Pending Fictions",
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(8.dp)
-                            )
-                            Spacer(modifier = Modifier.size(8.dp))
-                            if (adminUiState.pendingFictions.isNotEmpty()) {
-                                adminUiState.pendingFictions.forEach { fiction ->
-                                    FictionItem(
-                                        fiction = fiction,
-                                        uploadedAt = adminViewModel.getTime(fiction.uploadedAt),
-                                        onClick = {}
+                            when (val pendingFictions = adminUiState.pendingFictions) {
+                                is Resources.Success -> {
+                                    pendingFictions.data?.forEach { fiction ->
+                                        FictionItem(
+                                            fiction = fiction,
+                                            onClick = {
+                                                onNavToFictionPage(fiction.fictionId)
+                                            },
+                                            uploadedAt = adminViewModel.getTime(fiction.uploadedAt)
+                                        )
+                                    }
+                                }
+
+                                is Resources.Loading -> {
+                                    Text(
+                                        text = "Waiting for the next fiction to appear here",
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                    CircularProgressIndicator()
+                                }
+
+                                is Resources.Error -> {
+                                    Text(
+                                        text = "Error: ${pendingFictions.throwable?.message}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(8.dp)
                                     )
                                 }
-                            } else {
-                                Text(
-                                    text = "No pending fictions",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(8.dp)
-                                )
                             }
 
                         }

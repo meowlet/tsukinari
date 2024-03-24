@@ -74,28 +74,80 @@ class AdminRepository {
         }
     }
 
-    //get all unverified fictions, return the List<FictionModel>, dont use Resource, dont suspend
+    //get all unverified fictions using Resource
+    suspend fun getAllUnverifiedFictions(): Resources<List<FictionModel>> {
+        return try {
+            val snapshot = fictionsRef.orderByChild("verified").equalTo(false).get().await()
+            val fictions = snapshot.children.mapNotNull { it.getValue(FictionModel::class.java) }
+            Resources.Success(data = fictions)
+        } catch (e: Exception) {
+            Resources.Error(throwable = e)
+        }
+    }
 
-    fun getAllUnverifiedFictions(
-        onError: (Throwable?) -> Unit,
-        onSuccess: (List<FictionModel>?) -> Unit
+    //get user info by id, dont use Resource, dont use suspend, use onSucess and onError
+    fun getUserInfoById(
+        userId: String,
+        onSuccess: (UserModel) -> Unit,
+        onError: (DatabaseError) -> Unit
     ) {
-        fictionsRef.addListenerForSingleValueEvent(object : ValueEventListener {
+        usersRef.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val fictions =
-                    snapshot.children.mapNotNull { it.getValue(FictionModel::class.java) }
-                        .filter { !it.verified }
-                onSuccess(fictions)
+                val user = snapshot.getValue(UserModel::class.java)
+                if (user != null) {
+                    onSuccess(user)
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                onError(error.toException())
+                onError(error)
             }
         })
     }
 
-    //get all verified fictions using Resource
+    //update user info, dont use Resource, dont use suspend, use onSucess and onError
+    fun updateUserInfo(
+        userId: String,
+        user: UserModel,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        usersRef.child(userId).setValue(user).addOnCompleteListener {
+            if (it.isSuccessful) {
+                onSuccess()
+            } else {
+                onError(it.exception?.message ?: "Unknown error")
+            }
+        }
+    }
+
+    //delete user, dont use Resource, dont use suspend, use onSucess and onError, (change the user status to inactive)
+    fun deleteUser(userId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        usersRef.child(userId).child("accountActive").setValue(false).addOnCompleteListener {
+            if (it.isSuccessful) {
+                onSuccess()
+            } else {
+                onError(it.exception?.message ?: "Unknown error")
+            }
+        }
+    }
+
+
+    //re-enable user, dont use Resource, dont use suspend, use onSucess and onError, (change the user status to active)
+    fun reEnableUser(userId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        usersRef.child(userId).child("accountActive").setValue(true).addOnCompleteListener {
+            if (it.isSuccessful) {
+                onSuccess()
+            } else {
+                onError(it.exception?.message ?: "Unknown error")
+            }
+        }
+    }
+
 
 }
+
+
+
 
 
