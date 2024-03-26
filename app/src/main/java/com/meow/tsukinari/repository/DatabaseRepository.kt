@@ -20,6 +20,7 @@ import com.meow.tsukinari.model.FictionCommentModel
 import com.meow.tsukinari.model.FictionModel
 import com.meow.tsukinari.model.FictionStatsModel
 import com.meow.tsukinari.model.UserModel
+import com.meow.tsukinari.model.UserStatsModel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -823,6 +824,119 @@ class DatabaseRepository {
             snapshot.childrenCount.toInt()
         } catch (e: Exception) {
             0
+        }
+    }
+
+
+    suspend fun getUserStats(userId: String): Resources<UserStatsModel> {
+        return try {
+            val fictions =
+                fictionsRef.orderByChild("uploaderId").equalTo(userId).get().await().childrenCount
+
+            val fictionsSnapshot =
+                fictionsRef.orderByChild("uploaderId").equalTo(userId).get().await()
+            var totalChapters = 0L
+            for (fictionSnapshot in fictionsSnapshot.children) {
+                val fictionId = fictionSnapshot.key
+                val chaptersSnapshot =
+                    chaptersRef.orderByChild("fictionId").equalTo(fictionId).get().await()
+                totalChapters += chaptersSnapshot.childrenCount
+            }
+
+            // Get verified fictions
+            val verifiedFictionsSnapshot =
+                fictionsRef.orderByChild("uploaderId").equalTo(userId).get().await()
+            var verifiedFictions = 0L
+            for (fictionSnapshot in verifiedFictionsSnapshot.children) {
+                val fiction = fictionSnapshot.getValue(FictionModel::class.java)
+                if (fiction?.verified == true) {
+                    verifiedFictions++
+                }
+            }
+
+            // Get unverified fictions
+            val unverifiedFictionsSnapshot =
+                fictionsRef.orderByChild("uploaderId").equalTo(userId).get().await()
+            var unverifiedFictions = 0L
+            for (fictionSnapshot in unverifiedFictionsSnapshot.children) {
+                val fiction = fictionSnapshot.getValue(FictionModel::class.java)
+                if (fiction?.verified == false) {
+                    unverifiedFictions++
+                }
+            }
+
+            //get likes
+            var likes = 0L
+            for (fictionSnapshot in fictionsSnapshot.children) {
+                val fictionId = fictionSnapshot.key
+                val chaptersSnapshot =
+                    chaptersRef.orderByChild("fictionId").equalTo(fictionId).get().await()
+                for (chapterSnapshot in chaptersSnapshot.children) {
+                    val chapterId = chapterSnapshot.key
+                    val viewsSnapshot =
+                        statsRef.child(fictionId!!)
+                            .child("likedBy").get().await()
+                    likes += viewsSnapshot.childrenCount
+                }
+            }
+
+            //get dislikes
+            var dislikes = 0L
+            for (fictionSnapshot in fictionsSnapshot.children) {
+                val fictionId = fictionSnapshot.key
+                val chaptersSnapshot =
+                    chaptersRef.orderByChild("fictionId").equalTo(fictionId).get().await()
+                for (chapterSnapshot in chaptersSnapshot.children) {
+                    val chapterId = chapterSnapshot.key
+                    val viewsSnapshot =
+                        statsRef.child(fictionId!!)
+                            .child("dislikedBy").get().await()
+                    dislikes += viewsSnapshot.childrenCount
+                }
+            }
+
+            var comments = 0L
+            for (fictionSnapshot in fictionsSnapshot.children) {
+                val fictionId = fictionSnapshot.key
+                val chaptersSnapshot =
+                    chaptersRef.orderByChild("fictionId").equalTo(fictionId).get().await()
+                for (chapterSnapshot in chaptersSnapshot.children) {
+                    val chapterId = chapterSnapshot.key
+                    val viewsSnapshot =
+                        commentsRef.child(fictionId!!).get().await()
+                    comments += viewsSnapshot.childrenCount
+                }
+            }
+
+
+            var totalViews = 0L
+            for (fictionSnapshot in fictionsSnapshot.children) {
+                val fictionId = fictionSnapshot.key
+                val chaptersSnapshot =
+                    chaptersRef.orderByChild("fictionId").equalTo(fictionId).get().await()
+                for (chapterSnapshot in chaptersSnapshot.children) {
+                    val chapterId = chapterSnapshot.key
+                    val viewsSnapshot =
+                        statsRef.child(fictionId!!).child("chapters").child(chapterId!!)
+                            .child("viewedBy").get().await()
+                    totalViews += viewsSnapshot.childrenCount
+                }
+            }
+
+            Resources.Success(
+                data = UserStatsModel(
+                    myTotalFictions = fictions,
+                    myTotalChapters = totalChapters,
+                    myTotalViews = totalViews,
+                    myTotalComments = comments,
+                    myTotalVerifiedFictions = verifiedFictions,
+                    myTotalUnverifiedFictions = unverifiedFictions,
+                    myTotalLikes = likes,
+                    myTotalDislikes = dislikes,
+                )
+            )
+        } catch (e: Exception) {
+            Resources.Error(throwable = e)
         }
     }
 

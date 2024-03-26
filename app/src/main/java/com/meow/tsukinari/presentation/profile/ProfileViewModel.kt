@@ -8,7 +8,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.meow.tsukinari.model.UserStatsModel
 import com.meow.tsukinari.repository.DatabaseRepository
+import com.meow.tsukinari.repository.Resources
+import kotlinx.coroutines.launch
 
 class ProfileViewModel(
     private val repository: DatabaseRepository = DatabaseRepository(),
@@ -165,6 +169,27 @@ class ProfileViewModel(
             isAboutMeUpdated = false,
         )
     }
+
+    fun isAdmin() {
+        profileUiState = if (userId == "QqJw3JL74ycUxz7HXBLg9aZp7IB2") {
+            profileUiState.copy(isAdmin = true)
+        } else {
+            profileUiState.copy(isAdmin = false)
+        }
+    }
+
+    fun hideBottomSheet() {
+        profileUiState = profileUiState.copy(showBottomSheet = false)
+    }
+
+    //get user stats
+    fun getUserStats() = viewModelScope.launch {
+        profileUiState = profileUiState.copy(userStats = repository.getUserStats(userId))
+    }
+
+    fun showBottomSheet() {
+        profileUiState = profileUiState.copy(showBottomSheet = true)
+    }
 }
 
 data class ProfileUiState(
@@ -203,6 +228,13 @@ data class ProfileUiState(
     val isProfilePicUpdated: Boolean = false,
     val isDisplayNameUpdated: Boolean = false,
     val isAboutMeUpdated: Boolean = false,
+
+    //is admin
+    val isAdmin: Boolean = false,
+
+    val showBottomSheet: Boolean = false,
+
+    val userStats: Resources<UserStatsModel> = Resources.Loading(),
 )
 
 @Preview

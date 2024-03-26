@@ -8,6 +8,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 import com.google.firebase.storage.storage
+import com.meow.tsukinari.model.AllStatsModel
 import com.meow.tsukinari.model.ChapterModel
 import com.meow.tsukinari.model.FictionModel
 import com.meow.tsukinari.model.UserModel
@@ -232,6 +233,72 @@ class AdminRepository {
         }
 
     }
+
+    //verify fiction
+    fun verifyFiction(fictionId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        fictionsRef.child(fictionId).child("verified").setValue(true).addOnCompleteListener {
+            if (it.isSuccessful) {
+                onSuccess()
+            } else {
+                onError(it.exception?.message ?: "Unknown error")
+            }
+        }
+    }
+
+    //get full stats of all the fiction, all the chapters, all the comments, all the users, all the verified fictions, all the unverified fictions, all the likes, all the dislikes, all the active users, all the inactive users, return the AllStatsModel, just get the count of each
+    suspend fun getFullStats(): Resources<AllStatsModel> {
+        return try {
+            val fictions = fictionsRef.get().await().childrenCount
+            val chapters = chaptersRef.get().await().childrenCount
+            val comments = commentsRef.get().await().childrenCount
+            val users = usersRef.get().await().childrenCount
+            val verifiedFictions =
+                fictionsRef.orderByChild("verified").equalTo(true).get().await().childrenCount
+            val unverifiedFictions =
+                fictionsRef.orderByChild("verified").equalTo(false).get().await().childrenCount
+            val likes = statsRef.orderByChild("likedBy").get().await().childrenCount
+            val dislikes = statsRef.orderByChild("dislikedBy").get().await().childrenCount
+            val activeUsers =
+                usersRef.orderByChild("accountActive").equalTo(true).get().await().childrenCount
+            val inactiveUsers =
+                usersRef.orderByChild("accountActive").equalTo(false).get().await().childrenCount
+
+            val fictionsSnapshot = fictionsRef.get().await()
+            var totalViews = 0L
+            for (fictionSnapshot in fictionsSnapshot.children) {
+                val fictionId = fictionSnapshot.key
+                val chaptersSnapshot =
+                    chaptersRef.orderByChild("fictionId").equalTo(fictionId).get().await()
+                for (chapterSnapshot in chaptersSnapshot.children) {
+                    val chapterId = chapterSnapshot.key
+                    val viewsSnapshot =
+                        statsRef.child(fictionId!!).child("chapters").child(chapterId!!)
+                            .child("viewedBy").get().await()
+                    totalViews += viewsSnapshot.childrenCount
+                }
+            }
+
+            Resources.Success(
+                data = AllStatsModel(
+                    totalUsers = users,
+                    totalFictions = fictions,
+                    totalViews = totalViews,
+                    totalChapters = chapters,
+                    totalComments = comments,
+                    totalVerifiedFictions = verifiedFictions,
+                    totalUnverifiedFictions = unverifiedFictions,
+                    totalLikes = likes,
+                    totalDislikes = dislikes,
+                    totalActiveUser = activeUsers,
+                    totalInactiveUser = inactiveUsers
+                )
+            )
+        } catch (e: Exception) {
+            Resources.Error(throwable = e)
+        }
+    }
+
+    //the same as getFullStats but for the user, return the Resource<UserStatsModel>, just get the count of each
 
 
 }

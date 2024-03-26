@@ -80,56 +80,29 @@ fun MainLayout(mainLayoutViewModel: MainLayoutViewModel) {
                         exit = slideOutVertically(targetOffsetY = { it }),
                         content = {
                             NavigationBar {
-                                if (!mainLayoutUiState.isAdmin) {
-                                    mainLayoutViewModel.getHomeNavItems().forEach { item ->
-                                        NavigationBarItem(
-                                            icon = {
-                                                Icon(
-                                                    imageVector = item.icon,
-                                                    contentDescription = item.route
-                                                )
-                                            },
-                                            label = { Text(text = item.title) },
-                                            selected = mainLayoutViewModel.isNavItemSelected(
-                                                currentDestination,
-                                                item
-                                            ),
-                                            onClick = {
-                                                navController.navigate(item.route) {
-                                                    popUpTo(navController.graph.startDestinationId) {
-                                                        saveState = true
-                                                    }
-                                                    launchSingleTop = true
-                                                    restoreState = true
+                                mainLayoutViewModel.getHomeNavItems().forEach { item ->
+                                    NavigationBarItem(
+                                        icon = {
+                                            Icon(
+                                                imageVector = item.icon,
+                                                contentDescription = item.route
+                                            )
+                                        },
+                                        label = { Text(text = item.title) },
+                                        selected = mainLayoutViewModel.isNavItemSelected(
+                                            currentDestination,
+                                            item
+                                        ),
+                                        onClick = {
+                                            navController.navigate(item.route) {
+                                                popUpTo(navController.graph.startDestinationId) {
+                                                    saveState = true
                                                 }
+                                                launchSingleTop = true
+                                                restoreState = true
                                             }
-                                        )
-                                    }
-                                } else {
-                                    mainLayoutViewModel.getAdminNavItems().forEach { item ->
-                                        NavigationBarItem(
-                                            icon = {
-                                                Icon(
-                                                    imageVector = item.icon,
-                                                    contentDescription = item.route
-                                                )
-                                            },
-                                            label = { Text(text = item.title) },
-                                            selected = mainLayoutViewModel.isNavItemSelected(
-                                                currentDestination,
-                                                item
-                                            ),
-                                            onClick = {
-                                                navController.navigate(item.route) {
-                                                    popUpTo(navController.graph.startDestinationId) {
-                                                        saveState = true
-                                                    }
-                                                    launchSingleTop = true
-                                                    restoreState = true
-                                                }
-                                            }
-                                        )
-                                    }
+                                        }
+                                    )
                                 }
                             }
                         })

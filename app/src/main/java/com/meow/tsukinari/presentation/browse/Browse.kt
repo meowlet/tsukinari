@@ -62,6 +62,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.meow.tsukinari.model.FictionModel
+import com.meow.tsukinari.presentation.editor.AlertDialog
 import com.meow.tsukinari.repository.Resources
 
 @OptIn(
@@ -211,7 +212,7 @@ fun BrowseScreen(
                         Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = "")
                     }
                     IconButton(onClick = {
-                        browseViewModel?.signOut(context)
+                        browseViewModel?.showSignOutDialog()
                     }) {
                         Icon(
                             imageVector = Icons.Default.Lock,
@@ -224,6 +225,23 @@ fun BrowseScreen(
         },
 
         ) {
+
+        //sign out dialog
+        when {
+            browseUiState.showSignOutDialog -> {
+                AlertDialog(
+                    dialogText = "Are you sure you want to sign out?",
+                    dialogTitle = "Sign Out",
+                    onConfirmation = {
+                        browseViewModel?.signOut(context)
+                        browseViewModel?.hideSignOutDialog()
+                    },
+                    onDismissRequest = {
+                        browseViewModel?.hideSignOutDialog()
+                    }
+                )
+            }
+        }
 
 
         if (browseUiState.showBottomSheet) {

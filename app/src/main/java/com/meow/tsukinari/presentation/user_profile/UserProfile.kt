@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -37,6 +38,7 @@ fun UserProfileScreen(
     userProfileViewModel: UserProfileViewModel,
     userId: String,
     onNavToDetail: (String) -> Unit,
+    onNavBack: () -> Unit,
 ) {
     //init ui states
     val userProfileUiState = userProfileViewModel.userProfileUiState
@@ -57,17 +59,18 @@ fun UserProfileScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+            if (userProfileUiState.isAccountActive) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                     Box(
 
                         contentAlignment = Alignment.Center,
@@ -132,81 +135,105 @@ fun UserProfileScreen(
 
 
                 }
-            }
-
-            Spacer(modifier = Modifier.size(8.dp))
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .weight(0.1f), horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    Text(
-                        text = "Follower: ${userProfileUiState.follower}",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = "Following: ${userProfileUiState.following}",
-                        style = MaterialTheme.typography.titleMedium
-                    )
                 }
-                Box(
-                    modifier = Modifier.weight(0.9f),
-                ) {
 
-                    //if the fictionlist is null, say user has no fictions
-                    if (userProfileUiState.fictionsList.data?.isEmpty() == true) {
+                Spacer(modifier = Modifier.size(8.dp))
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(0.1f), horizontalArrangement = Arrangement.SpaceAround
+                    ) {
                         Text(
-                            text = "User has no fictions!",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .wrapContentSize(align = Alignment.Center)
+                            text = "Follower: ${userProfileUiState.follower}",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = "Following: ${userProfileUiState.following}",
+                            style = MaterialTheme.typography.titleMedium
                         )
                     }
+                    Text(
+                        text = "User's fiction:",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(vertical = 12.dp)
+                    )
+                    Box(
+                        modifier = Modifier.weight(0.9f),
+                    ) {
 
-                    when (userProfileUiState.fictionsList) {
-                        is Resources.Loading -> {
-                            CircularProgressIndicator(
+
+                        //if the fictionlist is null, say user has no fictions
+                        if (userProfileUiState.fictionsList.data?.isEmpty() == true) {
+                            Text(
+                                text = "User has no fictions!",
+                                style = MaterialTheme.typography.titleMedium,
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .wrapContentSize(align = Alignment.Center)
                             )
                         }
 
-                        is Resources.Success -> {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(2),
-                                verticalArrangement = Arrangement.spacedBy(10.dp),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                items(
-                                    items = userProfileUiState.fictionsList.data ?: emptyList()
+                        when (userProfileUiState.fictionsList) {
+                            is Resources.Loading -> {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .wrapContentSize(align = Alignment.Center)
+                                )
+                            }
 
-                                ) { fiction ->
-                                    FictionItem(fiction = fiction, onClick = {
-                                        onNavToDetail.invoke(fiction.fictionId)
-                                    })
+                            is Resources.Success -> {
+                                LazyVerticalGrid(
+                                    columns = GridCells.Fixed(2),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    items(
+                                        items = userProfileUiState.fictionsList.data ?: emptyList()
+
+                                    ) { fiction ->
+                                        FictionItem(fiction = fiction, onClick = {
+                                            onNavToDetail.invoke(fiction.fictionId)
+                                        })
+                                    }
                                 }
+                            }
+
+                            //
+
+                            else -> {
+                                Text(
+                                    text = userProfileUiState.fictionsList.throwable?.localizedMessage
+                                        ?: "Unknown Error",
+                                    color = MaterialTheme.colorScheme.error
+                                )
                             }
                         }
 
-                        //
-
-                        else -> {
-                            Text(
-                                text = userProfileUiState.fictionsList.throwable?.localizedMessage
-                                    ?: "Unknown Error",
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
                     }
-
+                }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "This account is deleted!",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    Button(onClick = { onNavBack.invoke() }) {
+                        Text(text = "Go back")
+                    }
                 }
             }
+
         }
 
     }

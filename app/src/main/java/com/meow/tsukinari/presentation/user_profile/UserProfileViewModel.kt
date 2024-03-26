@@ -28,7 +28,8 @@ class UserProfileViewModel(
                 displayName = it?.displayName,
                 aboutMe = it?.aboutMe,
                 profileImageUrl = it?.profileImageUrl,
-                userName = it?.userName
+                userName = it?.userName,
+                isAccountActive = it?.accountActive ?: true
             )
         }
     }
@@ -51,4 +52,5 @@ data class UserProfileUiState(
     val follower: Int = 0,
     val following: Int = 0,
     val fictionsList: Resources<List<FictionModel>> = Resources.Loading(),
+    val isAccountActive: Boolean = true,
 )

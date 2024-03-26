@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +31,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -50,7 +52,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AdminScreen(
     adminViewModel: AdminViewModel = AdminViewModel(),
@@ -62,11 +64,11 @@ fun AdminScreen(
 
     val context = LocalContext.current
 
-    val pagerState = rememberPagerState(pageCount = { 2 })
+    val pagerState = rememberPagerState(pageCount = { 3 })
 
     LaunchedEffect(key1 = Unit) {
         if (adminViewModel.isAdmin) {
-
+            adminViewModel.getUserList()
 
         } else {
             onNavToHomePage.invoke()
@@ -79,6 +81,7 @@ fun AdminScreen(
 
     LaunchedEffect(key1 = adminUiState.currentTab) {
         pagerState.animateScrollToPage(adminUiState.currentTab)
+
         when (adminUiState.currentTab) {
             0 -> {
                 adminViewModel.getUserList()
@@ -86,6 +89,10 @@ fun AdminScreen(
 
             1 -> {
                 adminViewModel.getPendingFictions()
+            }
+
+            2 -> {
+                adminViewModel.getFullStats()
             }
         }
     }
@@ -103,15 +110,27 @@ fun AdminScreen(
             1 -> {
                 adminViewModel.getPendingFictions()
             }
+
+            2 -> {
+                adminViewModel.getFullStats()
+            }
         }
     }
 
-    Scaffold {
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text(text = "Admin portal") }, navigationIcon = {
+                IconButton(onClick = { onNavToHomePage.invoke() }) {
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                }
+            })
+        },
+
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
-                .verticalScroll(rememberScrollState())
         ) {
             TabRow(
                 selectedTabIndex = adminUiState.currentTab,
@@ -125,18 +144,30 @@ fun AdminScreen(
                 Tab(
                     selected = adminUiState.currentTab == 1,
                     onClick = { adminViewModel.changeTab(1) }) {
-                    Text(text = "Pending fictions", modifier = Modifier.padding(8.dp))
+                    Text(text = "Pending", modifier = Modifier.padding(8.dp))
+                }
+                Tab(
+                    selected = adminUiState.currentTab == 2,
+                    onClick = { adminViewModel.changeTab(2) }) {
+                    Text(text = "Stats", modifier = Modifier.padding(8.dp))
                 }
 
             }
             HorizontalPager(state = pagerState) { page ->
                 Column(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     when (page) {
                         0 -> {
+                            Text(
+                                text = "User list:",
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(vertical = 12.dp)
+                            )
                             when (val userList = adminUiState.userList) {
                                 is Resources.Success -> {
 //                                    adminViewModel.getPendingFictions()
@@ -165,6 +196,12 @@ fun AdminScreen(
                         }
 
                         1 -> {
+                            Text(
+                                text = "${adminUiState.pendingFictionsCount} pending fictions:",
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(vertical = 12.dp)
+                            )
+
                             when (val pendingFictions = adminUiState.pendingFictions) {
                                 is Resources.Success -> {
                                     pendingFictions.data?.forEach { fiction ->
@@ -175,7 +212,7 @@ fun AdminScreen(
                                             },
                                             uploadedAt = adminViewModel.getTime(fiction.uploadedAt),
                                             onConfirmClick = {
-                                                adminViewModel.verifyFiction()
+                                                adminViewModel.verifyFiction(fiction.fictionId)
                                             }
                                         )
                                     }
@@ -198,6 +235,90 @@ fun AdminScreen(
                                 }
                             }
 
+                        }
+
+                        2 -> {
+                            Text(
+                                text = "Full stats:",
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(vertical = 12.dp)
+                            )
+                            when (val stats = adminUiState.stats) {
+                                is Resources.Success -> {
+                                    Text(
+                                        text = "Total users: ${stats.data?.totalUsers}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                    Text(
+                                        text = "Total fictions: ${stats.data?.totalFictions}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                    Text(
+                                        text = "Total chapters: ${stats.data?.totalChapters}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                    Text(
+                                        text = "Total views: ${stats.data?.totalViews}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                    Text(
+                                        text = "Total likes: ${stats.data?.totalLikes}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                    Text(
+                                        text = "Total dislikes: ${stats.data?.totalDislikes}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                    Text(
+                                        text = "Total comments: ${stats.data?.totalComments}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                    Text(
+                                        text = "Total verified fictions: ${stats.data?.totalVerifiedFictions}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                    Text(
+                                        text = "Total unverified fictions: ${stats.data?.totalUnverifiedFictions}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                    Text(
+                                        text = "Total active users: ${stats.data?.totalActiveUser}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                    Text(
+                                        text = "Total inactive users: ${stats.data?.totalInactiveUser}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+
+                                }
+
+                                is Resources.Loading -> {
+                                    Text(
+                                        text = "Loading stats...",
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                    CircularProgressIndicator()
+                                }
+
+                                is Resources.Error -> {
+                                    Text(
+                                        text = "Error: ${stats.throwable?.message}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -290,23 +411,19 @@ fun FictionItemm(
     onConfirmClick: () -> Unit
 ) {
     OutlinedCard(
-//        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = RoundedCornerShape(8.dp),
-        onClick = {
-            onClick.invoke()
-        },
+        onClick = { onClick.invoke() },
         modifier = Modifier
             .padding(horizontal = 18.dp, vertical = 6.dp)
             .height(100.dp)
-
     ) {
         Row(
-            Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+            Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Image(
-                painter = rememberAsyncImagePainter(
-                    fiction.coverLink
-                ),
+                painter = rememberAsyncImagePainter(fiction.coverLink),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -316,7 +433,9 @@ fun FictionItemm(
             )
             Spacer(modifier = Modifier.size(8.dp))
             Column(
-                modifier = Modifier.fillMaxHeight(),
+                modifier = Modifier
+                    .weight(0.85f)
+                    .fillMaxHeight(), // Use weight here
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
@@ -334,12 +453,6 @@ fun FictionItemm(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-//                Text(
-//                    text = "Description: ${fiction.description}",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    maxLines = 2,
-//                    overflow = TextOverflow.Ellipsis
-//                )
                 Text(
                     text = uploadedAt,
                     style = MaterialTheme.typography.labelSmall,
@@ -348,14 +461,15 @@ fun FictionItemm(
                         .align(Alignment.End)
                 )
             }
-            IconButton(
-                onClick = {
-                    onConfirmClick.invoke()
-                },
-                modifier = Modifier.align(Alignment.CenterVertically)
+            Column(
+                modifier = Modifier.weight(0.15f), // Use weight here
+                verticalArrangement = Arrangement.Center
             ) {
-                Icon(imageVector = Icons.Default.Done, contentDescription = null)
-
+                IconButton(
+                    onClick = { onConfirmClick.invoke() }
+                ) {
+                    Icon(imageVector = Icons.Default.Done, contentDescription = null)
+                }
             }
         }
     }

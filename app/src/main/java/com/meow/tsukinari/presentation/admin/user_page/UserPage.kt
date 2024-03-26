@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
@@ -108,9 +109,12 @@ fun UserPageScreen(
     }
     Scaffold(
         topBar = {
-            TopAppBar(title = { userPageUiState?.displayName }, navigationIcon = {
+            TopAppBar(title = { Text(text = "${userPageUiState?.displayName}") }, navigationIcon = {
                 IconButton(onClick = { onNavUp.invoke() }) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null
+                    )
                 }
             }, actions = {
                 IconButton(onClick = {
@@ -231,13 +235,13 @@ fun UserPageScreen(
                     .background(MaterialTheme.colorScheme.primaryContainer)
             ) {
                 Text(
-                    text = userPageUiState.userId ?: "Error fetching user id",
+                    text = userPageUiState.userId,
                     modifier = Modifier.padding(4.dp),
                     style = MaterialTheme.typography.labelMedium
                 )
             }
             Spacer(modifier = Modifier.size(8.dp))
-            Text(text = "Created at: ${viewModel.getTime(userPageUiState.createdAt ?: 0)}")
+            Text(text = "Created at: ${viewModel.getTime(userPageUiState.createdAt)}")
             Text(
                 text = "Username:",
                 style = MaterialTheme.typography.titleLarge,

@@ -36,7 +36,6 @@ class MainLayoutViewModel(
     fun getAdminNavItems() = listOf(
         HomeNav.Browse,
         HomeNav.Profile,
-        HomeNav.Admin
     )
 
     //check admin (if userid is matched with the admin id)

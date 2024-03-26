@@ -185,6 +185,9 @@ fun NavGraphBuilder.homeGraph(
                 navController.navigate(ExclusiveNav.MyFictions.route)
             }, onNavToSignIn = {
                 navController.navigate(AuthRoutes.SignIn.name)
+            }, onNavToAdminPortal = {
+                navController.navigate("admin")
+
             }, profileViewModel = profileViewModel)
         }
         composable(ExclusiveNav.MyFictions.route) {
@@ -323,10 +326,13 @@ fun NavGraphBuilder.homeGraph(
                     navController.navigate(ExclusiveNav.Detail.route + "?id=$it") {
                         launchSingleTop = true
                     }
+                },
+                onNavBack = {
+                    navController.navigateUp()
                 })
         }
         composable(
-            route = HomeNav.Admin.route
+            route = "admin"
         ) {
             AdminScreen(
                 adminViewModel = adminViewModel,

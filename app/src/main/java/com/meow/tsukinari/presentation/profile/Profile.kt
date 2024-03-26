@@ -22,14 +22,17 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -40,17 +43,20 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.meow.tsukinari.repository.Resources
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     profileViewModel: ProfileViewModel? = null,
     onNavToMyFictions: () -> Unit,
     onNavToSignIn: () -> Unit,
+    onNavToAdminPortal: () -> Unit
 ) {
+
+    val sheetState = rememberModalBottomSheetState()
 
     val context = LocalContext.current
     val profileUiState = profileViewModel?.profileUiState
@@ -71,8 +77,20 @@ fun ProfileScreen(
     LaunchedEffect(key1 = profileViewModel?.hasUser) {
         if (profileViewModel?.hasUser == true) {
             profileViewModel.getUserProfile()
+            profileViewModel.isAdmin()
+
+
         }
     }
+
+    //load stats only when bottom sheet is shown
+    LaunchedEffect(key1 = profileUiState?.showBottomSheet) {
+        if (profileUiState!!.showBottomSheet && profileUiState.email!!.isNotEmpty()) {
+            profileViewModel.getUserStats()
+        }
+    }
+
+
 
     LaunchedEffect(
         key1 = profileUiState?.isAboutMeUpdated,
@@ -120,6 +138,50 @@ fun ProfileScreen(
                 }
             } else {
 
+                if (profileUiState!!.showBottomSheet) {
+                    ModalBottomSheet(
+                        onDismissRequest = {
+                            profileViewModel.hideBottomSheet()
+                        },
+                        sheetState = sheetState,
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "User stats:",
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                            when (val stats = profileUiState.userStats) {
+                                is Resources.Success -> {
+                                    Column {
+                                        Text(text = "Total fictions: ${stats.data?.myTotalFictions}")
+                                        Text(text = "Total chapters: ${stats.data?.myTotalChapters}")
+                                        Text(text = "Total views: ${stats.data?.myTotalViews}")
+                                        Text(text = "Total likes: ${stats.data?.myTotalLikes}")
+                                        Text(text = "Total dislikes: ${stats.data?.myTotalDislikes}")
+                                        Text(text = "Total comments: ${stats.data?.myTotalComments}")
+                                        Text(text = "Total verified fictions: ${stats.data?.myTotalVerifiedFictions}")
+                                        Text(text = "Total unverified fictions: ${stats.data?.myTotalUnverifiedFictions}")
+                                    }
+                                }
+
+                                is Resources.Error -> {
+                                    Text(text = "Error: ${stats.throwable?.message}")
+                                }
+
+                                is Resources.Loading -> {
+                                    CircularProgressIndicator()
+                                }
+                            }
+                        }
+                    }
+                }
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -140,9 +202,9 @@ fun ProfileScreen(
                                 .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
 
                         ) {
-                            if (profileUiState?.newProfilePicUri == Uri.EMPTY) {
+                            if (profileUiState.newProfilePicUri == Uri.EMPTY) {
                                 AsyncImage(
-                                    model = profileUiState?.profilePicUrl,
+                                    model = profileUiState.profilePicUrl,
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
@@ -157,14 +219,14 @@ fun ProfileScreen(
                                 )
                             } else {
                                 AsyncImage(
-                                    model = profileUiState?.newProfilePicUri,
+                                    model = profileUiState.newProfilePicUri,
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier
                                         .size(128.dp)
                                         .clip(CircleShape)
                                 )
-                                if (profileUiState!!.isImageUploadLoading) {
+                                if (profileUiState.isImageUploadLoading) {
                                     Box(
                                         contentAlignment = Alignment.Center,
                                         modifier = Modifier
@@ -182,7 +244,7 @@ fun ProfileScreen(
                                 }
                             }
                         }
-                        if (profileUiState?.newProfilePicUri != Uri.EMPTY) {
+                        if (profileUiState.newProfilePicUri != Uri.EMPTY) {
                             Column {
                                 IconButton(
                                     onClick = { profileViewModel.onProfilePicChanged(Uri.EMPTY) },
@@ -204,7 +266,7 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (profileUiState?.isDisplayNameEditing == true) {
+                        if (profileUiState.isDisplayNameEditing == true) {
                             OutlinedTextField(
                                 value = profileUiState.newDisplayName ?: "",
                                 onValueChange = { profileViewModel.onNewDisplayNameChanged(it) },
@@ -227,7 +289,7 @@ fun ProfileScreen(
                             }
                         } else {
                             Text(
-                                text = "${profileUiState?.displayName}",
+                                text = "${profileUiState.displayName}",
                                 style = MaterialTheme.typography.titleLarge,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
@@ -241,11 +303,11 @@ fun ProfileScreen(
                     }
                     //small username
                     Text(
-                        text = "Username: ${profileUiState?.username}",
+                        text = "Username: ${profileUiState.username}",
                         style = MaterialTheme.typography.labelMedium
                     )
                     Text(
-                        text = "Email: ${profileUiState?.email}",
+                        text = "Email: ${profileUiState.email}",
                         style = MaterialTheme.typography.labelMedium
                     )
 
@@ -254,7 +316,7 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (profileUiState?.isAboutMeEditing == true) {
+                        if (profileUiState.isAboutMeEditing == true) {
                             OutlinedTextField(
                                 value = profileUiState.newAboutMe ?: "",
                                 onValueChange = { profileViewModel.onNewAboutMeChanged(it) },
@@ -277,7 +339,7 @@ fun ProfileScreen(
                             }
                         } else {
                             Text(
-                                text = if (profileUiState?.aboutMe?.isNotEmpty() == true) profileUiState.aboutMe else "Your bio goes here",
+                                text = if (profileUiState.aboutMe?.isNotEmpty() == true) profileUiState.aboutMe else "Your bio goes here",
                                 style = MaterialTheme.typography.titleSmall,
                                 maxLines = 8,
                                 textAlign = TextAlign.Center,
@@ -295,7 +357,7 @@ fun ProfileScreen(
 
                     //error here
                     Text(
-                        text = profileUiState?.fieldError ?: "",
+                        text = profileUiState.fieldError ?: "",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -309,11 +371,11 @@ fun ProfileScreen(
                             .weight(0.1f), horizontalArrangement = Arrangement.SpaceAround
                     ) {
                         Text(
-                            text = "Follower: ${profileUiState?.follower}",
+                            text = "Follower: ${profileUiState.follower}",
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = "Following: ${profileUiState?.following}",
+                            text = "Following: ${profileUiState.following}",
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -321,20 +383,30 @@ fun ProfileScreen(
                         modifier = Modifier.weight(0.9f),
                         contentAlignment = Alignment.Center
                     ) {
-                        Button(onClick = { onNavToMyFictions.invoke() }) {
-                            Text(text = "My fictions")
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Button(onClick = { onNavToMyFictions.invoke() }) {
+                                Text(text = "My fictions")
+                            }
+                            if (profileUiState.isAdmin == true) {
+                                Button(onClick = {
+                                    onNavToAdminPortal.invoke()
+                                }) {
+                                    Text(text = "Admin portal")
+                                }
+                            }
+                            Button(onClick = {
+                                profileViewModel.showBottomSheet()
+                            }) {
+                                Text(text = "View my stats")
+                            }
                         }
                     }
                 }
-            }
 
+            }
         }
     }
 }
 
-
-@Preview(showSystemUi = true)
-@Composable
-fun ProfilePrev() {
-    ProfileScreen(onNavToSignIn = {}, onNavToMyFictions = {})
-}

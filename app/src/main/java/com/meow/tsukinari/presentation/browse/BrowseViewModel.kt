@@ -140,7 +140,15 @@ class BrowseViewModel(
     }
 
 
-    //search fictions
+    //show sign out dialog
+    fun showSignOutDialog() {
+        browseUiState = browseUiState.copy(showSignOutDialog = true)
+    }
+
+    //hide sign out dialog
+    fun hideSignOutDialog() {
+        browseUiState = browseUiState.copy(showSignOutDialog = false)
+    }
 
 
 }
@@ -156,4 +164,7 @@ data class BrowseUiState(
     val sortBy: Int = 0,
     val filterBy: Int = 1,
     val userList: List<UserModel>? = emptyList(),
+
+    //signing out confirmation dialog
+    val showSignOutDialog: Boolean = false
 )

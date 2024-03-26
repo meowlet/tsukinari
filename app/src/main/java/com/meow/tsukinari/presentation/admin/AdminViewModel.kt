@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.meow.tsukinari.model.AllStatsModel
 import com.meow.tsukinari.model.FictionModel
 import com.meow.tsukinari.model.UserModel
 import com.meow.tsukinari.repository.Resources
@@ -57,8 +58,20 @@ class AdminViewModel(
             adminUiState.copy(pendingFictionsCount = adminUiState.pendingFictions.data?.size ?: 0)
     }
 
-    fun verifyFiction() {
-        TODO("Not yet implemented")
+    fun verifyFiction(fictionId: String) = viewModelScope.launch {
+        repository.verifyFiction(
+            fictionId,
+            onError = {
+            },
+            onSuccess = {
+                getPendingFictions()
+            })
+
+    }
+
+    //get full stats of everything
+    fun getFullStats() = viewModelScope.launch {
+        adminUiState = adminUiState.copy(stats = repository.getFullStats())
     }
 }
 
@@ -68,5 +81,7 @@ data class AdminUiState(
     val userList: Resources<List<UserModel>> = Resources.Loading(),
     val pendingFictions: Resources<List<FictionModel>> = Resources.Loading(),
     val pendingFictionsCount: Int = 0,
-    val currentTab: Int = 0 //0 for user list, 1 for pending fictions
+    val currentTab: Int = 0, //0 for user list, 1 for pending fictions
+
+    val stats: Resources<AllStatsModel> = Resources.Loading(),
 )
