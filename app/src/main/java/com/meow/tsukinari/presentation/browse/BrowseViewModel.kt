@@ -123,7 +123,12 @@ class BrowseViewModel(
     }
 
     fun changeFilterBy(option: Int) {
-        browseUiState = browseUiState.copy(filterBy = option)
+        //if the option parameter is 1, show warning dialog
+        browseUiState = if (option == 1) {
+            browseUiState.copy(showUnverifiedWarningDialog = true, filterBy = option)
+        } else {
+            browseUiState.copy(filterBy = option)
+        }
     }
 
     //stop refreshing
@@ -150,6 +155,10 @@ class BrowseViewModel(
         browseUiState = browseUiState.copy(showSignOutDialog = false)
     }
 
+    fun hideWarningDialog() {
+        browseUiState = browseUiState.copy(showUnverifiedWarningDialog = false)
+    }
+
 
 }
 
@@ -162,9 +171,10 @@ data class BrowseUiState(
     val isRefreshing: Boolean = false,
     //sort by 0 is by date, 1 is by name, 2 is by author, 3 is by views, 4 is by likes
     val sortBy: Int = 0,
-    val filterBy: Int = 1,
+    val filterBy: Int = 0,
     val userList: List<UserModel>? = emptyList(),
 
     //signing out confirmation dialog
-    val showSignOutDialog: Boolean = false
+    val showSignOutDialog: Boolean = false,
+    val showUnverifiedWarningDialog: Boolean = false
 )

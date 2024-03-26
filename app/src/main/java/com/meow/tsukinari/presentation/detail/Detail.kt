@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.CircularProgressIndicator
@@ -109,17 +108,17 @@ fun DetailScreen(
                         )
                     }
                 },
-                actions = {
-                    IconButton(onClick = { }) {
-                        Icon(imageVector = Icons.Default.Edit, contentDescription = "")
-                    }
-                    IconButton(onClick = { }) {
-                        Icon(
-                            imageVector = Icons.Default.Done,
-                            contentDescription = ""
-                        )
-                    }
-                },
+//                actions = {
+//                    IconButton(onClick = { }) {
+//                        Icon(imageVector = Icons.Default.Edit, contentDescription = "")
+//                    }
+//                    IconButton(onClick = { }) {
+//                        Icon(
+//                            imageVector = Icons.Default.Done,
+//                            contentDescription = ""
+//                        )
+//                    }
+//                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface.copy(0F),
                     scrolledContainerColor = MaterialTheme.colorScheme.inverseOnSurface

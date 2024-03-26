@@ -243,6 +243,23 @@ fun BrowseScreen(
             }
         }
 
+        when {
+            browseUiState.showUnverifiedWarningDialog -> {
+                AlertDialog(
+                    dialogText = "Unverified fictions may contain inappropriate content. Are you sure you want to continue?",
+                    dialogTitle = "Warning",
+                    onConfirmation = {
+                        browseViewModel?.changeFilterBy(1)
+                        browseViewModel?.hideWarningDialog()
+                    },
+                    onDismissRequest = {
+                        browseViewModel?.changeFilterBy(0)
+                        browseViewModel?.hideWarningDialog()
+                    }
+                )
+            }
+        }
+
 
         if (browseUiState.showBottomSheet) {
             ModalBottomSheet(
