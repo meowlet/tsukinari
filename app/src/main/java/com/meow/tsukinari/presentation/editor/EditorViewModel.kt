@@ -12,15 +12,20 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
+import com.meow.tsukinari.model.ChapterModel
 import com.meow.tsukinari.repository.DatabaseRepository
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class EditorViewModel(
     private val repository: DatabaseRepository = DatabaseRepository(),
 ) : ViewModel() {
     var editorUiState by mutableStateOf(EditorUiState())
         private set
+
 
 
     private val hasUser: Boolean
@@ -47,6 +52,14 @@ class EditorViewModel(
 
     fun isUpdatingFormFilled(): Boolean = editorUiState.title.isNotBlank() &&
             editorUiState.description.isNotBlank()
+
+    //get chapter list of the fiction
+    fun getChapterList(fictionId: String) =
+        repository.getChapters(fictionId, onError = {}, onSuccess = { chapters ->
+            editorUiState = editorUiState.copy(
+                chapters = chapters!!.sortedBy { it.chapterNumber }
+            )
+        })
 
 
     fun compressImage(imageUri: Uri, context: Context): Uri {
@@ -136,6 +149,19 @@ class EditorViewModel(
         )
     }
 
+    fun getTime(uploadedAt: Long): String {
+        val sdf = SimpleDateFormat("dd/MM/yyyy - HH:mm", Locale.getDefault())
+        return sdf.format(Date(uploadedAt))
+    }
+
+    fun showDialog() {
+        editorUiState = editorUiState.copy(confirmDeleteDialog = true)
+    }
+
+    fun hideDialog() {
+        editorUiState = editorUiState.copy(confirmDeleteDialog = false)
+    }
+
 }
 
 
@@ -148,5 +174,8 @@ data class EditorUiState(
     val fictionAddedStatus: Boolean = false,
     val fictionUpdatedStatus: Boolean = false,
     val fictionDeletedStatus: Boolean = false,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+
+    val chapters: List<ChapterModel> = emptyList(),
+    val confirmDeleteDialog: Boolean = false,
 )

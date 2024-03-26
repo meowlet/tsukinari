@@ -20,6 +20,9 @@ import com.meow.tsukinari.repository.Resources
 import com.meow.tsukinari.repository.STATS_COLLECTION_REF
 import com.meow.tsukinari.repository.USERS_COLLECTION_REF
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
@@ -204,6 +207,30 @@ class AdminRepository {
         return withContext(Dispatchers.IO) {
             usersRef.orderByChild("username").equalTo(username).get().await().value != null
         }
+    }
+
+
+    fun getUserFictions(userId: String): Flow<Resources<List<FictionModel>>> = callbackFlow {
+        val valueEventListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val fictions =
+                    snapshot.children.mapNotNull { it.getValue(FictionModel::class.java) }
+                trySend(Resources.Success(data = fictions))
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                trySend(Resources.Error(throwable = error.toException()))
+            }
+        }
+
+        fictionsRef.orderByChild("uploaderId").equalTo(userId)
+            .addValueEventListener(valueEventListener)
+
+        awaitClose {
+            fictionsRef.orderByChild("uploaderId").equalTo(userId)
+                .removeEventListener(valueEventListener)
+        }
+
     }
 
 

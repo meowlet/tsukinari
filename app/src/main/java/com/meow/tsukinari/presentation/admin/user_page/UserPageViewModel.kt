@@ -13,8 +13,10 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
+import com.meow.tsukinari.model.FictionModel
 import com.meow.tsukinari.model.UserModel
 import com.meow.tsukinari.presentation.admin.AdminRepository
+import com.meow.tsukinari.repository.Resources
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -52,6 +54,7 @@ class UserPageViewModel(
                     displayName = it.displayName,
 
                     //update user info
+                    newAvatarUri = Uri.EMPTY,
                     newUserName = it.userName,
                     newEmail = it.email,
                     newAboutMe = it.aboutMe,
@@ -136,29 +139,51 @@ class UserPageViewModel(
         )
     }
 
+    fun getUserFictions(userId: String) = viewModelScope.launch {
+        repository.getUserFictions(userId).collect {
+            userPageUiState = userPageUiState.copy(fictionsList = it)
+        }
+    }
+
 
     fun compressImage(imageUri: Uri, context: Context): Uri {
-        val tempFile = File.createTempFile("temp", "jpg")
-        val requestOptions = RequestOptions()
-            .override(1080)
-        Glide.with(context)
-            .asBitmap()
-            .load(imageUri)
-            .apply(requestOptions)
-            .into(object : CustomTarget<Bitmap>() {
-                override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                    resource.compress(Bitmap.CompressFormat.JPEG, 80, FileOutputStream(tempFile))
-                }
+        if (imageUri != Uri.EMPTY) {
+            val tempFile = File.createTempFile("temp", "jpg")
+            val requestOptions = RequestOptions()
+                .override(1080)
+            Glide.with(context)
+                .asBitmap()
+                .load(imageUri)
+                .apply(requestOptions)
+                .into(object : CustomTarget<Bitmap>() {
+                    override fun onResourceReady(
+                        resource: Bitmap,
+                        transition: Transition<in Bitmap>?
+                    ) {
+                        resource.compress(
+                            Bitmap.CompressFormat.JPEG,
+                            80,
+                            FileOutputStream(tempFile)
+                        )
+                    }
 
-                override fun onLoadCleared(placeholder: Drawable?) {
-                }
-            })
-        return Uri.fromFile(tempFile)
+                    override fun onLoadCleared(placeholder: Drawable?) {
+                    }
+                })
+            return Uri.fromFile(tempFile)
+        } else {
+            return Uri.EMPTY
+        }
     }
 
 
     //update user info
-    fun updateUserInfo(userId: String, imageUri: Uri) = viewModelScope.launch {
+    fun updateUserInfo(context: Context, userId: String, imageUri: Uri) = viewModelScope.launch {
+        userPageUiState = userPageUiState.copy(isLoading = true)
+        val usernameAvailability = repository.checkUsername(userPageUiState.newUserName)
+        if (usernameAvailability) {
+            throw IllegalArgumentException()
+        }
         //if username is the same, dont check for availability
         if (userPageUiState.newUserName == userPageUiState.userName) {
             val newUser = UserModel(
@@ -173,45 +198,43 @@ class UserPageViewModel(
             )
             repository.updateUserInfo(
                 userId,
-                imageUri,
+                compressImage(userPageUiState.newAvatarUri, context),
                 newUser,
                 onSuccess = {
                     getUserInfo(userId)
+                    userPageUiState = userPageUiState.copy(isLoading = false)
                 },
                 onError = {
                     it.let {
-                        userPageUiState = userPageUiState.copy(errorMessage = it)
+                        userPageUiState = userPageUiState.copy(errorMessage = it, isLoading = false)
                     }
                 }
             )
         } else {
-            if (repository.checkUsername(userPageUiState.newUserName)) {
-                val newUser = UserModel(
-                    userId = userId,
-                    accountActive = userPageUiState.isAccountActive,
-                    email = userPageUiState.newEmail,
-                    userName = userPageUiState.newUserName,
-                    displayName = userPageUiState.newDisplayName,
-                    aboutMe = userPageUiState.newAboutMe,
-                    createdAt = userPageUiState.createdAt,
-                    profileImageUrl = userPageUiState.avatarUrl
-                )
-                repository.updateUserInfo(
-                    userId,
-                    imageUri,
-                    newUser,
-                    onSuccess = {
-                        getUserInfo(userId)
-                    },
-                    onError = {
-                        it.let {
-                            userPageUiState = userPageUiState.copy(errorMessage = it)
-                        }
+            val newUser = UserModel(
+                userId = userId,
+                accountActive = userPageUiState.isAccountActive,
+                email = userPageUiState.newEmail,
+                userName = userPageUiState.newUserName,
+                displayName = userPageUiState.newDisplayName,
+                aboutMe = userPageUiState.newAboutMe,
+                createdAt = userPageUiState.createdAt,
+                profileImageUrl = userPageUiState.avatarUrl
+            )
+            repository.updateUserInfo(
+                userId,
+                compressImage(userPageUiState.newAvatarUri, context),
+                newUser,
+                onSuccess = {
+                    getUserInfo(userId)
+                    userPageUiState = userPageUiState.copy(isLoading = false)
+                },
+                onError = {
+                    it.let {
+                        userPageUiState = userPageUiState.copy(errorMessage = it, isLoading = false)
                     }
-                )
-            } else {
-                userPageUiState = userPageUiState.copy(errorMessage = "Username is already taken")
-            }
+                }
+            )
         }
     }
 
@@ -220,6 +243,15 @@ class UserPageViewModel(
 
     fun hideDialog() {
         userPageUiState = userPageUiState.copy(isAccountActive = true)
+    }
+
+    fun hideBottomSheet() {
+        userPageUiState = userPageUiState.copy(showBottomSheet = false)
+    }
+
+    fun showBottomSheet() {
+        userPageUiState = userPageUiState.copy(showBottomSheet = true)
+
     }
 
 }
@@ -235,10 +267,17 @@ data class UserPageUiState(
     val isAccountActive: Boolean = true,
     val errorMessage: String = "",
 
+    //ficiton
+    val fictionsList: Resources<List<FictionModel>> = Resources.Loading(),
+
     //update user info
     val newUserName: String = "",
     val newDisplayName: String = "",
     val newEmail: String = "",
     val newAvatarUri: Uri = Uri.EMPTY,
     val newAboutMe: String = "",
+
+    //state
+    val isLoading: Boolean = false,
+    val showBottomSheet: Boolean = false
 )

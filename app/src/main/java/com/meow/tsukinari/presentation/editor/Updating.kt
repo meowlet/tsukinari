@@ -16,11 +16,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -46,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -75,12 +79,32 @@ fun UpdatingScreen(
     val hasImage = editorUiState.imageUri != Uri.EMPTY
     LaunchedEffect(key1 = Unit) {
         editorViewModel?.getFiction(fictionId)
+        editorViewModel?.getChapterList(fictionId)
         editorViewModel?.resetImage()
     }
 
 
     val snackBarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+
+    when (editorUiState.confirmDeleteDialog) {
+        true -> {
+            AlertDialog(
+                onDismissRequest = {
+                    editorViewModel?.hideDialog()
+                },
+                onConfirmation = {
+                    editorViewModel?.deleteFiction(fictionId)
+                    editorViewModel?.hideDialog()
+                },
+                dialogTitle = "Delete fiction?",
+                dialogText = "This action cannot be undone, do you still want to proceed?"
+            )
+        }
+
+        else -> {}
+    }
 
 
 
@@ -103,7 +127,6 @@ fun UpdatingScreen(
             scope.launch {
                 editorViewModel?.resetChangedStatus()
                 snackBarHostState.showSnackbar("Fiction updated successfully")
-                onNavigate.invoke()
             }
         }
         if (editorUiState.fictionDeletedStatus) {
@@ -251,10 +274,50 @@ fun UpdatingScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedButton(
-                onClick = { editorViewModel?.deleteFiction(fictionId) },
+                onClick = {
+                    editorViewModel?.showDialog()
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = "Delete")
+            }
+
+
+
+            Text(
+                text = "Chapters List:",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.secondary,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier.padding(
+                    start = 20.dp,
+                    end = 20.dp,
+                    top = 24.dp,
+                    bottom = 4.dp
+                )
+            )
+
+
+            if (editorUiState.chapters.isEmpty()) {
+
+                Text(
+                    text = "This fiction has no chapters yet.",
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(20.dp)
+                )
+
+            }
+
+
+            editorUiState.chapters.forEachIndexed { index, chapter ->
+                ChapterItem(
+                    chapter.chapterTitle,
+                    chapter.chapterNumber,
+                    editorViewModel!!.getTime(chapter.uploadedAt)
+                ) {
+
+                }
+
             }
         }
     }
@@ -280,5 +343,73 @@ fun UpdateScreenPrev() {
             Text(text = "Date", style = MaterialTheme.typography.bodyMedium)
         }
     }
+}
+
+
+@Composable
+fun ChapterItem(
+    chapterName: String,
+    chapterNum: Int,
+    uploadedAt: String,
+    navagateToChapter: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .padding(vertical = 12.dp)
+            .fillMaxWidth()
+            .clickable { navagateToChapter.invoke() }
+    ) {
+        Text(
+            text = "Chapter $chapterNum: $chapterName",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.size(6.dp))
+        Text(
+            text = "Uploaded at: $uploadedAt",
+            style = MaterialTheme.typography.labelMedium
+        )
+    }
+}
+
+
+@Composable
+fun AlertDialog(
+    onDismissRequest: () -> Unit,
+    onConfirmation: () -> Unit,
+    dialogTitle: String,
+    dialogText: String,
+) {
+    androidx.compose.material3.AlertDialog(
+        icon = {
+            Icon(Icons.Default.Info, contentDescription = "Example Icon")
+        },
+        title = {
+            Text(text = dialogTitle)
+        },
+        text = {
+            Text(text = dialogText)
+        },
+        onDismissRequest = {
+            onDismissRequest
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onConfirmation()
+                }
+            ) {
+                Text("Yes")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    onDismissRequest()
+                }
+            ) {
+                Text("No")
+            }
+        }
+    )
 }
 

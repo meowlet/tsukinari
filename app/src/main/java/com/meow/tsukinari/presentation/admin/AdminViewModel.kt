@@ -56,6 +56,10 @@ class AdminViewModel(
         adminUiState =
             adminUiState.copy(pendingFictionsCount = adminUiState.pendingFictions.data?.size ?: 0)
     }
+
+    fun verifyFiction() {
+        TODO("Not yet implemented")
+    }
 }
 
 data class AdminUiState(

@@ -16,8 +16,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
@@ -34,10 +40,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import com.meow.tsukinari.model.FictionModel
 import com.meow.tsukinari.model.UserModel
-import com.meow.tsukinari.presentation.my_fictions.FictionItem
 import com.meow.tsukinari.repository.Resources
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -49,7 +56,7 @@ fun AdminScreen(
     adminViewModel: AdminViewModel = AdminViewModel(),
     onNavToHomePage: () -> Unit,
     onNavToUserPage: (String) -> Unit,
-    onNavToFictionPage: (String) -> Unit
+    onNavToDetailPage: (String) -> Unit
 ) {
     val adminUiState = adminViewModel.adminUiState
 
@@ -104,6 +111,7 @@ fun AdminScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
+                .verticalScroll(rememberScrollState())
         ) {
             TabRow(
                 selectedTabIndex = adminUiState.currentTab,
@@ -160,12 +168,15 @@ fun AdminScreen(
                             when (val pendingFictions = adminUiState.pendingFictions) {
                                 is Resources.Success -> {
                                     pendingFictions.data?.forEach { fiction ->
-                                        FictionItem(
+                                        FictionItemm(
                                             fiction = fiction,
                                             onClick = {
-                                                onNavToFictionPage(fiction.fictionId)
+                                                onNavToDetailPage(fiction.fictionId)
                                             },
-                                            uploadedAt = adminViewModel.getTime(fiction.uploadedAt)
+                                            uploadedAt = adminViewModel.getTime(fiction.uploadedAt),
+                                            onConfirmClick = {
+                                                adminViewModel.verifyFiction()
+                                            }
                                         )
                                     }
                                 }
@@ -270,4 +281,98 @@ fun UserItem(
         }
     }
 }
+
+@Composable
+fun FictionItemm(
+    fiction: FictionModel,
+    uploadedAt: String,
+    onClick: () -> Unit,
+    onConfirmClick: () -> Unit
+) {
+    OutlinedCard(
+//        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        shape = RoundedCornerShape(8.dp),
+        onClick = {
+            onClick.invoke()
+        },
+        modifier = Modifier
+            .padding(horizontal = 18.dp, vertical = 6.dp)
+            .height(100.dp)
+
+    ) {
+        Row(
+            Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+        ) {
+            Image(
+                painter = rememberAsyncImagePainter(
+                    fiction.coverLink
+                ),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(6.dp))
+            )
+            Spacer(modifier = Modifier.size(8.dp))
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = fiction.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = fiction.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontStyle = FontStyle.Italic,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+//                Text(
+//                    text = "Description: ${fiction.description}",
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    maxLines = 2,
+//                    overflow = TextOverflow.Ellipsis
+//                )
+                Text(
+                    text = uploadedAt,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier
+                        .padding(bottom = 2.dp)
+                        .align(Alignment.End)
+                )
+            }
+            IconButton(
+                onClick = {
+                    onConfirmClick.invoke()
+                },
+                modifier = Modifier.align(Alignment.CenterVertically)
+            ) {
+                Icon(imageVector = Icons.Default.Done, contentDescription = null)
+
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun alfsj() {
+    FictionItemm(fiction = FictionModel(
+        title = "alskfdjafds",
+        description = "áldkfjalfdskalkfdsjlkfdsalkfdsal",
+        uploadedAt = 14320
+    ),
+        uploadedAt = "slfdkj",
+        onConfirmClick = {},
+        onClick = {})
+}
+
+
 

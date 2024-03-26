@@ -343,9 +343,11 @@ fun NavGraphBuilder.homeGraph(
                         launchSingleTop = true
                     }
                 },
-                onNavToFictionPage = { fictionId ->
-                    navController.navigate(AdminNav.FictionPage.route + "?fictionId=$fictionId") {
+                onNavToDetailPage = { fictionId ->
+                    navController.navigate(ExclusiveNav.Detail.route + "?id=$fictionId") {
+
                         launchSingleTop = true
+
                     }
                 }
             )
@@ -360,6 +362,14 @@ fun NavGraphBuilder.homeGraph(
                 viewModel = userPageViewModel,
                 onNavUp = {
                     navController.navigateUp()
+                },
+                onNavToUpdate = { fictionId ->
+                    navController.navigate(
+                        ExclusiveNav.Update.route + "?id=$fictionId"
+                    ) {
+                        launchSingleTop = true
+                        popUpTo(ExclusiveNav.MyFictions.route)
+                    }
                 }
             )
         }
